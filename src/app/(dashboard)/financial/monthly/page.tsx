@@ -1,3 +1,4 @@
+import BudgetCard from "@/components/finance/budget/budget-card";
 import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
@@ -6,6 +7,7 @@ import TransactionForm from "@/components/finance/transaction-form";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   addMonths,
+  budgetReport,
   dayBuckets,
   formatMonth,
   monthRange,
@@ -13,7 +15,12 @@ import {
   todayISO,
   totalsOf,
 } from "@/lib/finance";
-import { getCategories, getTransactions } from "@/lib/finance-queries";
+import {
+  getBudget,
+  getCategories,
+  getPreviousBudget,
+  getTransactions,
+} from "@/lib/finance-queries";
 
 export default async function MonthlyFinancePage({
   searchParams,
@@ -23,9 +30,11 @@ export default async function MonthlyFinancePage({
   const thisMonth = today.slice(0, 7);
   const { from, to } = monthRange(month);
 
-  const [transactions, categories] = await Promise.all([
+  const [transactions, categories, budget, previous] = await Promise.all([
     getTransactions({ from, to }),
     getCategories(),
+    getBudget("month", month),
+    getPreviousBudget("month", month),
   ]);
   const monthlyEntries = transactions.filter((t) => t.period === "monthly");
   const totals = totalsOf(transactions);
@@ -50,6 +59,22 @@ export default async function MonthlyFinancePage({
             hint: "Recurring expenses logged",
           },
         ]}
+      />
+
+      <BudgetCard
+        key={month}
+        scope="month"
+        periodKey={month}
+        periodLabel={formatMonth(month)}
+        budget={budget}
+        report={
+          budget
+            ? budgetReport(budget, "month", month, transactions, today)
+            : null
+        }
+        previous={previous}
+        previousLabel={previous ? formatMonth(previous.period_key) : null}
+        categories={categories}
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">

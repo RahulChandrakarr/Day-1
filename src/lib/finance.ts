@@ -249,3 +249,120 @@ export function categoryBreakdown(rows: Transaction[], type: TxType) {
   }
   return [...map.values()].sort((a, b) => b.amount - a.amount);
 }
+
+// ---------------------------------------------------------------------------
+// Budgets — an estimate for a month or year, compared with actual entries
+// ---------------------------------------------------------------------------
+export type BudgetScope = "month" | "year";
+
+export type BudgetLine = {
+  category_id: string;
+  name: string;
+  color: number;
+  amount: number;
+  note: string | null;
+};
+
+export type Budget = {
+  id: string;
+  scope: BudgetScope;
+  period_key: string; // YYYY-MM or YYYY
+  expected_income: number | null;
+  savings_target: number | null;
+  lines: BudgetLine[];
+};
+
+export type BudgetRow = {
+  id: string;
+  name: string;
+  color: number;
+  note: string | null;
+  planned: number;
+  actual: number;
+};
+
+export type BudgetReport = {
+  rows: BudgetRow[]; // planned categories, in plan order
+  unplanned: BudgetRow[]; // spending in categories without a plan line
+  planned: number;
+  actual: number; // all expenses in the period
+  income: { expected: number | null; actual: number };
+  savings: { target: number | null; actual: number };
+  // Only for the period that contains today
+  progress: {
+    elapsed: number; // 0..1
+    daysLeft: number;
+    // Planned lines spent in full (or as already spent, if over), plus
+    // unplanned spending continuing at its current pace
+    projected: number;
+  } | null;
+  ended: boolean;
+};
+
+export function periodRange(scope: BudgetScope, key: string) {
+  return scope === "month" ? monthRange(key) : yearRange(Number(key));
+}
+
+export function formatPeriod(scope: BudgetScope, key: string) {
+  return scope === "month" ? formatMonth(key) : key;
+}
+
+export function previousPeriodKey(scope: BudgetScope, key: string) {
+  return scope === "month" ? addMonths(key, -1) : String(Number(key) - 1);
+}
+
+export function budgetReport(
+  budget: Pick<Budget, "expected_income" | "savings_target" | "lines">,
+  scope: BudgetScope,
+  key: string,
+  transactions: Transaction[],
+  today = todayISO(),
+): BudgetReport {
+  const spent = new Map(
+    categoryBreakdown(transactions, "expense").map((s) => [s.id, s]),
+  );
+  const rows = budget.lines.map((line) => ({
+    id: line.category_id,
+    name: line.name,
+    color: line.color,
+    note: line.note,
+    planned: line.amount,
+    actual: spent.get(line.category_id)?.amount ?? 0,
+  }));
+  const plannedIds = new Set(rows.map((r) => r.id));
+  const unplanned = [...spent.values()]
+    .filter((s) => !plannedIds.has(s.id))
+    .map((s) => ({ ...s, note: null, planned: 0, actual: s.amount }));
+
+  const totals = totalsOf(transactions);
+  const { from, to } = periodRange(scope, key);
+  let progress: BudgetReport["progress"] = null;
+  if (today >= from && today <= to) {
+    const total = dayIndex(to) - dayIndex(from) + 1;
+    const done = dayIndex(today) - dayIndex(from) + 1;
+    const elapsed = done / total;
+    const unplannedSpend = unplanned.reduce((sum, r) => sum + r.actual, 0);
+    progress = {
+      elapsed,
+      daysLeft: total - done,
+      projected:
+        rows.reduce((sum, r) => sum + Math.max(r.actual, r.planned), 0) +
+        unplannedSpend / elapsed,
+    };
+  }
+
+  return {
+    rows,
+    unplanned,
+    planned: rows.reduce((sum, r) => sum + r.planned, 0),
+    actual: totals.expense,
+    income: { expected: budget.expected_income, actual: totals.income },
+    savings: { target: budget.savings_target, actual: totals.net },
+    progress,
+    ended: today > to,
+  };
+}
+
+function dayIndex(iso: string) {
+  return toUTC(iso).getTime() / 86_400_000;
+}

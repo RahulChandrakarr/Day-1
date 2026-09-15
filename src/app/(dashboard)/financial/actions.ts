@@ -103,9 +103,11 @@ export async function addCategory(
     return fail("Pick a color.");
 
   const supabase = await authedClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("finance_categories")
-    .insert({ name, type, color });
+    .insert({ name, type, color })
+    .select("id")
+    .single();
   if (error) {
     return fail(
       error.code === "23505"
@@ -115,12 +117,127 @@ export async function addCategory(
   }
 
   refresh();
-  return { error: null, ok: true, version: prev.version + 1 };
+  // The new id lets callers select the category straight away
+  return {
+    error: null,
+    ok: true,
+    version: prev.version + 1,
+    values: { id: data.id },
+  };
 }
 
 export async function deleteCategory(id: string) {
   if (!uuid.test(id)) return;
   const supabase = await authedClient();
   await supabase.from("finance_categories").delete().eq("id", id);
+  refresh();
+}
+
+type LineInput = { category_id: string; amount: number; note: string | null };
+
+export async function saveBudget(
+  prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = Object.fromEntries(
+    ["scope", "period_key", "expected_income", "savings_target", "lines"].map(
+      (key) => [key, String(formData.get(key) ?? "").trim()],
+    ),
+  );
+  const fail = (error: string): FormState => ({
+    error,
+    ok: false,
+    version: prev.version + 1,
+    values,
+  });
+
+  const { scope, period_key } = values;
+  if (scope === "month") {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period_key))
+      return fail("Invalid month.");
+  } else if (scope === "year") {
+    if (!/^\d{4}$/.test(period_key)) return fail("Invalid year.");
+  } else {
+    return fail("Invalid plan type.");
+  }
+
+  const optionalMoney = (raw: string, label: string) => {
+    if (!raw) return null;
+    const n = Number(raw.replace(/,/g, ""));
+    if (!Number.isFinite(n) || n < 0) throw new Error(`${label} can't be negative.`);
+    if (n >= 1e10) throw new Error(`${label} is too large.`);
+    return Math.round(n * 100) / 100;
+  };
+
+  let expectedIncome: number | null;
+  let savingsTarget: number | null;
+  try {
+    expectedIncome = optionalMoney(values.expected_income, "Expected income");
+    savingsTarget = optionalMoney(values.savings_target, "Savings target");
+  } catch (e) {
+    return fail((e as Error).message);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(values.lines || "[]");
+  } catch {
+    return fail("Couldn't read the plan lines.");
+  }
+  if (!Array.isArray(parsed) || parsed.length > 50)
+    return fail("A plan can have up to 50 lines.");
+
+  const lines: LineInput[] = [];
+  const seen = new Set<string>();
+  for (const raw of parsed as Record<string, unknown>[]) {
+    const category_id = String(raw?.category_id ?? "");
+    const amountText = String(raw?.amount ?? "").replace(/,/g, "").trim();
+    const note = String(raw?.note ?? "").trim();
+    if (!category_id && !amountText) continue; // blank row
+    if (!uuid.test(category_id)) return fail("Pick a category for every line.");
+    if (seen.has(category_id))
+      return fail("Each category can only appear once in a plan.");
+    const amount = Number(amountText);
+    if (!Number.isFinite(amount) || amount <= 0)
+      return fail("Every line needs an amount greater than 0.");
+    if (amount >= 1e10) return fail("That amount is too large.");
+    if (note.length > 80) return fail("Keep notes under 80 characters.");
+    seen.add(category_id);
+    lines.push({
+      category_id,
+      amount: Math.round(amount * 100) / 100,
+      note: note || null,
+    });
+  }
+
+  const supabase = await authedClient();
+  if (lines.length > 0) {
+    const { data: cats, error } = await supabase
+      .from("finance_categories")
+      .select("id")
+      .eq("type", "expense")
+      .in("id", [...seen]);
+    if (error) return fail(error.message);
+    if ((cats ?? []).length !== seen.size)
+      return fail("Plan lines must use your expense categories.");
+  }
+
+  const { error } = await supabase.rpc("save_finance_budget", {
+    p_scope: scope,
+    p_period_key: period_key,
+    p_expected_income: expectedIncome,
+    p_savings_target: savingsTarget,
+    p_lines: lines,
+  });
+  if (error) return fail(error.message);
+
+  refresh();
+  return { error: null, ok: true, version: prev.version + 1 };
+}
+
+export async function deleteBudget(id: string) {
+  if (!uuid.test(id)) return;
+  const supabase = await authedClient();
+  await supabase.from("finance_budgets").delete().eq("id", id);
   refresh();
 }

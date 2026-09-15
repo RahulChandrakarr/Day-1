@@ -12,8 +12,6 @@ type ChatContextValue = ReturnType<typeof useChat<AssistantUIMessage>> & {
   send: (text: string) => void;
   newChat: () => void;
   openConversation: (id: string) => Promise<void>;
-  sheetOpen: boolean;
-  setSheetOpen: (open: boolean) => void;
   name: string;
 };
 
@@ -46,7 +44,7 @@ function readError(error: Error | undefined) {
   return error.message || "Something went wrong. Please try again.";
 }
 
-// One chat shared by the Overview panel and the slide-over on other tabs.
+// One chat for the whole dashboard, so a conversation survives tab changes.
 export default function ChatProvider({
   name,
   children,
@@ -59,7 +57,6 @@ export default function ChatProvider({
     initial: AssistantUIMessage[];
   }>(() => ({ id: crypto.randomUUID(), initial: [] }));
   const [statusLabel, setStatusLabel] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   // The chat id doubles as the conversation id; only the new text is sent.
   const [transport] = useState(
@@ -116,8 +113,6 @@ export default function ChatProvider({
     send,
     newChat,
     openConversation,
-    sheetOpen,
-    setSheetOpen,
     name,
   };
 

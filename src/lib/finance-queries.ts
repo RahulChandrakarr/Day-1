@@ -1,6 +1,12 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Category, Transaction, TxPeriod } from "@/lib/finance";
+import type {
+  Budget,
+  BudgetScope,
+  Category,
+  Transaction,
+  TxPeriod,
+} from "@/lib/finance";
 
 const TX_COLUMNS =
   "id, type, amount, description, period, occurred_on, created_at, category:finance_categories(id, name, color)";
@@ -77,4 +83,83 @@ export async function getYearsWithData(currentYear: number) {
   );
   const from = Math.max(start, end - 9); // at most 10 years on the chart
   return Array.from({ length: end - from + 1 }, (_, i) => from + i);
+}
+
+const BUDGET_COLUMNS =
+  "id, scope, period_key, expected_income, savings_target, lines:finance_budget_lines(category_id, amount, note, created_at, category:finance_categories(name, color))";
+
+type Joined<T> = T | T[] | null;
+type BudgetRowData = Omit<Budget, "expected_income" | "savings_target" | "lines"> & {
+  expected_income: number | string | null;
+  savings_target: number | string | null;
+  lines: {
+    category_id: string;
+    amount: number | string;
+    note: string | null;
+    created_at: string;
+    category: Joined<{ name: string; color: number }>;
+  }[];
+};
+
+function toBudget(row: BudgetRowData): Budget {
+  const money = (v: number | string | null) => (v === null ? null : Number(v));
+  return {
+    ...row,
+    expected_income: money(row.expected_income),
+    savings_target: money(row.savings_target),
+    lines: [...row.lines]
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .map((line) => {
+        const category = Array.isArray(line.category)
+          ? line.category[0]
+          : line.category;
+        return {
+          category_id: line.category_id,
+          name: category?.name ?? "Deleted category",
+          color: category?.color ?? 8,
+          amount: Number(line.amount),
+          note: line.note,
+        };
+      }),
+  };
+}
+
+export async function getBudget(scope: BudgetScope, key: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_budgets")
+    .select(BUDGET_COLUMNS)
+    .eq("scope", scope)
+    .eq("period_key", key)
+    .returns<BudgetRowData[]>()
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? toBudget(data) : null;
+}
+
+// Most recent plan before this period, used to start a new plan from it.
+export async function getPreviousBudget(scope: BudgetScope, key: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_budgets")
+    .select(BUDGET_COLUMNS)
+    .eq("scope", scope)
+    .lt("period_key", key)
+    .order("period_key", { ascending: false })
+    .limit(1)
+    .returns<BudgetRowData[]>();
+  if (error) throw new Error(error.message);
+  return data?.[0] ? toBudget(data[0]) : null;
+}
+
+export async function getMonthBudgets(year: number) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_budgets")
+    .select(BUDGET_COLUMNS)
+    .eq("scope", "month")
+    .like("period_key", `${year}-%`)
+    .returns<BudgetRowData[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(toBudget);
 }

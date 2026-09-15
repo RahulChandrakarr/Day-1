@@ -1,5 +1,4 @@
 import { requireProfile } from "@/lib/auth";
-import ChatLauncher from "@/components/assistant/chat-launcher";
 import ChatProvider from "@/components/assistant/chat-provider";
 import MobileNav from "@/components/dashboard/mobile-nav";
 import Sidebar from "@/components/dashboard/sidebar";
@@ -20,7 +19,6 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
           </main>
         </div>
       </div>
-      <ChatLauncher />
     </ChatProvider>
   );
 }

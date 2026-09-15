@@ -97,7 +97,7 @@ export default function MobileNav({ profile }: { profile: Profile }) {
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-paper/10 bg-ink/85 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl md:hidden">
-        <ul className="mx-auto grid max-w-md grid-cols-5 px-2">
+        <ul className="mx-auto grid max-w-lg grid-cols-6 px-1">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -105,7 +105,7 @@ export default function MobileNav({ profile }: { profile: Profile }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+                  className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[10.5px] transition-colors ${
                     active ? "text-ember" : "text-paper/45"
                   }`}
                 >

@@ -6,7 +6,6 @@ import type { AssistantUIMessage } from "@/lib/ai/types";
 import { useAssistant } from "./chat-provider";
 import ConversationList from "./conversation-list";
 import {
-  CloseIcon,
   HistoryIcon,
   PlusIcon,
   SendIcon,
@@ -26,13 +25,7 @@ function textOf(message: AssistantUIMessage) {
   return message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
 }
 
-export default function ChatPanel({
-  variant,
-  onClose,
-}: {
-  variant: "inline" | "sheet";
-  onClose?: () => void;
-}) {
+export default function ChatPanel() {
   const {
     messages,
     status,
@@ -61,11 +54,7 @@ export default function ChatPanel({
 
   return (
     <section
-      className={`relative flex min-h-0 flex-col overflow-hidden bg-surface/60 ${
-        variant === "inline"
-          ? "h-[min(78vh,720px)] min-h-[520px] rounded-3xl border border-paper/10"
-          : "h-full"
-      }`}
+      className="relative flex h-[calc(100dvh-14.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[440px] flex-col overflow-hidden rounded-3xl border border-paper/10 bg-surface/60 md:h-[min(80vh,760px)] md:min-h-[520px]"
     >
       <header className="flex items-center gap-2 border-b border-paper/10 px-4 py-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember text-on-ember">
@@ -99,17 +88,6 @@ export default function ChatPanel({
         >
           <PlusIcon />
         </button>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            title="Close"
-            aria-label="Close assistant"
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
-          >
-            <CloseIcon />
-          </button>
-        )}
       </header>
 
       <AnimatePresence>
@@ -236,7 +214,6 @@ export default function ChatPanel({
           send(t);
         }}
         onStop={() => void stop()}
-        autoFocus={variant === "sheet"}
       />
     </section>
   );
@@ -246,12 +223,10 @@ function Composer({
   busy,
   onSend,
   onStop,
-  autoFocus,
 }: {
   busy: boolean;
   onSend: (text: string) => void;
   onStop: () => void;
-  autoFocus: boolean;
 }) {
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -275,14 +250,13 @@ function Composer({
         e.preventDefault();
         submit();
       }}
-      className="border-t border-paper/10 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
+      className="border-t border-paper/10 p-3"
     >
       <div className="flex items-end gap-2 rounded-2xl border border-paper/10 bg-ink/60 p-1.5 transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
         <textarea
           ref={ref}
           rows={1}
           value={value}
-          autoFocus={autoFocus}
           maxLength={2000}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {

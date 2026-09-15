@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   addDays,
   addMonths,
+  budgetReport,
   categoryBreakdown,
   isValidDate,
   monthRange,
@@ -11,7 +12,11 @@ import {
   totalsOf,
   type Transaction,
 } from "@/lib/finance";
-import { getCategories, getTransactions } from "@/lib/finance-queries";
+import {
+  getBudget,
+  getCategories,
+  getTransactions,
+} from "@/lib/finance-queries";
 import type { Supabase } from "../types";
 
 const date = z
@@ -51,6 +56,38 @@ function overview(rows: Transaction[]) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5)
       .map(row),
+  };
+}
+
+// The user's estimate for the month against what has been logged so far.
+function planVsActual(
+  budget: Parameters<typeof budgetReport>[0],
+  month: string,
+  rows: Transaction[],
+) {
+  const report = budgetReport(budget, "month", month, rows);
+  return {
+    month,
+    plannedSpend: report.planned,
+    actualSpend: report.actual,
+    expectedIncome: report.income.expected,
+    actualIncome: report.income.actual,
+    savingsTarget: report.savings.target,
+    actualSavings: report.savings.actual,
+    daysLeft: report.progress?.daysLeft ?? null,
+    projectedMonthSpend: report.progress
+      ? Math.round(report.progress.projected)
+      : null,
+    categories: report.rows.map((r) => ({
+      category: r.name,
+      planned: r.planned,
+      actual: r.actual,
+      note: r.note,
+    })),
+    unplannedSpending: report.unplanned.map((r) => ({
+      category: r.name,
+      actual: r.actual,
+    })),
   };
 }
 
@@ -112,7 +149,7 @@ export async function financeSnapshot(supabase: Supabase) {
     `${lastMonth}-${today.slice(8)}`,
   ].sort()[0];
 
-  const [thisMonthRows, lastMonthRows, recent] = await Promise.all([
+  const [thisMonthRows, lastMonthRows, recent, monthPlan] = await Promise.all([
     getTransactions({ from: `${month}-01`, to: today }),
     getTransactions({ from: lastMonthRange.from, to: lastMonthRange.to }),
     supabase
@@ -123,6 +160,7 @@ export async function financeSnapshot(supabase: Supabase) {
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(10),
+    getBudget("month", month),
   ]);
 
   return {
@@ -130,6 +168,7 @@ export async function financeSnapshot(supabase: Supabase) {
       range: { from: `${month}-01`, to: today },
       ...overview(thisMonthRows),
     },
+    thisMonthPlan: monthPlan ? planVsActual(monthPlan, month, thisMonthRows) : null,
     lastMonthFull: { range: lastMonthRange, ...totalsOf(lastMonthRows) },
     lastMonthToSameDay: {
       range: { from: lastMonthRange.from, to: lastMonthSameDay },
