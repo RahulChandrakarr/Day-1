@@ -5,9 +5,11 @@ type Tile = { label: string; value: string; hint?: string };
 export default function StatTiles({
   totals,
   extra = [],
+  netHint,
 }: {
   totals: Totals;
   extra?: Tile[];
+  netHint?: string;
 }) {
   const tiles: (Tile & { swatch?: string })[] = [
     {
@@ -23,7 +25,7 @@ export default function StatTiles({
     {
       label: "Net balance",
       value: `${totals.net < 0 ? "−" : ""}${formatMoney(Math.abs(totals.net))}`,
-      hint: totals.net >= 0 ? "Saved" : "Overspent",
+      hint: netHint ?? (totals.net >= 0 ? "Saved" : "Overspent"),
     },
     ...extra,
   ];

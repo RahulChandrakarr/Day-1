@@ -1,5 +1,8 @@
 // Shared finance types and helpers (safe for server and client).
 
+import { debtFlows, type DebtEntry } from "./debts";
+import { netSaved, type InvestmentEntry } from "./investments";
+
 export const APP_TIMEZONE = "Asia/Kolkata";
 export const CURRENCY = "INR";
 export const LOCALE = "en-IN";
@@ -64,6 +67,20 @@ export function totalsOf(rows: Pick<Transaction, "type" | "amount">[]): Totals {
     else expense += row.amount;
   }
   return { income, expense, net: income - expense };
+}
+
+// Cash in hand for a set of entries: spending and income, plus money moved
+// into savings and any borrow entries the user chose to count.
+export function cashFlow(
+  transactions: Pick<Transaction, "type" | "amount">[],
+  debts: Pick<DebtEntry, "kind" | "amount" | "in_balance">[] = [],
+  investments: Pick<InvestmentEntry, "kind" | "amount">[] = [],
+): Totals {
+  const totals = totalsOf(transactions);
+  let net = totals.net - netSaved(investments);
+  for (const d of debts.filter((d) => d.in_balance))
+    net += d.kind === "borrowed" || d.kind === "received" ? d.amount : -d.amount;
+  return { ...totals, net };
 }
 
 // ---------------------------------------------------------------------------
@@ -255,9 +272,13 @@ export function categoryBreakdown(rows: Transaction[], type: TxType) {
 // ---------------------------------------------------------------------------
 export type BudgetScope = "month" | "year";
 
+export type BudgetLineKind = "spend" | "repay" | "collect";
+
 export type BudgetLine = {
-  category_id: string;
-  name: string;
+  kind: BudgetLineKind;
+  category_id: string | null; // spend lines
+  person_id: string | null; // repay / collect lines
+  name: string; // category or person name
   color: number;
   amount: number;
   note: string | null;
@@ -273,20 +294,30 @@ export type Budget = {
 };
 
 export type BudgetRow = {
-  id: string;
+  id: string; // category or person id
   name: string;
   color: number;
-  note: string | null;
-  planned: number;
+  planned: number; // sum of the lines for this category or person
   actual: number;
+  items: { label: string | null; amount: number }[];
+};
+
+// What happened in the period, compared with the plan
+export type BudgetActivity = {
+  transactions: Transaction[];
+  debts?: DebtEntry[];
+  investments?: Pick<InvestmentEntry, "kind" | "amount">[];
 };
 
 export type BudgetReport = {
   rows: BudgetRow[]; // planned categories, in plan order
   unplanned: BudgetRow[]; // spending in categories without a plan line
-  planned: number;
+  repay: BudgetRow[]; // money planned to return, per person
+  collect: BudgetRow[]; // money planned to get back, per person
+  planned: number; // planned spending (categories only)
   actual: number; // all expenses in the period
   income: { expected: number | null; actual: number };
+  // Money put into savings & investments in the period
   savings: { target: number | null; actual: number };
   // Only for the period that contains today
   progress: {
@@ -315,24 +346,54 @@ export function budgetReport(
   budget: Pick<Budget, "expected_income" | "savings_target" | "lines">,
   scope: BudgetScope,
   key: string,
-  transactions: Transaction[],
+  activity: BudgetActivity,
   today = todayISO(),
 ): BudgetReport {
+  const { transactions, debts = [], investments = [] } = activity;
   const spent = new Map(
     categoryBreakdown(transactions, "expense").map((s) => [s.id, s]),
   );
-  const rows = budget.lines.map((line) => ({
-    id: line.category_id,
-    name: line.name,
-    color: line.color,
-    note: line.note,
-    planned: line.amount,
-    actual: spent.get(line.category_id)?.amount ?? 0,
-  }));
+  const flows = debtFlows(debts);
+
+  // Lines sharing a category (or person) are compared together
+  const group = (
+    kind: BudgetLineKind,
+    actualOf: (id: string) => number,
+  ) => {
+    const grouped = new Map<string, BudgetRow>();
+    for (const line of budget.lines) {
+      const id = kind === "spend" ? line.category_id : line.person_id;
+      if (line.kind !== kind || !id) continue;
+      const row = grouped.get(id) ?? {
+        id,
+        name: line.name,
+        color: line.color,
+        planned: 0,
+        actual: actualOf(id),
+        items: [],
+      };
+      row.planned += line.amount;
+      row.items.push({ label: line.note, amount: line.amount });
+      grouped.set(id, row);
+    }
+    return [...grouped.values()];
+  };
+
+  const rows = group("spend", (id) => spent.get(id)?.amount ?? 0);
+  const repay = group("repay", (id) => flows.repaid.get(id) ?? 0);
+  const collect = group("collect", (id) => flows.received.get(id) ?? 0);
+
   const plannedIds = new Set(rows.map((r) => r.id));
   const unplanned = [...spent.values()]
     .filter((s) => !plannedIds.has(s.id))
-    .map((s) => ({ ...s, note: null, planned: 0, actual: s.amount }));
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      color: s.color,
+      planned: 0,
+      actual: s.amount,
+      items: [],
+    }));
 
   const totals = totalsOf(transactions);
   const { from, to } = periodRange(scope, key);
@@ -354,10 +415,12 @@ export function budgetReport(
   return {
     rows,
     unplanned,
+    repay,
+    collect,
     planned: rows.reduce((sum, r) => sum + r.planned, 0),
     actual: totals.expense,
     income: { expected: budget.expected_income, actual: totals.income },
-    savings: { target: budget.savings_target, actual: totals.net },
+    savings: { target: budget.savings_target, actual: netSaved(investments) },
     progress,
     ended: today > to,
   };

@@ -72,7 +72,7 @@ export default function PlanSummary({
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-paper/45">Saved so far</dt>
+          <dt className="text-xs text-paper/45">Put into savings</dt>
           <dd className="font-medium tabular-nums">
             {savings.actual < 0 ? "−" : ""}
             {formatMoney(Math.abs(savings.actual))}

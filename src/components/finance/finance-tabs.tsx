@@ -8,6 +8,8 @@ const tabs = [
   { href: "/financial/daily", label: "Daily" },
   { href: "/financial/monthly", label: "Monthly" },
   { href: "/financial/yearly", label: "Yearly" },
+  { href: "/financial/borrow", label: "Borrow" },
+  { href: "/financial/savings", label: "Savings" },
   { href: "/financial/tracking", label: "Tracking" },
 ];
 

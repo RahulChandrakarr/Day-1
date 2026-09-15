@@ -9,7 +9,7 @@ import type {
   BudgetScope,
   Category,
 } from "@/lib/finance";
-import BudgetEditor from "./budget-editor";
+import BudgetEditor, { type PlanPerson } from "./budget-editor";
 import BudgetReportView from "./budget-report";
 
 type Mode = "view" | "edit" | "copy" | "new";
@@ -24,6 +24,7 @@ export default function BudgetCard({
   previous,
   previousLabel,
   categories,
+  people,
 }: {
   scope: BudgetScope;
   periodKey: string;
@@ -33,6 +34,7 @@ export default function BudgetCard({
   previous: Budget | null;
   previousLabel: string | null;
   categories: Category[];
+  people: PlanPerson[];
 }) {
   const [mode, setMode] = useState<Mode>("view");
   const [deleting, startDelete] = useTransition();
@@ -100,6 +102,7 @@ export default function BudgetCard({
               scope={scope}
               periodKey={periodKey}
               categories={categories}
+              people={people}
               initial={editorInitial}
               onCancel={() => setMode("view")}
               onSaved={() => setMode("view")}

@@ -10,13 +10,20 @@ import {
   monthRange,
   todayISO,
   totalsOf,
+  type BudgetActivity,
   type Transaction,
 } from "@/lib/finance";
+import { personBalances } from "@/lib/debts";
 import {
+  getAccounts,
   getBudget,
   getCategories,
+  getDebts,
+  getInvestmentEntries,
+  getPeople,
   getTransactions,
 } from "@/lib/finance-queries";
+import { accountSummaries, netSaved } from "@/lib/investments";
 import type { Supabase } from "../types";
 
 const date = z
@@ -63,9 +70,9 @@ function overview(rows: Transaction[]) {
 function planVsActual(
   budget: Parameters<typeof budgetReport>[0],
   month: string,
-  rows: Transaction[],
+  activity: BudgetActivity,
 ) {
-  const report = budgetReport(budget, "month", month, rows);
+  const report = budgetReport(budget, "month", month, activity);
   return {
     month,
     plannedSpend: report.planned,
@@ -73,7 +80,7 @@ function planVsActual(
     expectedIncome: report.income.expected,
     actualIncome: report.income.actual,
     savingsTarget: report.savings.target,
-    actualSavings: report.savings.actual,
+    savedIntoInvestments: report.savings.actual,
     daysLeft: report.progress?.daysLeft ?? null,
     projectedMonthSpend: report.progress
       ? Math.round(report.progress.projected)
@@ -82,11 +89,21 @@ function planVsActual(
       category: r.name,
       planned: r.planned,
       actual: r.actual,
-      note: r.note,
+      lines: r.items,
     })),
     unplannedSpending: report.unplanned.map((r) => ({
       category: r.name,
       actual: r.actual,
+    })),
+    toReturn: report.repay.map((r) => ({
+      person: r.name,
+      planned: r.planned,
+      returnedThisMonth: r.actual,
+    })),
+    toCollect: report.collect.map((r) => ({
+      person: r.name,
+      planned: r.planned,
+      receivedThisMonth: r.actual,
     })),
   };
 }
@@ -149,7 +166,16 @@ export async function financeSnapshot(supabase: Supabase) {
     `${lastMonth}-${today.slice(8)}`,
   ].sort()[0];
 
-  const [thisMonthRows, lastMonthRows, recent, monthPlan] = await Promise.all([
+  const [
+    thisMonthRows,
+    lastMonthRows,
+    recent,
+    monthPlan,
+    people,
+    debts,
+    accounts,
+    investments,
+  ] = await Promise.all([
     getTransactions({ from: `${month}-01`, to: today }),
     getTransactions({ from: lastMonthRange.from, to: lastMonthRange.to }),
     supabase
@@ -161,14 +187,51 @@ export async function financeSnapshot(supabase: Supabase) {
       .order("created_at", { ascending: false })
       .limit(10),
     getBudget("month", month),
+    getPeople(),
+    getDebts(),
+    getAccounts(),
+    getInvestmentEntries(),
   ]);
+  const monthDebts = debts.filter((d) => d.occurred_on.startsWith(month));
+  const monthInvestments = investments.filter((e) =>
+    e.occurred_on.startsWith(month),
+  );
+  const balances = personBalances(people, debts).filter(
+    (p) => p.owe > 0 || p.owed > 0,
+  );
+  const holdings = accountSummaries(accounts, investments);
 
   return {
     thisMonthToDate: {
       range: { from: `${month}-01`, to: today },
       ...overview(thisMonthRows),
     },
-    thisMonthPlan: monthPlan ? planVsActual(monthPlan, month, thisMonthRows) : null,
+    thisMonthPlan: monthPlan
+      ? planVsActual(monthPlan, month, {
+          transactions: thisMonthRows,
+          debts: monthDebts,
+          investments: monthInvestments,
+        })
+      : null,
+    // Borrow/lend balances (not income or expenses)
+    borrowBalances: balances.map((p) => ({
+      person: p.name,
+      userOwes: p.owe,
+      owesUser: p.owed,
+      lastEntry: p.lastOn,
+    })),
+    savingsAndInvestments: {
+      totalPutIn: holdings.reduce((s, a) => s + a.invested, 0),
+      totalWorthNow: holdings.reduce((s, a) => s + a.current, 0),
+      savedThisMonth: netSaved(monthInvestments),
+      accounts: holdings.map((a) => ({
+        name: a.name,
+        type: a.kind,
+        putIn: a.invested,
+        worthNow: a.current,
+        valueUpdatedOn: a.valuedOn,
+      })),
+    },
     lastMonthFull: { range: lastMonthRange, ...totalsOf(lastMonthRows) },
     lastMonthToSameDay: {
       range: { from: lastMonthRange.from, to: lastMonthSameDay },

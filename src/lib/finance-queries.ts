@@ -1,7 +1,10 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import type { DebtEntry, Person } from "@/lib/debts";
+import type { Account, InvestmentEntry } from "@/lib/investments";
 import type {
   Budget,
+  BudgetLine,
   BudgetScope,
   Category,
   Transaction,
@@ -86,18 +89,25 @@ export async function getYearsWithData(currentYear: number) {
 }
 
 const BUDGET_COLUMNS =
-  "id, scope, period_key, expected_income, savings_target, lines:finance_budget_lines(category_id, amount, note, created_at, category:finance_categories(name, color))";
+  "id, scope, period_key, expected_income, savings_target, lines:finance_budget_lines(kind, category_id, person_id, position, amount, note, created_at, category:finance_categories(name, color), person:finance_people(name))";
 
 type Joined<T> = T | T[] | null;
+const one = <T>(value: Joined<T>) =>
+  Array.isArray(value) ? (value[0] ?? null) : value;
+
 type BudgetRowData = Omit<Budget, "expected_income" | "savings_target" | "lines"> & {
   expected_income: number | string | null;
   savings_target: number | string | null;
   lines: {
-    category_id: string;
+    kind: BudgetLine["kind"];
+    category_id: string | null;
+    person_id: string | null;
+    position: number;
     amount: number | string;
     note: string | null;
     created_at: string;
     category: Joined<{ name: string; color: number }>;
+    person: Joined<{ name: string }>;
   }[];
 };
 
@@ -108,15 +118,22 @@ function toBudget(row: BudgetRowData): Budget {
     expected_income: money(row.expected_income),
     savings_target: money(row.savings_target),
     lines: [...row.lines]
-      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .sort(
+        (a, b) =>
+          a.position - b.position || a.created_at.localeCompare(b.created_at),
+      )
       .map((line) => {
-        const category = Array.isArray(line.category)
-          ? line.category[0]
-          : line.category;
+        const category = one(line.category);
+        const person = one(line.person);
         return {
+          kind: line.kind,
           category_id: line.category_id,
-          name: category?.name ?? "Deleted category",
-          color: category?.color ?? 8,
+          person_id: line.person_id,
+          name:
+            line.kind === "spend"
+              ? (category?.name ?? "Deleted category")
+              : (person?.name ?? "Deleted person"),
+          color: line.kind === "spend" ? (category?.color ?? 8) : 8,
           amount: Number(line.amount),
           note: line.note,
         };
@@ -162,4 +179,74 @@ export async function getMonthBudgets(year: number) {
     .returns<BudgetRowData[]>();
   if (error) throw new Error(error.message);
   return (data ?? []).map(toBudget);
+}
+
+// ---------------------------------------------------------------------------
+// Borrow / lend
+// ---------------------------------------------------------------------------
+export async function getPeople() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_people")
+    .select("id, name")
+    .order("name")
+    .returns<Person[]>();
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+type DebtRow = Omit<DebtEntry, "amount" | "person"> & {
+  amount: number | string;
+  person: Joined<Person>;
+};
+
+export async function getDebts(options: { from?: string; to?: string } = {}) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("finance_debts")
+    .select(
+      "id, kind, amount, note, occurred_on, created_at, in_balance, person:finance_people(id, name)",
+    )
+    .order("occurred_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (options.from) query = query.gte("occurred_on", options.from);
+  if (options.to) query = query.lte("occurred_on", options.to);
+  const { data, error } = await query.returns<DebtRow[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((row) => {
+    const person = one(row.person);
+    return person ? [{ ...row, amount: Number(row.amount), person }] : [];
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Savings & investments
+// ---------------------------------------------------------------------------
+export async function getAccounts() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_accounts")
+    .select("id, name, kind, color")
+    .order("created_at", { ascending: true })
+    .returns<Account[]>();
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function getInvestmentEntries(
+  options: { from?: string; to?: string } = {},
+) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("finance_investment_entries")
+    .select("id, account_id, kind, amount, note, occurred_on, created_at")
+    .order("occurred_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (options.from) query = query.gte("occurred_on", options.from);
+  if (options.to) query = query.lte("occurred_on", options.to);
+  const { data, error } = await query.returns<
+    (Omit<InvestmentEntry, "amount"> & { amount: number | string })[]
+  >();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => ({ ...row, amount: Number(row.amount) }));
 }

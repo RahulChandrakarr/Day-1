@@ -43,7 +43,7 @@ export default function BudgetReportView({
           targetLabel="expected"
         />
         <CompareTile
-          label="Saved"
+          label="Put into savings"
           actual={report.savings.actual}
           target={report.savings.target}
           targetLabel="target"
@@ -61,6 +61,22 @@ export default function BudgetReportView({
             ))}
           </ul>
         </div>
+      )}
+
+      {report.repay.length > 0 && (
+        <PersonSection
+          title="Money to return"
+          done="returned"
+          rows={report.repay}
+        />
+      )}
+
+      {report.collect.length > 0 && (
+        <PersonSection
+          title="Money to collect"
+          done="received"
+          rows={report.collect}
+        />
       )}
 
       {report.unplanned.length > 0 && (
@@ -264,11 +280,6 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
             style={{ background: `var(--cat-${row.color})` }}
           />
           <span className="truncate font-medium">{row.name}</span>
-          {row.note && (
-            <span className="hidden truncate text-paper/40 sm:inline">
-              · {row.note}
-            </span>
-          )}
         </span>
         <span className="shrink-0 tabular-nums">
           {formatMoney(row.actual)}
@@ -300,6 +311,94 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
             ? "Nothing spent yet"
             : `${formatMoney(diff)} left`}
       </p>
+      {row.items.some((item) => item.label) && (
+        <ul className="mt-2 flex flex-col gap-1 border-l border-paper/10 pl-3 text-xs text-paper/55">
+          {row.items.map((item, i) => (
+            <li key={i} className="flex justify-between gap-3">
+              <span className="truncate">{item.label ?? row.name}</span>
+              <span className="shrink-0 tabular-nums">
+                {formatMoney(item.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
+  );
+}
+
+function PersonSection({
+  title,
+  done,
+  rows,
+}: {
+  title: string;
+  done: string;
+  rows: BudgetRow[];
+}) {
+  const planned = rows.reduce((sum, r) => sum + r.planned, 0);
+  const actual = rows.reduce((sum, r) => sum + Math.min(r.actual, r.planned), 0);
+
+  return (
+    <div>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h4 className="text-xs font-medium uppercase tracking-wider text-paper/50">
+          {title}
+        </h4>
+        <span className="text-xs text-paper/45 tabular-nums">
+          {formatMoney(actual)} of {formatMoney(planned)} {done}
+        </span>
+      </div>
+      <ul className="flex flex-col gap-3">
+        {rows.map((row) => {
+          const complete = row.actual >= row.planned;
+          const share = Math.min(row.actual / row.planned, 1);
+          return (
+            <li
+              key={row.id}
+              className="rounded-2xl border border-paper/10 bg-ink/30 p-3"
+            >
+              <div className="flex items-center gap-3 text-sm">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper/10 text-xs font-medium">
+                  {row.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="min-w-0 flex-1 truncate font-medium">
+                  {row.name}
+                </span>
+                <span
+                  className={`shrink-0 text-xs font-medium ${
+                    complete ? "text-moss" : "text-paper/55"
+                  }`}
+                >
+                  {complete
+                    ? `Done · ${formatMoney(row.actual)}`
+                    : `${formatMoney(row.actual)} / ${formatMoney(row.planned)}`}
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper/10">
+                <motion.div
+                  className={`h-full rounded-full ${complete ? "bg-moss" : "bg-ember"}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${share * 100}%` }}
+                  transition={{ duration: 0.6 }}
+                />
+              </div>
+              {row.items.some((item) => item.label) && (
+                <ul className="mt-2 flex flex-col gap-0.5 text-xs text-paper/50">
+                  {row.items.map((item, i) => (
+                    <li key={i} className="flex justify-between gap-3">
+                      <span className="truncate">{item.label ?? "—"}</span>
+                      <span className="tabular-nums">
+                        {formatMoney(item.amount)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

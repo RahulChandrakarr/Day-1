@@ -7,7 +7,11 @@ import {
   monthRange,
   todayISO,
 } from "@/lib/finance";
-import { getBudget, getTransactions } from "@/lib/finance-queries";
+import {
+  getBudget,
+  getInvestmentEntries,
+  getTransactions,
+} from "@/lib/finance-queries";
 
 export const metadata: Metadata = {
   title: "Overview · Day One",
@@ -16,9 +20,11 @@ export const metadata: Metadata = {
 export default async function OverviewPage() {
   const today = todayISO();
   const month = today.slice(0, 7);
-  const [budget, transactions] = await Promise.all([
+  const range = monthRange(month);
+  const [budget, transactions, investments] = await Promise.all([
     getBudget("month", month),
-    getTransactions(monthRange(month)),
+    getTransactions(range),
+    getInvestmentEntries(range),
   ]);
 
   return (
@@ -28,7 +34,13 @@ export default async function OverviewPage() {
           monthLabel={formatMonth(month)}
           report={
             budget
-              ? budgetReport(budget, "month", month, transactions, today)
+              ? budgetReport(
+                  budget,
+                  "month",
+                  month,
+                  { transactions, investments },
+                  today,
+                )
               : null
           }
         />

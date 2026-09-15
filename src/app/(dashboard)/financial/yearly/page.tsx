@@ -4,7 +4,6 @@ import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
-import TransactionForm from "@/components/finance/transaction-form";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   budgetReport,
@@ -17,10 +16,15 @@ import {
   type Budget,
   type Bucket,
 } from "@/lib/finance";
+import { personBalances } from "@/lib/debts";
+import { netSaved, type InvestmentEntry } from "@/lib/investments";
 import {
   getBudget,
   getCategories,
+  getDebts,
+  getInvestmentEntries,
   getMonthBudgets,
+  getPeople,
   getPreviousBudget,
   getTransactions,
 } from "@/lib/finance-queries";
@@ -34,14 +38,25 @@ export default async function YearlyFinancePage({
   const { from, to } = yearRange(year);
   const key = String(year);
 
-  const [transactions, categories, budget, previous, monthBudgets] =
-    await Promise.all([
-      getTransactions({ from, to }),
-      getCategories(),
-      getBudget("year", key),
-      getPreviousBudget("year", key),
-      getMonthBudgets(year),
-    ]);
+  const [
+    transactions,
+    categories,
+    budget,
+    previous,
+    monthBudgets,
+    people,
+    debts,
+    investments,
+  ] = await Promise.all([
+    getTransactions({ from, to }),
+    getCategories(),
+    getBudget("year", key),
+    getPreviousBudget("year", key),
+    getMonthBudgets(year),
+    getPeople(),
+    getDebts(),
+    getInvestmentEntries({ from, to }),
+  ]);
   const yearlyEntries = transactions.filter((t) => t.period === "yearly");
   const buckets = monthBuckets(year, transactions);
 
@@ -66,49 +81,57 @@ export default async function YearlyFinancePage({
         budget={budget}
         report={
           budget
-            ? budgetReport(budget, "year", key, transactions, today)
+            ? budgetReport(
+                budget,
+                "year",
+                key,
+                {
+                  transactions,
+                  debts: debts.filter(
+                    (d) => d.occurred_on >= from && d.occurred_on <= to,
+                  ),
+                  investments,
+                },
+                today,
+              )
             : null
         }
         previous={previous}
         previousLabel={previous?.period_key ?? null}
         categories={categories}
+        people={personBalances(people, debts).map(({ id, name, owe, owed }) => ({
+          id,
+          name,
+          owe,
+          owed,
+        }))}
       />
 
       <MonthPlanTable
         year={year}
         buckets={buckets}
         budgets={monthBudgets}
+        investments={investments}
         thisMonth={today.slice(0, 7)}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
-        <TransactionForm
-          key={year}
-          categories={categories}
-          period="yearly"
-          defaultDate={year === thisYear ? today : from}
-          minDate={from}
-          maxDate={to}
-        />
-        <div className="flex flex-col gap-6">
-          <TransactionList
-            title="Yearly entries"
-            transactions={yearlyEntries}
-            showDate
-            empty="No yearly entries yet — add insurance, fees or bonuses."
-          />
-          <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
-            <h3 className="font-serif text-2xl">Month by month</h3>
-            <p className="mb-4 text-sm text-paper/50">
-              Everything logged in {year}.
-            </p>
-            <IncomeExpenseChart data={buckets} />
-            <div className="mt-4">
-              <BucketTable data={buckets} heading="Month" />
-            </div>
-          </section>
+      <TransactionList
+        title="Yearly entries"
+        transactions={yearlyEntries}
+        showDate
+        empty="No yearly entries this year."
+      />
+
+      <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+        <h3 className="font-serif text-2xl">Month by month</h3>
+        <p className="mb-4 text-sm text-paper/50">
+          Everything logged in {year}.
+        </p>
+        <IncomeExpenseChart data={buckets} />
+        <div className="mt-4">
+          <BucketTable data={buckets} heading="Month" />
         </div>
-      </div>
+      </section>
 
       <CategoryManager categories={categories} />
     </div>
@@ -120,11 +143,13 @@ function MonthPlanTable({
   year,
   buckets,
   budgets,
+  investments,
   thisMonth,
 }: {
   year: number;
   buckets: Bucket[];
   budgets: Budget[];
+  investments: InvestmentEntry[];
   thisMonth: string;
 }) {
   const byMonth = new Map(budgets.map((b) => [b.period_key, b]));
@@ -132,9 +157,15 @@ function MonthPlanTable({
     const plan = byMonth.get(bucket.key);
     return {
       bucket,
-      planned: plan ? plan.lines.reduce((s, l) => s + l.amount, 0) : null,
+      planned: plan
+        ? plan.lines
+            .filter((l) => l.kind === "spend")
+            .reduce((s, l) => s + l.amount, 0)
+        : null,
       target: plan?.savings_target ?? null,
-      saved: bucket.income - bucket.expense,
+      saved: netSaved(
+        investments.filter((e) => e.occurred_on.startsWith(bucket.key)),
+      ),
     };
   });
   const planned = rows.filter((r) => r.planned !== null);
@@ -221,7 +252,7 @@ function MonthPlanTable({
         </table>
       </div>
       <p className="mt-3 text-xs text-paper/40">
-        Saved is income minus expenses, shown against the month&apos;s savings target.
+        Saved is money put into savings &amp; investments that month, against the plan&apos;s savings target.
       </p>
     </section>
   );

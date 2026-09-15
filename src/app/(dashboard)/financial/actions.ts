@@ -1,29 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { isValidDate } from "@/lib/finance";
-import { createClient } from "@/lib/supabase/server";
+import {
+  authedClient,
+  parseAmount,
+  refresh,
+  uuid,
+  type FormState,
+} from "./action-utils";
 
-export type FormState = {
-  error: string | null;
-  // Bumps on every submit so the client can react (reset, toast)
-  version: number;
-  ok: boolean;
-  values?: Record<string, string>;
-};
-
-const uuid = /^[0-9a-f-]{36}$/i;
-
-async function authedClient() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  if (!data?.claims?.sub) throw new Error("Not signed in.");
-  return supabase;
-}
-
-function refresh() {
-  revalidatePath("/financial", "layout");
-}
+export type { FormState } from "./action-utils";
 
 export async function addTransaction(
   prev: FormState,
@@ -133,7 +119,13 @@ export async function deleteCategory(id: string) {
   refresh();
 }
 
-type LineInput = { category_id: string; amount: number; note: string | null };
+type LineInput = {
+  kind: "spend" | "repay" | "collect";
+  category_id: string | null;
+  person_id: string | null;
+  amount: number;
+  note: string | null;
+};
 
 export async function saveBudget(
   prev: FormState,
@@ -187,39 +179,127 @@ export async function saveBudget(
   if (!Array.isArray(parsed) || parsed.length > 50)
     return fail("A plan can have up to 50 lines.");
 
-  const lines: LineInput[] = [];
-  const seen = new Set<string>();
+  // Each line is either planned spending in an expense category (existing id,
+  // or a new category name) or money to return to / collect from a person.
+  // Categories and people may repeat across lines.
+  const entries: {
+    kind: LineInput["kind"];
+    category_id: string | null;
+    category_name: string | null;
+    person_id: string | null;
+    label: string | null;
+    amount: number;
+  }[] = [];
   for (const raw of parsed as Record<string, unknown>[]) {
-    const category_id = String(raw?.category_id ?? "");
+    const kindText = String(raw?.kind ?? "spend");
+    const category_id = String(raw?.category_id ?? "").trim();
+    const category_name = String(raw?.category_name ?? "")
+      .trim()
+      .replace(/\s+/g, " ");
+    const person_id = String(raw?.person_id ?? "").trim();
+    const label = String(raw?.label ?? "").trim();
     const amountText = String(raw?.amount ?? "").replace(/,/g, "").trim();
-    const note = String(raw?.note ?? "").trim();
-    if (!category_id && !amountText) continue; // blank row
-    if (!uuid.test(category_id)) return fail("Pick a category for every line.");
-    if (seen.has(category_id))
-      return fail("Each category can only appear once in a plan.");
-    const amount = Number(amountText);
-    if (!Number.isFinite(amount) || amount <= 0)
-      return fail("Every line needs an amount greater than 0.");
-    if (amount >= 1e10) return fail("That amount is too large.");
-    if (note.length > 80) return fail("Keep notes under 80 characters.");
-    seen.add(category_id);
-    lines.push({
-      category_id,
-      amount: Math.round(amount * 100) / 100,
-      note: note || null,
+    if (!category_id && !category_name && !person_id && !label && !amountText)
+      continue; // blank row
+    const what = label ? `"${label}"` : "every line";
+    if (kindText !== "spend" && kindText !== "repay" && kindText !== "collect")
+      return fail("Invalid line type.");
+    const kind = kindText;
+    if (kind === "spend") {
+      if (!category_id && !category_name)
+        return fail(`Pick a category or person for ${what}.`);
+      if (category_id && !uuid.test(category_id))
+        return fail("Invalid category.");
+      if (category_name.length > 40)
+        return fail("Keep category names under 40 characters.");
+    } else if (!uuid.test(person_id)) {
+      return fail("Invalid person.");
+    }
+    if (label.length > 80) return fail("Keep line names under 80 characters.");
+    const amount = parseAmount(amountText);
+    if (amount === null || amount >= 1e10)
+      return fail(`Enter an amount greater than 0 for ${what}.`);
+    entries.push({
+      kind,
+      category_id: kind === "spend" && category_id ? category_id : null,
+      category_name: kind === "spend" && !category_id ? category_name : null,
+      person_id: kind === "spend" ? null : person_id,
+      label: label || null,
+      amount,
     });
   }
 
   const supabase = await authedClient();
-  if (lines.length > 0) {
-    const { data: cats, error } = await supabase
+
+  const lines: LineInput[] = [];
+  const spend = entries.filter((e) => e.kind === "spend");
+  const byName = new Map<string, string>();
+  const categoryIds = new Set<string>();
+  if (spend.length > 0) {
+    const { data: existing, error } = await supabase
       .from("finance_categories")
-      .select("id")
-      .eq("type", "expense")
-      .in("id", [...seen]);
+      .select("id, name")
+      .eq("type", "expense");
     if (error) return fail(error.message);
-    if ((cats ?? []).length !== seen.size)
-      return fail("Plan lines must use your expense categories.");
+    for (const c of existing ?? []) {
+      categoryIds.add(c.id);
+      byName.set(c.name.toLowerCase(), c.id);
+    }
+
+    // New category names that don't exist yet are created once each
+    const missing = [
+      ...new Map(
+        spend
+          .filter(
+            (e) =>
+              e.category_name && !byName.has(e.category_name.toLowerCase()),
+          )
+          .map((e) => [e.category_name!.toLowerCase(), e.category_name!]),
+      ).values(),
+    ];
+    if (missing.length > 0) {
+      const { data: created, error: createError } = await supabase
+        .from("finance_categories")
+        .insert(
+          missing.map((name, i) => ({
+            name,
+            type: "expense",
+            color: ((byName.size + i) % 8) + 1,
+          })),
+        )
+        .select("id, name");
+      if (createError) return fail(createError.message);
+      for (const c of created ?? []) {
+        categoryIds.add(c.id);
+        byName.set(c.name.toLowerCase(), c.id);
+      }
+    }
+  }
+
+  const personIds = new Set<string>();
+  if (entries.some((e) => e.kind !== "spend")) {
+    const { data: people, error } = await supabase
+      .from("finance_people")
+      .select("id");
+    if (error) return fail(error.message);
+    for (const p of people ?? []) personIds.add(p.id);
+  }
+
+  for (const e of entries) {
+    if (e.kind === "spend") {
+      const category_id = e.category_id
+        ? categoryIds.has(e.category_id)
+          ? e.category_id
+          : undefined
+        : byName.get(e.category_name!.toLowerCase());
+      if (!category_id)
+        return fail("Plan lines must use your expense categories.");
+      lines.push({ kind: "spend", category_id, person_id: null, amount: e.amount, note: e.label });
+    } else {
+      if (!personIds.has(e.person_id!))
+        return fail("That person isn't in your Borrow list any more.");
+      lines.push({ kind: e.kind, category_id: null, person_id: e.person_id, amount: e.amount, note: e.label });
+    }
   }
 
   const { error } = await supabase.rpc("save_finance_budget", {
