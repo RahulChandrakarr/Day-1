@@ -1,7 +1,7 @@
 "use server";
 
 import { isValidDate } from "@/lib/finance";
-import { ACCOUNT_KINDS } from "@/lib/investments";
+import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 import {
   authedClient,
   formFields,
@@ -15,7 +15,13 @@ export async function addAccount(
   prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const values = formFields(formData, ["name", "kind", "opening"]);
+  const values = formFields(formData, [
+    "name",
+    "kind",
+    "opening",
+    "sip_day",
+    "sip_amount",
+  ]);
   const fail = (error: string): FormState => ({
     error,
     ok: false,
@@ -31,13 +37,29 @@ export async function addAccount(
   if (values.opening && opening === null)
     return fail("Enter a valid starting amount.");
 
+  // SIP / recurring deposit: monthly amount and deduction day
+  const recurring = isRecurringKind(values.kind as AccountKind);
+  const sipDay = recurring && values.sip_day ? Number(values.sip_day) : null;
+  if (sipDay !== null && (!Number.isInteger(sipDay) || sipDay < 1 || sipDay > 31))
+    return fail("Pick a deduction date between 1 and 31.");
+  const sipAmount =
+    recurring && values.sip_amount ? parseAmount(values.sip_amount) : null;
+  if (recurring && values.sip_amount && sipAmount === null)
+    return fail("Enter a valid monthly amount.");
+
   const supabase = await authedClient();
   const { count } = await supabase
     .from("finance_accounts")
     .select("id", { count: "exact", head: true });
   const { data, error } = await supabase
     .from("finance_accounts")
-    .insert({ name, kind: values.kind, color: ((count ?? 0) % 8) + 1 })
+    .insert({
+      name,
+      kind: values.kind,
+      color: ((count ?? 0) % 8) + 1,
+      sip_day: sipDay,
+      sip_amount: sipAmount,
+    })
     .select("id")
     .single();
   if (error) {

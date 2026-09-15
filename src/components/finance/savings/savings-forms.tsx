@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { FormState } from "@/app/(dashboard)/financial/actions";
 import { addAccount } from "@/app/(dashboard)/financial/savings/actions";
-import { ACCOUNT_KINDS } from "@/lib/investments";
+import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-paper/10 bg-ink/60 px-4 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
@@ -15,6 +15,7 @@ const initial: FormState = { error: null, ok: false, version: 0 };
 
 export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
   const [open, setOpen] = useState(startOpen);
+  const [kind, setKind] = useState<AccountKind>("fd");
   const [state, action, pending] = useActionState(addAccount, initial);
 
   return (
@@ -65,7 +66,8 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
                 <span className={labelClass}>Type</span>
                 <select
                   name="kind"
-                  defaultValue={state.ok ? "fd" : (state.values?.kind ?? "fd")}
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value as AccountKind)}
                   className={inputClass}
                 >
                   {ACCOUNT_KINDS.map((k) => (
@@ -75,6 +77,36 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
                   ))}
                 </select>
               </label>
+              {isRecurringKind(kind) && (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex min-w-0 flex-col gap-1.5">
+                    <span className={labelClass}>
+                      {kind === "rd" ? "Monthly amount" : "SIP amount"}
+                    </span>
+                    <input
+                      name="sip_amount"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      defaultValue={state.ok ? "" : state.values?.sip_amount}
+                      placeholder="₹ 5000"
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="flex min-w-0 flex-col gap-1.5">
+                    <span className={labelClass}>Deduction date</span>
+                    <input
+                      name="sip_day"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={31}
+                      defaultValue={state.ok ? "" : state.values?.sip_day}
+                      placeholder="Day, e.g. 5"
+                      className={inputClass}
+                    />
+                  </label>
+                </div>
+              )}
               <label className="flex flex-col gap-1.5">
                 <span className={labelClass}>Already in it</span>
                 <div className="relative">

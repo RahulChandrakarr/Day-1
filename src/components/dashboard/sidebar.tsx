@@ -9,7 +9,13 @@ import type { Profile } from "@/lib/auth";
 import { isActive, logoutIcon, navItems, usersIcon } from "./nav";
 
 // Desktop and tablet: icon rail at md, full sidebar at lg.
-export default function Sidebar({ profile }: { profile: Profile }) {
+export default function Sidebar({
+  profile,
+  alerts = [],
+}: {
+  profile: Profile;
+  alerts?: string[];
+}) {
   const pathname = usePathname();
   const name = profile.full_name || profile.email.split("@")[0];
 
@@ -65,7 +71,15 @@ export default function Sidebar({ profile }: { profile: Profile }) {
                 {!active && (
                   <span className="absolute inset-0 rounded-xl bg-paper/0 transition-colors group-hover:bg-paper/5" />
                 )}
-                <span className="relative">{item.icon}</span>
+                <span className="relative">
+                  {item.icon}
+                  {alerts.includes(item.href) && !active && (
+                    <span
+                      aria-label="Reminder"
+                      className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-ink bg-ember"
+                    />
+                  )}
+                </span>
                 <span className="relative hidden font-medium lg:block">
                   {item.label}
                 </span>

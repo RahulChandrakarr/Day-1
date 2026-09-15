@@ -116,7 +116,7 @@ export default async function SavingsPage({
         ))}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,24rem)]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,22rem)]">
         <AccountList accounts={summaries} />
         <AddAccountForm startOpen={accounts.length === 0} />
       </div>

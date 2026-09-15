@@ -10,7 +10,13 @@ import type { Profile } from "@/lib/auth";
 import { isActive, logoutIcon, navItems, usersIcon } from "./nav";
 
 // Phones: app-style top bar plus a bottom tab bar.
-export default function MobileNav({ profile }: { profile: Profile }) {
+export default function MobileNav({
+  profile,
+  alerts = [],
+}: {
+  profile: Profile;
+  alerts?: string[];
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -123,8 +129,15 @@ export default function MobileNav({ profile }: { profile: Profile }) {
                   <motion.span
                     animate={{ scale: active ? 1.1 : 1, y: active ? -1 : 0 }}
                     whileTap={{ scale: 0.85 }}
+                    className="relative"
                   >
                     {item.icon}
+                    {alerts.includes(item.href) && !active && (
+                      <span
+                        aria-label="Reminder"
+                        className="absolute -right-1.5 -top-1 h-2.5 w-2.5 rounded-full border-2 border-ink bg-ember"
+                      />
+                    )}
                   </motion.span>
                   <span className="font-medium">{item.short}</span>
                 </Link>

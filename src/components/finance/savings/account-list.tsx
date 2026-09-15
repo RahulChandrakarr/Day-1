@@ -9,6 +9,7 @@ import {
 import { formatMoney, formatShortDate } from "@/lib/finance";
 import {
   accountKindLabel,
+  ordinal,
   type AccountSummary,
   type InvestmentEntry,
 } from "@/lib/investments";
@@ -101,6 +102,10 @@ function AccountCard({
           <span className="block truncate font-medium">{account.name}</span>
           <span className="block truncate text-xs text-paper/45">
             {accountKindLabel(account.kind)}
+            {account.sip_day &&
+              ` · ${account.kind === "rd" ? "RD" : "SIP"}${
+                account.sip_amount ? ` ${formatMoney(account.sip_amount)}` : ""
+              } on ${ordinal(account.sip_day)}`}
             {total > 0 &&
               account.current > 0 &&
               ` · ${Math.round((account.current / total) * 100)}%`}

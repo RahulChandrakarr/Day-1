@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   useActionState,
@@ -8,6 +7,7 @@ import {
   useId,
   useRef,
   useState,
+  useTransition,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -17,8 +17,20 @@ import {
   type FormState,
 } from "@/app/(dashboard)/financial/actions";
 import { addDebt } from "@/app/(dashboard)/financial/borrow/actions";
-import { addInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
+import {
+  addAccount,
+  addInvestmentEntry,
+} from "@/app/(dashboard)/financial/savings/actions";
 import type { DebtKind } from "@/lib/debts";
+import {
+  ACCOUNT_KINDS,
+  isRecurringKind,
+  ordinal,
+  sipDate,
+  type Account,
+  type AccountKind,
+  type InvestmentKind,
+} from "@/lib/investments";
 import {
   formatMoney,
   isValidDate,
@@ -26,7 +38,6 @@ import {
   type Category,
   type TxType,
 } from "@/lib/finance";
-import type { Account, InvestmentKind } from "@/lib/investments";
 
 export type EntryPerson = {
   id: string;
@@ -36,34 +47,47 @@ export type EntryPerson = {
 };
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink/60 px-4 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-ink/60 px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 
 const initialState: FormState = { error: null, ok: false, version: 0 };
-const VISIBLE_CATEGORIES = 8;
+const FORM_ID = "add-entry-form";
 
-type Mode = TxType | "savings";
-
-// Borrow choices shown as chips: money out under Expense, money in under Income
-const BORROW_CHIPS: Record<TxType, { kind: DebtKind; label: string }[]> = {
+// Borrow choices listed with the categories: money out under Expense, money in under Income
+const BORROW_OPTIONS: Record<TxType, { kind: DebtKind; label: string }[]> = {
   expense: [
-    { kind: "repaid", label: "I returned" },
-    { kind: "lent", label: "I gave" },
+    { kind: "repaid", label: "I returned money" },
+    { kind: "lent", label: "I gave money" },
   ],
   income: [
-    { kind: "borrowed", label: "I took" },
-    { kind: "received", label: "I got back" },
+    { kind: "borrowed", label: "I took money" },
+    { kind: "received", label: "I got money back" },
   ],
 };
 
-const SAVINGS_KINDS: { kind: InvestmentKind; label: string }[] = [
-  { kind: "deposit", label: "Put in" },
-  { kind: "withdrawal", label: "Take out" },
-  { kind: "value", label: "Update value" },
+// "+ Add entry" button and the dialog it opens.
+type Variant = "entry" | "borrow" | "savings";
+
+const VARIANTS: Record<Variant, { button: string; title: string }> = {
+  entry: { button: "Add entry", title: "Add entry" },
+  borrow: { button: "Add borrow entry", title: "Borrow entry" },
+  savings: { button: "Add savings entry", title: "Savings entry" },
+};
+
+const BORROW_KINDS: { value: DebtKind; label: string }[] = [
+  { value: "borrowed", label: "I took" },
+  { value: "repaid", label: "I returned" },
+  { value: "lent", label: "I gave" },
+  { value: "received", label: "Got back" },
 ];
 
-// "+ Add entry" button and the dialog it opens.
+const SAVINGS_KINDS: { value: InvestmentKind; label: string }[] = [
+  { value: "deposit", label: "Put in" },
+  { value: "withdrawal", label: "Take out" },
+  { value: "value", label: "Update value" },
+];
+
 export default function EntryDialog({
   categories,
   usage,
@@ -79,6 +103,12 @@ export default function EntryDialog({
   const [session, setSession] = useState(0);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  // The Borrow and Savings tabs open their own kind of entry
+  const variant: Variant = pathname.startsWith("/financial/borrow")
+    ? "borrow"
+    : pathname.startsWith("/financial/savings")
+      ? "savings"
+      : "entry";
 
   // On a past day in Daily, entries default to that day
   const dateParam = searchParams.get("date");
@@ -111,7 +141,7 @@ export default function EntryDialog({
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-6 font-medium text-on-ember shadow-sm transition-colors hover:bg-ember-light md:w-auto md:self-start"
       >
         <span className="text-xl leading-none">+</span>
-        Add entry
+        {VARIANTS[variant].button}
       </motion.button>
 
       <AnimatePresence>
@@ -130,7 +160,7 @@ export default function EntryDialog({
                 key="dialog"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Add entry"
+                aria-label={VARIANTS[variant].title}
                 initial={{ y: "100%", opacity: 0.8 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
@@ -139,10 +169,11 @@ export default function EntryDialog({
               >
                 <EntryForm
                   key={session}
+                  variant={variant}
+                  accounts={accounts}
                   categories={categories}
                   usage={usage}
                   people={people}
-                  accounts={accounts}
                   defaultDate={defaultDate}
                   onClose={() => setOpen(false)}
                 />
@@ -156,25 +187,28 @@ export default function EntryDialog({
 }
 
 function EntryForm({
+  variant,
+  accounts,
   categories,
   usage,
   people,
-  accounts,
   defaultDate,
   onClose,
 }: {
+  variant: Variant;
+  accounts: Account[];
   categories: Category[];
   usage: Record<string, number>;
   people: EntryPerson[];
-  accounts: Account[];
   defaultDate: string;
   onClose: () => void;
 }) {
-  const [mode, setMode] = useState<Mode>("expense");
-  const [categoryId, setCategoryId] = useState("");
-  const [borrowKind, setBorrowKind] = useState<DebtKind | null>(null);
-  const [showAll, setShowAll] = useState(false);
-  const [details, setDetails] = useState(defaultDate !== todayISO());
+  const [type, setType] = useState<TxType>("expense");
+  // A category id, "borrow:<kind>", or "" for no category
+  const [choice, setChoice] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [debtKind, setDebtKind] = useState<DebtKind>("borrowed");
+  const [savingsKind, setSavingsKind] = useState<InvestmentKind>("deposit");
   const [savedCount, setSavedCount] = useState(0);
   const [dismissed, setDismissed] = useState(0);
   const showSaved = savedCount > 0 && dismissed !== savedCount;
@@ -185,78 +219,148 @@ function EntryForm({
     return () => window.clearTimeout(t);
   }, [savedCount]);
 
-  const txType: TxType = mode === "income" ? "income" : "expense";
+  const borrowKind = choice.startsWith("borrow:")
+    ? (choice.slice(7) as DebtKind)
+    : null;
+  // Set when Done is pressed with an amount typed: save first, then close
+  const closeAfterSave = useRef(false);
   const onSaved = () => {
     setSavedCount((n) => n + 1);
-    setCategoryId("");
+    if (!borrowKind) setChoice("");
+    if (closeAfterSave.current) {
+      closeAfterSave.current = false;
+      onClose();
+    }
   };
 
-  // Most-used categories first; keep the selected one visible
+  function done() {
+    const form = document.getElementById(FORM_ID) as HTMLFormElement | null;
+    const amount = form?.elements.namedItem("amount") as HTMLInputElement | null;
+    if (form && amount?.value.trim()) {
+      closeAfterSave.current = true;
+      form.requestSubmit();
+    } else {
+      onClose();
+    }
+  }
+
+  // Most-used categories first
   const sorted = categories
-    .filter((c) => c.type === txType)
+    .filter((c) => c.type === type)
     .map((c, i) => ({ c, i }))
     .sort((a, b) => (usage[b.c.id] ?? 0) - (usage[a.c.id] ?? 0) || a.i - b.i)
     .map(({ c }) => c);
-  const visible = showAll
-    ? sorted
-    : sorted.filter(
-        (c, i) => i < VISIBLE_CATEGORIES || c.id === categoryId,
-      );
-  const hidden = sorted.length - visible.length;
+  const selected = sorted.find((c) => c.id === choice);
 
-  const categoryChips = (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2">
-        {visible.map((c) => (
-          <Chip
-            key={c.id}
-            selected={!borrowKind && categoryId === c.id}
-            color={`var(--cat-${c.color})`}
-            onClick={() => {
-              setBorrowKind(null);
-              setCategoryId(categoryId === c.id ? "" : c.id);
-            }}
-          >
-            {c.name}
-          </Chip>
-        ))}
-        {hidden > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowAll(true)}
-            className="h-9 rounded-full border border-dashed border-paper/20 px-3 text-sm text-paper/55 hover:text-paper"
-          >
-            + {hidden} more
-          </button>
-        )}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-paper/40">Borrow</span>
-        {BORROW_CHIPS[txType].map((c) => (
-          <Chip
-            key={c.kind}
-            selected={borrowKind === c.kind}
-            color="var(--ember)"
-            onClick={() => setBorrowKind(borrowKind === c.kind ? null : c.kind)}
-          >
-            {c.label}
-          </Chip>
-        ))}
-      </div>
+  const choose = (value: string) => {
+    setChoice(value);
+    setPickerOpen(false);
+  };
+  const choiceLabel = borrowKind
+    ? BORROW_OPTIONS[type].find((o) => o.kind === borrowKind)?.label
+    : (selected?.name ?? "No category");
+  const dotColor = borrowKind
+    ? "var(--ember)"
+    : selected
+      ? `var(--cat-${selected.color})`
+      : "color-mix(in srgb, var(--paper) 20%, transparent)";
+
+  // Drawn inside the dialog; the browser's own dropdown mispositions in the sheet
+  const categorySelect = (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span className={labelClass}>Category</span>
+      <button
+        type="button"
+        onClick={() => setPickerOpen((v) => !v)}
+        aria-expanded={pickerOpen}
+        aria-haspopup="listbox"
+        className={`${inputClass} flex items-center gap-2 text-left ${
+          pickerOpen ? "border-ember/70 ring-4 ring-ember/15" : ""
+        }`}
+      >
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ background: dotColor }}
+        />
+        <span className="min-w-0 flex-1 truncate">{choiceLabel}</span>
+        <motion.svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden
+          animate={{ rotate: pickerOpen ? 180 : 0 }}
+          className="shrink-0 text-paper/45"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </motion.svg>
+      </button>
     </div>
   );
 
-  const shared = {
-    onSaved,
-    defaultDate,
-    details,
-    onToggleDetails: () => setDetails((v) => !v),
-  };
+  const option = (value: string, label: string, color: string) => (
+    <button
+      key={value}
+      type="button"
+      role="option"
+      aria-selected={choice === value}
+      onClick={() => choose(value)}
+      className={`flex h-8 items-center gap-2 rounded-full border px-3 text-sm transition ${
+        choice === value
+          ? "border-paper/40 bg-paper/10 text-paper"
+          : "border-paper/10 text-paper/70 hover:bg-paper/5"
+      }`}
+    >
+      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+      {label}
+    </button>
+  );
+
+  const categoryPanel = (
+    <AnimatePresence initial={false}>
+      {pickerOpen && (
+        <motion.div
+          role="listbox"
+          aria-label="Category"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden"
+        >
+          <div className="flex flex-col gap-3 rounded-xl border border-paper/10 bg-ink/40 p-3">
+            <div className="flex flex-wrap gap-2">
+              {option(
+                "",
+                "No category",
+                "color-mix(in srgb, var(--paper) 25%, transparent)",
+              )}
+              {sorted.map((c) => option(c.id, c.name, `var(--cat-${c.color})`))}
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-paper/40">Borrow</p>
+              <div className="flex flex-wrap gap-2">
+                {BORROW_OPTIONS[type].map((o) =>
+                  option(`borrow:${o.kind}`, o.label, "var(--ember)"),
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const shared = { onSaved, defaultDate, categorySelect, categoryPanel };
 
   return (
     <>
-      <header className="flex items-center gap-3 border-b border-paper/10 px-5 py-4">
-        <h2 className="flex-1 font-serif text-2xl">Add entry</h2>
+      <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
+        <h2 className="flex-1 font-serif text-xl sm:text-2xl">
+          {VARIANTS[variant].title}
+        </h2>
         <AnimatePresence>
           {showSaved && (
             <motion.span
@@ -280,50 +384,84 @@ function EntryForm({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        <Segmented
-          id="entry-mode"
-          label="Entry type"
-          value={mode}
-          onChange={(m) => {
-            setMode(m);
-            setCategoryId("");
-            setBorrowKind(null);
-            setShowAll(false);
-          }}
-          options={[
-            { value: "expense", label: "Expense", dot: "bg-chart-expense" },
-            { value: "income", label: "Income", dot: "bg-chart-income" },
-            { value: "savings", label: "Savings", dot: "bg-moss" },
-          ]}
-        />
-
-        {mode === "savings" ? (
-          <SavingsFields accounts={accounts} {...shared} />
-        ) : borrowKind ? (
-          <BorrowFields
-            key={borrowKind}
-            kind={borrowKind}
-            people={people}
-            chips={categoryChips}
-            {...shared}
-          />
+      <div
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5"
+        onClickCapture={(e) => {
+          // Pressing Save (or Enter) keeps the dialog open as usual
+          if ((e.target as HTMLElement).closest('button[type="submit"]'))
+            closeAfterSave.current = false;
+        }}
+      >
+        {variant === "borrow" ? (
+          <>
+            <Segmented
+              label="What happened"
+              value={debtKind}
+              onChange={setDebtKind}
+              options={BORROW_KINDS}
+            />
+            <BorrowFields
+              key={debtKind}
+              kind={debtKind}
+              people={people}
+              onSaved={onSaved}
+              defaultDate={defaultDate}
+            />
+          </>
+        ) : variant === "savings" ? (
+          <>
+            <Segmented
+              label="What happened"
+              value={savingsKind}
+              onChange={setSavingsKind}
+              options={SAVINGS_KINDS}
+            />
+            <SavingsFields
+              kind={savingsKind}
+              accounts={accounts}
+              onSaved={onSaved}
+              defaultDate={defaultDate}
+            />
+          </>
         ) : (
-          <TransactionFields
-            key={mode}
-            type={txType}
-            categoryId={categoryId}
-            chips={categoryChips}
-            {...shared}
-          />
+          <>
+            <Segmented
+              label="Entry type"
+              value={type}
+              onChange={(t) => {
+                setType(t);
+                setChoice("");
+                setPickerOpen(false);
+              }}
+              options={[
+                { value: "expense", label: "Expense", dot: "bg-chart-expense" },
+                { value: "income", label: "Income", dot: "bg-chart-income" },
+              ]}
+            />
+            {borrowKind ? (
+              <BorrowFields
+                key={borrowKind}
+                kind={borrowKind}
+                people={people}
+                {...shared}
+              />
+            ) : (
+              <TransactionFields
+                key={type}
+                type={type}
+                categoryId={choice}
+                {...shared}
+              />
+            )}
+          </>
         )}
       </div>
 
-      <footer className="border-t border-paper/10 px-5 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3">
+      <footer className="border-t border-paper/10 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3 sm:px-5">
         <button
           type="button"
-          onClick={onClose}
-          className="h-11 w-full rounded-xl border border-paper/15 text-sm font-medium transition hover:bg-paper/5"
+          onClick={done}
+          className="h-10 w-full rounded-xl border border-paper/15 text-sm font-medium transition hover:bg-paper/5"
         >
           Done
         </button>
@@ -335,8 +473,8 @@ function EntryForm({
 type SharedProps = {
   onSaved: () => void;
   defaultDate: string;
-  details: boolean;
-  onToggleDetails: () => void;
+  categorySelect?: ReactNode;
+  categoryPanel?: ReactNode;
 };
 
 // ---------------------------------------------------------------------------
@@ -345,18 +483,22 @@ type SharedProps = {
 function TransactionFields({
   type,
   categoryId,
-  chips,
+  categorySelect,
+  categoryPanel,
   onSaved,
   defaultDate,
-  details,
-  onToggleDetails,
-}: SharedProps & { type: TxType; categoryId: string; chips: ReactNode }) {
+}: SharedProps & { type: TxType; categoryId: string }) {
   const [state, action, pending] = useActionState(addTransaction, initialState);
   const amountRef = useSavedEffect(state, onSaved);
   const values = state.ok ? undefined : state.values;
 
   return (
-    <form key={state.version} action={action} className="mt-4 flex flex-col gap-4">
+    <form
+      id={FORM_ID}
+      key={state.version}
+      action={action}
+      className="mt-3 flex flex-col gap-3"
+    >
       <input type="hidden" name="type" value={type} />
       <input type="hidden" name="period" value="daily" />
       <input type="hidden" name="category_id" value={categoryId} />
@@ -367,21 +509,22 @@ function TransactionFields({
         pending={pending}
       />
       <ErrorBox error={state.error} />
-      {chips}
-
-      <Details open={details} onToggle={onToggleDetails}>
-        <label className="flex flex-col gap-1.5">
-          <span className={labelClass}>Description</span>
-          <input
-            name="description"
-            maxLength={200}
-            defaultValue={values?.description}
-            placeholder={type === "expense" ? "Lunch with team" : "September salary"}
-            className={inputClass}
-          />
-        </label>
+      <div className="grid grid-cols-2 gap-3">
+        {categorySelect}
         <DateField defaultValue={values?.occurred_on || defaultDate} />
-      </Details>
+      </div>
+      {categoryPanel}
+
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Description</span>
+        <input
+          name="description"
+          maxLength={200}
+          defaultValue={values?.description}
+          placeholder={type === "expense" ? "Lunch" : "Salary"}
+          className={inputClass}
+        />
+      </label>
     </form>
   );
 }
@@ -392,12 +535,11 @@ function TransactionFields({
 function BorrowFields({
   kind,
   people,
-  chips,
+  categorySelect,
+  categoryPanel,
   onSaved,
   defaultDate,
-  details,
-  onToggleDetails,
-}: SharedProps & { kind: DebtKind; people: EntryPerson[]; chips: ReactNode }) {
+}: SharedProps & { kind: DebtKind; people: EntryPerson[] }) {
   const [state, action, pending] = useActionState(addDebt, initialState);
   const [person, setPerson] = useState("");
   const [inBalance, setInBalance] = useState<"" | "yes" | "no">("");
@@ -434,7 +576,12 @@ function BorrowFields({
     .slice(0, 4);
 
   return (
-    <form key={state.version} action={action} className="mt-4 flex flex-col gap-4">
+    <form
+      id={FORM_ID}
+      key={state.version}
+      action={action}
+      className="mt-3 flex flex-col gap-3"
+    >
       <input type="hidden" name="kind" value={kind} />
       <input type="hidden" name="in_balance" value={inBalance} />
       <input type="hidden" name="person" value={person || values?.person || ""} />
@@ -445,7 +592,11 @@ function BorrowFields({
         pending={pending}
       />
       <ErrorBox error={state.error} />
-      {chips}
+      <div className="grid grid-cols-2 gap-3">
+        {categorySelect ?? <NoteField defaultValue={values?.note} />}
+        <DateField defaultValue={values?.occurred_on || defaultDate} />
+      </div>
+      {categoryPanel}
 
       <div className="flex flex-col gap-1.5">
         <span className={labelClass}>
@@ -491,10 +642,7 @@ function BorrowFields({
 
       <BalanceChoice value={inBalance} onChange={setInBalance} />
 
-      <Details open={details} onToggle={onToggleDetails}>
-        <NoteField defaultValue={values?.note} />
-        <DateField defaultValue={values?.occurred_on || defaultDate} />
-      </Details>
+      {categorySelect && <NoteField defaultValue={values?.note} />}
     </form>
   );
 }
@@ -503,85 +651,262 @@ function BorrowFields({
 // Savings: put in / take out / update value
 // ---------------------------------------------------------------------------
 function SavingsFields({
+  kind,
   accounts,
   onSaved,
   defaultDate,
-  details,
-  onToggleDetails,
-}: SharedProps & { accounts: Account[] }) {
+}: {
+  kind: InvestmentKind;
+  accounts: Account[];
+  onSaved: () => void;
+  defaultDate: string;
+}) {
   const [state, action, pending] = useActionState(
     addInvestmentEntry,
     initialState,
   );
   const amountRef = useSavedEffect(state, onSaved);
-  const [kind, setKind] = useState<InvestmentKind>("deposit");
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
+  const [creating, setCreating] = useState(false);
   const values = state.ok ? undefined : state.values;
+  // A just-created account may not be in the list until the page refreshes
+  const selectedId = accountId || accounts[0]?.id || "";
+  const selected = accounts.find((a) => a.id === selectedId);
+  // Money going into a SIP / RD starts from its usual amount and date
+  const sip =
+    kind === "deposit" && selected?.sip_day
+      ? {
+          amount: selected.sip_amount ? String(selected.sip_amount) : undefined,
+          date: sipDate(selected.sip_day, defaultDate),
+        }
+      : null;
 
-  if (accounts.length === 0) {
+  if ((accounts.length === 0 && !accountId) || creating) {
     return (
-      <p className="mt-4 rounded-2xl border border-dashed border-paper/10 px-4 py-8 text-center text-sm text-paper/50">
-        No savings accounts yet.{" "}
-        <Link href="/financial/savings" className="text-ember hover:underline">
-          Add one on the Savings tab
-        </Link>
-        .
-      </p>
+      <NewAccount
+        first={accounts.length === 0}
+        onCancel={accounts.length ? () => setCreating(false) : undefined}
+        onCreated={(id) => {
+          setAccountId(id);
+          setCreating(false);
+        }}
+      />
     );
   }
 
   return (
-    <form key={state.version} action={action} className="mt-4 flex flex-col gap-4">
+    <form
+      id={FORM_ID}
+      key={`${state.version}-${selectedId}-${kind}`}
+      action={action}
+      className="mt-3 flex flex-col gap-3"
+    >
       <input type="hidden" name="kind" value={kind} />
-      <input type="hidden" name="account_id" value={accountId} />
+      <input type="hidden" name="account_id" value={selectedId} />
 
       <AmountRow
         inputRef={amountRef}
-        defaultValue={values?.amount}
+        defaultValue={values?.amount ?? sip?.amount}
         pending={pending}
         placeholder={kind === "value" ? "Worth now" : "0"}
       />
+      {sip && selected?.sip_day && (
+        <p className="-mt-1 text-xs text-paper/50">
+          {selected.kind === "rd" ? "RD" : "SIP"} of{" "}
+          {selected.sip_amount ? formatMoney(selected.sip_amount) : "—"} on the{" "}
+          {ordinal(selected.sip_day)} of every month
+        </p>
+      )}
       <ErrorBox error={state.error} />
 
-      <div className="flex flex-wrap gap-2">
-        {SAVINGS_KINDS.map((k) => (
-          <Chip
-            key={k.kind}
-            selected={kind === k.kind}
-            onClick={() => setKind(k.kind)}
-          >
-            {k.label}
-          </Chip>
-        ))}
-      </div>
       <div className="flex flex-col gap-1.5">
         <span className={labelClass}>Account</span>
         <div className="flex flex-wrap gap-2">
           {accounts.map((a) => (
             <Chip
               key={a.id}
-              selected={accountId === a.id}
+              selected={selectedId === a.id}
               color={`var(--cat-${a.color})`}
               onClick={() => setAccountId(a.id)}
             >
               {a.name}
             </Chip>
           ))}
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="h-9 rounded-full border border-dashed border-paper/20 px-3 text-sm text-paper/55 transition hover:text-paper"
+          >
+            + New account
+          </button>
         </div>
       </div>
 
-      <Details open={details} onToggle={onToggleDetails}>
+      <div className="grid grid-cols-2 gap-3">
         <NoteField defaultValue={values?.note} />
-        <DateField defaultValue={values?.occurred_on || defaultDate} />
-      </Details>
+        <DateField
+          defaultValue={values?.occurred_on || sip?.date || defaultDate}
+        />
+      </div>
     </form>
+  );
+}
+
+// Create a savings account without leaving the dialog.
+function NewAccount({
+  first,
+  onCancel,
+  onCreated,
+}: {
+  first: boolean;
+  onCancel?: () => void;
+  onCreated: (id: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState<AccountKind>("savings");
+  const [sipDay, setSipDay] = useState("");
+  const [sipAmount, setSipAmount] = useState("");
+  const recurring = isRecurringKind(kind);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function create() {
+    const fd = new FormData();
+    fd.set("name", name);
+    fd.set("kind", kind);
+    if (recurring) {
+      fd.set("sip_day", sipDay);
+      fd.set("sip_amount", sipAmount);
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await addAccount(initialState, fd);
+      if (result.error || !result.values?.id) {
+        setError(result.error ?? "Couldn't add the account.");
+        return;
+      }
+      onCreated(result.values.id);
+    });
+  }
+
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      <p className="text-sm text-paper/60">
+        {first
+          ? "First, where does this money go? Add an account, like your savings account, an FD or a SIP."
+          : "Add another account."}
+      </p>
+      <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>Account name</span>
+        <input
+          autoFocus
+          value={name}
+          maxLength={60}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (name.trim()) create();
+            }
+          }}
+          placeholder="SBI savings, HDFC FD, Nifty SIP…"
+          className={inputClass}
+        />
+      </label>
+      <div className="flex flex-col gap-1.5">
+        <span className={labelClass}>Type</span>
+        <div className="flex flex-wrap gap-2">
+          {ACCOUNT_KINDS.map((k) => (
+            <Chip
+              key={k.kind}
+              selected={kind === k.kind}
+              onClick={() => setKind(k.kind)}
+            >
+              {k.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
+      {recurring && (
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex min-w-0 flex-col gap-1.5">
+            <span className={labelClass}>
+              {kind === "rd" ? "Monthly amount" : "SIP amount"}
+            </span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/40">
+                ₹
+              </span>
+              <input
+                inputMode="decimal"
+                autoComplete="off"
+                value={sipAmount}
+                onChange={(e) => setSipAmount(e.target.value)}
+                placeholder="5000"
+                className={`${inputClass} pl-7`}
+              />
+            </div>
+          </label>
+          <label className="flex min-w-0 flex-col gap-1.5">
+            <span className={labelClass}>Deduction date</span>
+            <DaySelect value={sipDay} onChange={setSipDay} />
+          </label>
+        </div>
+      )}
+      <ErrorBox error={error} />
+      <div className="flex gap-2">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
+          >
+            Cancel
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={pending || !name.trim()}
+          onClick={create}
+          className="h-10 flex-1 rounded-xl bg-ember text-sm font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-50"
+        >
+          {pending ? "Adding…" : "Add account & continue"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Day of the month, 1–31.
+function DaySelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <input
+        type="number"
+        inputMode="numeric"
+        min={1}
+        max={31}
+        value={value}
+        onChange={(e) => onChange(e.target.value.slice(0, 2))}
+        placeholder="5"
+        className={`${inputClass} pr-24`}
+      />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-paper/40">
+        of every month
+      </span>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
 // Shared pieces
 // ---------------------------------------------------------------------------
-
 // Tells the parent about each successful save and refocuses the amount.
 function useSavedEffect(state: FormState, onSaved: () => void) {
   const amountRef = useRef<HTMLInputElement>(null);
@@ -611,7 +936,7 @@ function AmountRow({
   return (
     <div className="flex gap-2">
       <div className="relative min-w-0 flex-1">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl text-paper/40">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-paper/40">
           ₹
         </span>
         <input
@@ -624,14 +949,14 @@ function AmountRow({
           defaultValue={defaultValue}
           placeholder={placeholder}
           aria-label="Amount"
-          className={`${inputClass} h-14 pl-10 text-3xl font-semibold tabular-nums`}
+          className={`${inputClass} h-12 pl-8 text-xl font-semibold tabular-nums sm:text-2xl`}
         />
       </div>
       <motion.button
         type="submit"
         disabled={pending}
         whileTap={{ scale: 0.97 }}
-        className="h-14 shrink-0 rounded-xl bg-ember px-6 font-medium text-on-ember transition-colors hover:bg-ember-light disabled:cursor-wait disabled:opacity-70"
+        className="h-12 shrink-0 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light disabled:cursor-wait disabled:opacity-70"
       >
         {pending ? "…" : "Save"}
       </motion.button>
@@ -669,77 +994,58 @@ function Chip({
   );
 }
 
-// Optional fields: always in the form (so the date is sent), shown on demand.
-function Details({
-  open,
-  onToggle,
-  children,
-}: {
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="text-sm text-paper/55 transition hover:text-paper"
-      >
-        {open ? "Hide details ▴" : "More details (note, date) ▾"}
-      </button>
-      <div className={open ? "mt-3 grid gap-4 sm:grid-cols-2" : "hidden"}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function Segmented<T extends string>({
-  id,
   label,
   value,
   onChange,
   options,
 }: {
-  id: string;
+  id?: string;
   label: string;
   value: T;
   onChange: (value: T) => void;
   options: { value: T; label: string; dot?: string }[];
 }) {
+  const index = Math.max(
+    options.findIndex((o) => o.value === value),
+    0,
+  );
+
+  // The highlight slides inside the track, so it isn't thrown off while the dialog animates
   return (
-    <div
-      role="radiogroup"
-      aria-label={label}
-      className="grid gap-1 rounded-xl border border-paper/10 bg-ink/40 p-1"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
-    >
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`relative h-9 rounded-lg text-sm font-medium transition-colors ${
-            value === o.value ? "text-paper" : "text-paper/50 hover:text-paper"
-          }`}
-        >
-          {value === o.value && (
-            <motion.span
-              layoutId={`pill-${id}`}
-              className="absolute inset-0 rounded-lg border border-paper/10 bg-surface shadow-sm"
-              transition={{ type: "spring", stiffness: 420, damping: 34 }}
-            />
-          )}
-          <span className="relative flex items-center justify-center gap-2">
-            {o.dot && <span className={`h-2 w-2 rounded-full ${o.dot}`} />}
-            {o.label}
-          </span>
-        </button>
-      ))}
+    <div className="rounded-xl border border-paper/10 bg-ink/40 p-1">
+      <div
+        role="radiogroup"
+        aria-label={label}
+        className="relative grid"
+        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      >
+        <motion.span
+          aria-hidden
+          className="absolute inset-y-0 left-0 rounded-lg border border-paper/10 bg-surface shadow-sm"
+          style={{ width: `${100 / options.length}%` }}
+          initial={false}
+          animate={{ x: `${index * 100}%` }}
+          transition={{ type: "spring", stiffness: 500, damping: 38 }}
+        />
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => onChange(o.value)}
+            className={`relative h-9 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              value === o.value ? "text-paper" : "text-paper/50 hover:text-paper"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              {o.dot && <span className={`h-2 w-2 rounded-full ${o.dot}`} />}
+              {o.label}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -776,7 +1082,7 @@ function BalanceChoice({
 
 function DateField({ defaultValue }: { defaultValue: string }) {
   return (
-    <label className="flex flex-col gap-1.5">
+    <label className="flex min-w-0 flex-col gap-1.5">
       <span className={labelClass}>Date</span>
       <input
         type="date"

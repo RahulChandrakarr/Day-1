@@ -242,11 +242,14 @@ export async function getAccounts() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("finance_accounts")
-    .select("id, name, kind, color")
+    .select("id, name, kind, color, sip_day, sip_amount")
     .order("created_at", { ascending: true })
-    .returns<Account[]>();
+    .returns<(Omit<Account, "sip_amount"> & { sip_amount: number | string | null })[]>();
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []).map((a) => ({
+    ...a,
+    sip_amount: a.sip_amount === null ? null : Number(a.sip_amount),
+  }));
 }
 
 export async function getInvestmentEntries(

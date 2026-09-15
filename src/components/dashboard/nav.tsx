@@ -39,7 +39,7 @@ export const navItems: NavItem[] = [
     href: "/daily",
     label: "Daily",
     short: "Daily",
-    description: "Today's tasks and routines.",
+    description: "Your journal for the day.",
     icon: (
       <svg {...iconProps}>
         <path d="M9 11l3 3 8-8" />
@@ -62,9 +62,9 @@ export const navItems: NavItem[] = [
   },
   {
     href: "/health",
-    label: "Health",
+    label: "Health & Habits",
     short: "Health",
-    description: "Sleep, workouts and wellbeing.",
+    description: "Gym plan, workouts and habits.",
     icon: (
       <svg {...iconProps}>
         <path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z" />

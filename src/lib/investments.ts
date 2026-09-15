@@ -39,7 +39,28 @@ export type Account = {
   name: string;
   kind: AccountKind;
   color: number;
+  sip_day: number | null; // day of month the SIP / RD is deducted
+  sip_amount: number | null;
 };
+
+// Account types that take a fixed amount every month
+export const isRecurringKind = (kind: AccountKind) =>
+  kind === "mutual_fund" || kind === "rd";
+
+export function ordinal(day: number) {
+  const tens = day % 100;
+  if (tens >= 11 && tens <= 13) return `${day}th`;
+  return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
+}
+
+// This month's deduction date if it has passed, otherwise today.
+export function sipDate(day: number, today: string) {
+  const month = today.slice(0, 7);
+  const [y, m] = month.split("-").map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const date = `${month}-${String(Math.min(day, last)).padStart(2, "0")}`;
+  return date <= today ? date : today;
+}
 
 export type InvestmentEntry = {
   id: string;

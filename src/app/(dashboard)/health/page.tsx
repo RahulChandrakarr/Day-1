@@ -1,12 +1,5 @@
-import type { Metadata } from "next";
-import PageShell from "@/components/dashboard/page-shell";
-
-export const metadata: Metadata = {
-  title: "Health · Day One",
-};
+import { redirect } from "next/navigation";
 
 export default function HealthPage() {
-  return (
-    <PageShell title="Health" description="Sleep, workouts and wellbeing." />
-  );
+  redirect("/health/gym");
 }
