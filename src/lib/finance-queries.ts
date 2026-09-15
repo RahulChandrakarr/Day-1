@@ -61,6 +61,22 @@ export async function getCategories() {
   return data ?? [];
 }
 
+// How often each category was used in recent entries, for "most used first".
+export async function getCategoryUsage() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_transactions")
+    .select("category_id")
+    .not("category_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw new Error(error.message);
+  const usage: Record<string, number> = {};
+  for (const row of data ?? [])
+    usage[row.category_id] = (usage[row.category_id] ?? 0) + 1;
+  return usage;
+}
+
 // Years that have any entries, always including the current one.
 export async function getYearsWithData(currentYear: number) {
   const supabase = await createClient();

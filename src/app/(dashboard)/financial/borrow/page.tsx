@@ -1,5 +1,4 @@
 import Link from "next/link";
-import DebtForm from "@/components/finance/borrow/debt-form";
 import PeopleList, {
   type PersonPlan,
 } from "@/components/finance/borrow/people-list";
@@ -93,22 +92,19 @@ export default async function BorrowPage() {
       </div>
 
       <p className="-mt-2 text-sm text-paper/45">
-        Borrowed and lent money isn&apos;t counted as income or expenses. Plan
-        what to return or collect in the{" "}
+        Log borrowing with Add entry above. It isn&apos;t counted as income or
+        expenses. Plan what to return or collect in the{" "}
         <Link href="/financial/monthly" className="text-ember hover:underline">
           {formatMonth(month)} plan
         </Link>
         .
       </p>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
-        <DebtForm people={people} defaultDate={today} />
-        <PeopleList
-          people={balances}
-          plans={plans}
-          monthLabel={formatMonthShort(month)}
-        />
-      </div>
+      <PeopleList
+        people={balances}
+        plans={plans}
+        monthLabel={formatMonthShort(month)}
+      />
     </div>
   );
 }

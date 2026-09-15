@@ -17,8 +17,8 @@ export default function FinanceTabs() {
   const pathname = usePathname();
 
   return (
-    <nav className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <ul className="inline-flex gap-1 rounded-2xl border border-paper/10 bg-paper/[0.03] p-1">
+    <nav aria-label="Finance sections">
+      <ul className="grid grid-cols-3 gap-1 rounded-2xl border border-paper/10 bg-paper/[0.03] p-1 sm:inline-flex">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (
@@ -26,7 +26,7 @@ export default function FinanceTabs() {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex h-10 items-center rounded-xl px-4 text-sm font-medium transition-colors sm:px-5 ${
+                className={`relative flex h-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition-colors sm:h-10 sm:px-5 ${
                   active ? "text-on-ember" : "text-paper/60 hover:text-paper"
                 }`}
               >

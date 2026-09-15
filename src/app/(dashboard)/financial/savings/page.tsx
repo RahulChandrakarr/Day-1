@@ -1,9 +1,6 @@
 import Link from "next/link";
 import AccountList from "@/components/finance/savings/account-list";
-import {
-  AddAccountForm,
-  InvestmentEntryForm,
-} from "@/components/finance/savings/savings-forms";
+import { AddAccountForm } from "@/components/finance/savings/savings-forms";
 import PeriodNav from "@/components/finance/period-nav";
 import {
   formatMoney,
@@ -119,12 +116,9 @@ export default async function SavingsPage({
         ))}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
-        <div className="flex flex-col gap-6">
-          <InvestmentEntryForm accounts={accounts} defaultDate={today} />
-          <AddAccountForm startOpen={accounts.length === 0} />
-        </div>
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,24rem)]">
         <AccountList accounts={summaries} />
+        <AddAccountForm startOpen={accounts.length === 0} />
       </div>
 
       <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">

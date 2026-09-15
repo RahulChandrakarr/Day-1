@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PageShell from "@/components/dashboard/page-shell";
+import AddEntry from "@/components/finance/add-entry";
 import PlanSummary from "@/components/finance/budget/plan-summary";
 import {
   budgetReport,
@@ -29,6 +31,9 @@ export default async function OverviewPage() {
 
   return (
     <PageShell title="Overview" description="Your life at a glance.">
+      <Suspense fallback={<div className="h-12" />}>
+        <AddEntry />
+      </Suspense>
       <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
         <PlanSummary
           monthLabel={formatMonth(month)}
