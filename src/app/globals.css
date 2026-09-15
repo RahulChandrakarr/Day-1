@@ -1,26 +1,145 @@
 @import "tailwindcss";
 
+@source "../../node_modules/streamdown/dist/*.js";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #f6f1e7; /* page background */
+  --paper: #1f1b16; /* main text */
+  --surface: #fffaf2; /* menus, popovers */
+  --ember: #cf7f36;
+  --ember-light: #dd9148;
+  --moss: #4f7040;
+  /* Chart palette (validated for CVD + contrast on --surface) */
+  --chart-income: #1baf7a;
+  --chart-expense: #eb6834;
+  --chart-net: #2a78d6;
+  --chart-grid: #e7dfd1;
+  --cat-1: #2a78d6;
+  --cat-2: #eb6834;
+  --cat-3: #1baf7a;
+  --cat-4: #eda100;
+  --cat-5: #e87ba4;
+  --cat-6: #008300;
+  --cat-7: #4a3aa7;
+  --cat-8: #e34948;
+  color-scheme: light;
+}
+
+/* Dark theme */
+.dark {
+  --ink: #100f0d;
+  --paper: #f3ede2;
+  --surface: #1a1815;
+  --ember: #e8a15a;
+  --ember-light: #f0b77c;
+  --moss: #8fb07f;
+  --chart-income: #199e70;
+  --chart-expense: #d95926;
+  --chart-net: #3987e5;
+  --chart-grid: #2a2723;
+  --cat-1: #3987e5;
+  --cat-2: #d95926;
+  --cat-3: #199e70;
+  --cat-4: #c98500;
+  --cat-5: #d55181;
+  --cat-6: #008300;
+  --cat-7: #9085e9;
+  --cat-8: #e66767;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ember: var(--ember);
+  --color-ember-light: var(--ember-light);
+  --color-on-ember: #1a1208;
+  --color-moss: var(--moss);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
+  --color-chart-net: var(--chart-net);
+  --color-chart-grid: var(--chart-grid);
+  --color-background: var(--ink);
+  --color-foreground: var(--paper);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-instrument-serif);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Smooth colour change only while the theme is being switched */
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease !important;
+}
+
+/* Assistant markdown */
+.assistant-md > * + * {
+  margin-top: 0.7em;
+}
+.assistant-md strong {
+  font-weight: 600;
+  color: var(--paper);
+}
+.assistant-md ul,
+.assistant-md ol {
+  padding-left: 1.25em;
+}
+.assistant-md ul {
+  list-style: disc;
+}
+.assistant-md ol {
+  list-style: decimal;
+}
+.assistant-md li + li {
+  margin-top: 0.3em;
+}
+.assistant-md li::marker {
+  color: color-mix(in oklab, var(--paper) 40%, transparent);
+}
+.assistant-md h1,
+.assistant-md h2,
+.assistant-md h3 {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+.assistant-md a {
+  color: var(--ember);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.assistant-md code {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.35em;
+  background: color-mix(in oklab, var(--paper) 8%, transparent);
+}
+.assistant-md table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+.assistant-md th,
+.assistant-md td {
+  padding: 0.45em 0.6em;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in oklab, var(--paper) 10%, transparent);
+}
+.assistant-md th {
+  font-weight: 500;
+  color: color-mix(in oklab, var(--paper) 60%, transparent);
 }

@@ -1,0 +1,324 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import type { AssistantUIMessage } from "@/lib/ai/types";
+import { useAssistant } from "./chat-provider";
+import ConversationList from "./conversation-list";
+import {
+  CloseIcon,
+  HistoryIcon,
+  PlusIcon,
+  SendIcon,
+  SparkleIcon,
+  StopIcon,
+} from "./icons";
+import Markdown from "./markdown";
+
+const STARTERS = [
+  "How am I doing this month?",
+  "Where did most of my money go this month?",
+  "Compare my spending with last month",
+  "Which day of the week do I spend the most?",
+];
+
+function textOf(message: AssistantUIMessage) {
+  return message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
+}
+
+export default function ChatPanel({
+  variant,
+  onClose,
+}: {
+  variant: "inline" | "sheet";
+  onClose?: () => void;
+}) {
+  const {
+    messages,
+    status,
+    statusLabel,
+    errorMessage,
+    send,
+    stop,
+    regenerate,
+    newChat,
+    name,
+  } = useAssistant();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
+
+  const busy = status === "submitted" || status === "streaming";
+  const last = messages[messages.length - 1];
+  const waitingForText =
+    busy && (!last || last.role === "user" || !textOf(last).trim());
+
+  // Follow new tokens unless the user scrolled up to read
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+  }, [messages, statusLabel]);
+
+  return (
+    <section
+      className={`relative flex min-h-0 flex-col overflow-hidden bg-surface/60 ${
+        variant === "inline"
+          ? "h-[min(78vh,720px)] min-h-[520px] rounded-3xl border border-paper/10"
+          : "h-full"
+      }`}
+    >
+      <header className="flex items-center gap-2 border-b border-paper/10 px-4 py-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember text-on-ember">
+          <SparkleIcon size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-serif text-xl leading-tight">Assistant</h3>
+          <p className="truncate text-xs text-paper/45">
+            Knows your Day One data
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setHistoryOpen((v) => !v)}
+          aria-expanded={historyOpen}
+          title="Past chats"
+          aria-label="Past chats"
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+        >
+          <HistoryIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            newChat();
+            setHistoryOpen(false);
+          }}
+          title="New chat"
+          aria-label="New chat"
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+        >
+          <PlusIcon />
+        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            title="Close"
+            aria-label="Close assistant"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          >
+            <CloseIcon />
+          </button>
+        )}
+      </header>
+
+      <AnimatePresence>
+        {historyOpen && (
+          <ConversationList onClose={() => setHistoryOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      <div
+        ref={scrollRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          stickToBottom.current =
+            el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-5"
+      >
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col justify-end gap-4">
+            <div>
+              <p className="font-serif text-3xl">Hi {name}.</p>
+              <p className="mt-1 text-sm text-paper/55">
+                Ask me anything about your money — I&apos;ll look it up.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {STARTERS.map((s, i) => (
+                <motion.button
+                  key={s}
+                  type="button"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * i }}
+                  onClick={() => send(s)}
+                  className="rounded-full border border-paper/10 px-3 py-1.5 text-left text-sm text-paper/70 transition hover:border-paper/25 hover:bg-paper/5 hover:text-paper"
+                >
+                  {s}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-4">
+            {messages.map((m, i) => {
+              const text = textOf(m);
+              const isLast = i === messages.length - 1;
+              if (m.role === "user") {
+                return (
+                  <motion.li
+                    key={m.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ember/15 px-4 py-2.5 text-[15px]"
+                  >
+                    {text}
+                  </motion.li>
+                );
+              }
+              if (!text.trim()) return null;
+              return (
+                <motion.li
+                  key={m.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="max-w-full text-[15px] leading-relaxed"
+                >
+                  <Markdown streaming={isLast && status === "streaming"}>
+                    {text}
+                  </Markdown>
+                </motion.li>
+              );
+            })}
+            <AnimatePresence>
+              {waitingForText && (
+                <motion.li
+                  key="status"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-2 text-sm text-paper/55"
+                  role="status"
+                >
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/60" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ember" />
+                  </span>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={statusLabel ?? "Thinking…"}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {statusLabel ?? "Thinking…"}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.li>
+              )}
+            </AnimatePresence>
+            {errorMessage && status === "error" && (
+              <li
+                role="alert"
+                className="flex flex-wrap items-center gap-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+              >
+                <span className="flex-1">{errorMessage}</span>
+                <button
+                  type="button"
+                  onClick={() => void regenerate()}
+                  className="rounded-lg border border-current/30 px-3 py-1 font-medium"
+                >
+                  Retry
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+
+      <Composer
+        busy={busy}
+        onSend={(t) => {
+          stickToBottom.current = true;
+          send(t);
+        }}
+        onStop={() => void stop()}
+        autoFocus={variant === "sheet"}
+      />
+    </section>
+  );
+}
+
+function Composer({
+  busy,
+  onSend,
+  onStop,
+  autoFocus,
+}: {
+  busy: boolean;
+  onSend: (text: string) => void;
+  onStop: () => void;
+  autoFocus: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [value]);
+
+  function submit() {
+    if (busy || !value.trim()) return;
+    onSend(value);
+    setValue("");
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+      className="border-t border-paper/10 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
+    >
+      <div className="flex items-end gap-2 rounded-2xl border border-paper/10 bg-ink/60 p-1.5 transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
+        <textarea
+          ref={ref}
+          rows={1}
+          value={value}
+          autoFocus={autoFocus}
+          maxLength={2000}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              !e.nativeEvent.isComposing
+            ) {
+              e.preventDefault();
+              submit();
+            }
+          }}
+          placeholder="Ask about your spending, savings…"
+          aria-label="Message the assistant"
+          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] text-paper outline-none placeholder:text-paper/35"
+        />
+        {busy ? (
+          <button
+            type="button"
+            onClick={onStop}
+            aria-label="Stop"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-paper/10 text-paper transition hover:bg-paper/15"
+          >
+            <StopIcon />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!value.trim()}
+            aria-label="Send"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember text-on-ember transition hover:bg-ember-light disabled:opacity-40"
+          >
+            <SendIcon />
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}

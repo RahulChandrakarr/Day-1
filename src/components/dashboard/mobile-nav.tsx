@@ -1,0 +1,138 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { logout } from "@/app/login/actions";
+import { ThemeToggle } from "@/components/theme";
+import type { Profile } from "@/lib/auth";
+import { isActive, logoutIcon, navItems, usersIcon } from "./nav";
+
+// Phones: app-style top bar plus a bottom tab bar.
+export default function MobileNav({ profile }: { profile: Profile }) {
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const name = profile.full_name || profile.email.split("@")[0];
+  const current =
+    navItems.find((item) => isActive(pathname, item.href))?.label ??
+    (pathname.startsWith("/admin") ? "Users" : "Day One");
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [menuOpen]);
+
+  return (
+    <>
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-paper/10 bg-ink/80 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-xl md:hidden">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember font-serif text-xl text-on-ember">
+            D
+          </span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={current}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="font-serif text-2xl"
+            >
+              {current}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+
+        <div ref={menuRef} className="relative flex items-center gap-2">
+          <ThemeToggle className="h-9 w-9 justify-center rounded-full hover:bg-paper/10" />
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Account menu"
+            aria-expanded={menuOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/10 text-sm font-medium"
+          >
+            {name.charAt(0).toUpperCase()}
+          </button>
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-12 w-56 origin-top-right rounded-2xl border border-paper/10 bg-surface p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
+              >
+                <div className="px-3 py-2">
+                  <p className="truncate text-sm font-medium">{name}</p>
+                  <p className="truncate text-xs text-paper/40">
+                    {profile.email}
+                  </p>
+                </div>
+                {profile.role === "admin" && (
+                  <Link
+                    href="/admin/users"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper"
+                  >
+                    {usersIcon}
+                    Manage users
+                  </Link>
+                )}
+                <form action={logout}>
+                  <button className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper">
+                    {logoutIcon}
+                    Sign out
+                  </button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </header>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-paper/10 bg-ink/85 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl md:hidden">
+        <ul className="mx-auto grid max-w-md grid-cols-5 px-2">
+          {navItems.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+                    active ? "text-ember" : "text-paper/45"
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="bottom-nav-active"
+                      className="absolute top-0 h-0.5 w-8 rounded-full bg-ember"
+                      transition={{
+                        type: "spring",
+                        stiffness: 420,
+                        damping: 34,
+                      }}
+                    />
+                  )}
+                  <motion.span
+                    animate={{ scale: active ? 1.1 : 1, y: active ? -1 : 0 }}
+                    whileTap={{ scale: 0.85 }}
+                  >
+                    {item.icon}
+                  </motion.span>
+                  <span className="font-medium">{item.short}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </>
+  );
+}
