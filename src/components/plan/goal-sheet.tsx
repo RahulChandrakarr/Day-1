@@ -6,6 +6,12 @@ import { deleteGoal, saveGoal } from "@/app/(dashboard)/plan/actions";
 import VoiceInput from "@/components/journal/voice-input";
 import Sheet from "@/components/ui/sheet";
 import { Field, inputClass, primaryButtonClass } from "@/components/ui/kit";
+
+// Buttons that open the sheet (a server page can't pass a render function)
+const TRIGGERS = {
+  primary: primaryButtonClass,
+  link: "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-ember hover:bg-ember/10",
+};
 import type { PlanGoal } from "@/lib/plans";
 
 const EMOJIS = ["🎯", "💰", "💪", "📚", "💻", "🧘", "✈️", "🏠", "❤️", "🎨", "🚭", "📈"];
@@ -15,11 +21,13 @@ const UNITS = ["₹", "kg", "books", "km", "hours", "days", "%"];
 export default function GoalSheet({
   year,
   goal,
-  trigger,
+  label,
+  variant = "primary",
 }: {
   year: number;
   goal?: PlanGoal;
-  trigger: (open: () => void) => React.ReactNode;
+  label: string;
+  variant?: keyof typeof TRIGGERS;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -72,7 +80,13 @@ export default function GoalSheet({
 
   return (
     <>
-      {trigger(() => setOpen(true))}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={TRIGGERS[variant]}
+      >
+        {label}
+      </button>
       <Sheet
         open={open}
         onClose={() => setOpen(false)}

@@ -3,7 +3,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import GoalSheet from "@/components/plan/goal-sheet";
 import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, DarkCard, Empty, primaryButtonClass } from "@/components/ui/kit";
+import { Card, DarkCard, Empty } from "@/components/ui/kit";
 import { formatMonthShort, parseYearParam, todayISO } from "@/lib/finance";
 import { goalProgress, monthsOfYear } from "@/lib/plans";
 import { getPlanYear } from "@/lib/plan-queries";
@@ -72,14 +72,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
         </DarkCard>
       )}
 
-      <GoalSheet
-        year={year}
-        trigger={(open) => (
-          <button type="button" onClick={open} className={primaryButtonClass}>
-            ＋ New goal
-          </button>
-        )}
-      />
+      <GoalSheet year={year} label="＋ New goal" />
 
       {goals.length === 0 ? (
         <Empty>
@@ -103,19 +96,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
                         </p>
                       )}
                     </div>
-                    <GoalSheet
-                      year={year}
-                      goal={goal}
-                      trigger={(open) => (
-                        <button
-                          type="button"
-                          onClick={open}
-                          className="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-ember hover:bg-ember/10"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    />
+                    <GoalSheet year={year} goal={goal} label="Edit" variant="link" />
                   </div>
 
                   <div className="mt-3">
