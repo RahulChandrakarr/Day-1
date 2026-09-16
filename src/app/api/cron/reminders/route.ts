@@ -54,13 +54,16 @@ export async function GET(request: Request) {
   await client.connect();
 
   try {
-    // Due in the last 20 minutes and not sent yet today
+    // Due within the last 3 hours and not sent yet today. The window lets a
+    // late or infrequent run (Vercel Hobby runs this once a day, at 06:30-07:30
+    // India time) still deliver, while an every-15-minutes scheduler is punctual.
     const { rows: due } = await client.query<Due>(
       `select s.user_id, s.kind, p.full_name as name
          from reminder_settings s
          join profiles p on p.id = s.user_id
         where s.enabled
-          and (s.hour * 60 + s.minute) between $1 - 20 and $1
+          and s.kind <> 'spend_pin'
+          and (s.hour * 60 + s.minute) between $1 - 180 and $1
           and not exists (
             select 1 from reminder_sends r
              where r.user_id = s.user_id and r.kind = s.kind and r.sent_on = $2
