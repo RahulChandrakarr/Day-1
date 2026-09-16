@@ -55,7 +55,7 @@ const blankExercise = (): DraftExercise => ({
 });
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-ink/60 px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const smallLabel = "text-[11px] uppercase tracking-wider text-paper/45";
 
 const SUGGESTED_TITLES = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Cardio", "Full body"];
@@ -324,7 +324,7 @@ function PlanEditor({
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="rounded-2xl border border-paper/10 bg-ink/30 p-3"
+                    className="rounded-2xl border border-paper/10 bg-ink p-3"
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-5 shrink-0 text-center text-xs text-paper/40">

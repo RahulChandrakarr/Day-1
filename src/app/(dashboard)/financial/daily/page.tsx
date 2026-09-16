@@ -77,7 +77,7 @@ export default async function DailyFinancePage({
           empty="Nothing logged for this day yet. Tap Add entry above."
         />
         {spending.length > 0 && (
-          <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
             <h3 className="mb-4 font-serif text-2xl">Spending by category</h3>
             <CategoryBars slices={spending} />
           </section>

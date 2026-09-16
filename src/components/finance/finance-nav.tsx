@@ -104,7 +104,7 @@ export function FinanceSidebar() {
 
   return (
     <aside
-      className={`sticky top-6 hidden shrink-0 flex-col gap-1 self-start rounded-2xl border border-paper/10 bg-paper/[0.03] p-2 transition-[width] duration-300 xl:flex ${
+      className={`sticky top-6 hidden shrink-0 flex-col gap-1 self-start rounded-2xl border border-paper/10 bg-surface p-2 transition-[width] duration-300 xl:flex ${
         collapsed ? "w-14" : "w-52"
       }`}
     >
@@ -134,20 +134,15 @@ export function FinanceSidebar() {
               href={s.href}
               title={s.label}
               aria-current={isActive ? "page" : undefined}
-              className={`relative flex h-10 items-center gap-3 rounded-xl px-2.5 text-sm transition-colors ${
-                isActive ? "text-on-ember" : "text-paper/60 hover:text-paper"
+              className={`flex h-10 items-center gap-3 rounded-xl px-2.5 text-sm transition-colors ${
+                isActive
+                  ? "bg-ember text-on-ember"
+                  : "text-paper/60 hover:bg-paper/5 hover:text-paper"
               }`}
             >
-              {isActive && (
-                <motion.span
-                  layoutId="finance-sidebar-active"
-                  className="absolute inset-0 rounded-xl bg-ember"
-                  transition={{ type: "spring", stiffness: 400, damping: 34 }}
-                />
-              )}
-              <span className="relative shrink-0">{s.icon}</span>
+              <span className="shrink-0">{s.icon}</span>
               {!collapsed && (
-                <span className="relative truncate font-medium">{s.label}</span>
+                <span className="truncate font-medium">{s.label}</span>
               )}
             </Link>
           );
@@ -185,7 +180,7 @@ export function FinanceMenuButton() {
         onClick={() => setOpenOn(pathname)}
         aria-label="Finance sections"
         aria-expanded={open}
-        className="flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-paper/10 bg-paper/[0.03] pl-3 pr-3.5 text-sm font-medium transition hover:bg-paper/5 xl:hidden"
+        className="flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-paper/10 bg-surface pl-3 pr-3.5 text-sm font-semibold transition active:bg-ink xl:hidden"
       >
         <svg {...iconProps}>
           <path d="M4 6h16M4 12h16M4 18h10" />

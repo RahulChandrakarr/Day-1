@@ -13,7 +13,7 @@ export default function PlanSummary({
     return (
       <Link
         href="/financial/monthly"
-        className="group flex flex-col gap-2 rounded-3xl border border-dashed border-paper/15 p-5 transition hover:border-ember/50 sm:p-6"
+        className="group flex flex-col gap-2 rounded-[18px] border border-dashed border-paper/15 p-5 transition hover:border-ember/50 sm:p-6"
       >
         <h3 className="font-serif text-2xl">Plan {monthLabel}</h3>
         <p className="text-sm text-paper/55">
@@ -35,7 +35,7 @@ export default function PlanSummary({
   return (
     <Link
       href="/financial/monthly"
-      className="flex flex-col gap-4 rounded-3xl border border-paper/10 bg-surface/60 p-5 transition hover:border-paper/25 sm:p-6"
+      className="flex flex-col gap-4 rounded-3xl border border-paper/10 bg-surface p-5 transition hover:border-paper/25 sm:p-6"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">{monthLabel} plan</h3>

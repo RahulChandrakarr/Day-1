@@ -91,13 +91,89 @@ export async function addHabit(
       ok: false,
       error: error.code === "23505" ? "You already have that habit." : error.message,
     };
-  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/daily");
+  revalidatePath("/health/habits");
   return { ok: true, habit: data };
+}
+
+// Change a habit's type or its daily counter
+export async function updateHabit(
+  id: string,
+  patch: {
+    kind?: "build" | "quit";
+    count_label?: string | null;
+    daily_limit?: number | null;
+  },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!uuid.test(id)) return { ok: false, error: "Unknown habit." };
+  const label =
+    patch.count_label === undefined
+      ? undefined
+      : String(patch.count_label ?? "").trim().slice(0, 20) || null;
+  const limit = Number(patch.daily_limit);
+  const supabase = await authedClient();
+  const { error } = await supabase
+    .from("journal_habits")
+    .update({
+      ...(patch.kind ? { kind: patch.kind } : {}),
+      ...(label === undefined ? {} : { count_label: label }),
+      ...(patch.daily_limit === undefined
+        ? {}
+        : {
+            daily_limit:
+              label !== null && Number.isInteger(limit) && limit >= 0 && limit <= 1000
+                ? limit
+                : null,
+          }),
+    })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/");
+  revalidatePath("/daily");
+  revalidatePath("/health/habits");
+  return { ok: true };
 }
 
 export async function deleteHabit(id: string) {
   if (!uuid.test(id)) return;
   const supabase = await authedClient();
   await supabase.from("journal_habits").delete().eq("id", id);
-  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/daily");
+  revalidatePath("/health/habits");
+}
+
+// Quick note from the add sheet: appended to today's journal notes.
+export async function appendJournalNote(
+  text: string,
+  date: string,
+  mood?: number | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const note = String(text ?? "").trim();
+  if (!isValidDate(date)) return { ok: false, error: "Invalid date." };
+  if (!note && mood === undefined) return { ok: false, error: "Write something first." };
+
+  const supabase = await authedClient();
+  const { data: existing } = await supabase
+    .from("journal_entries")
+    .select("notes")
+    .eq("entry_date", date)
+    .maybeSingle<{ notes: string }>();
+
+  const notes = [existing?.notes?.trim(), note].filter(Boolean).join("\n");
+  const { error } = await supabase.from("journal_entries").upsert(
+    {
+      entry_date: date,
+      notes: notes.slice(0, 20000),
+      ...(mood === undefined ? {} : { mood }),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,entry_date" },
+  );
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/");
+  revalidatePath("/daily");
+  return { ok: true };
 }

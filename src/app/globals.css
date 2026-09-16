@@ -4,14 +4,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Light theme */
+/* Light theme (matches the Overview design) */
 :root {
-  --ink: #f6f1e7; /* page background */
-  --paper: #1f1b16; /* main text */
-  --surface: #fffaf2; /* menus, popovers */
-  --ember: #cf7f36;
-  --ember-light: #dd9148;
-  --moss: #4f7040;
+  --ink: #f7f2e9; /* page background */
+  --paper: #2b2117; /* main text */
+  --surface: #fffdf8; /* cards, menus, popovers */
+  --ember: #b0561f;
+  --ember-light: #8f4517; /* hover: deeper, not lighter, on paper */
+  --on-ember: #fbf7ef; /* text on the accent */
+  --moss: #4c7a4f;
   /* Chart palette (validated for CVD + contrast on --surface) */
   --chart-income: #1baf7a;
   --chart-expense: #eb6834;
@@ -35,6 +36,7 @@
   --surface: #1a1815;
   --ember: #e8a15a;
   --ember-light: #f0b77c;
+  --on-ember: #1a1208;
   --moss: #8fb07f;
   --chart-income: #199e70;
   --chart-expense: #d95926;
@@ -57,7 +59,7 @@
   --color-surface: var(--surface);
   --color-ember: var(--ember);
   --color-ember-light: var(--ember-light);
-  --color-on-ember: #1a1208;
+  --color-on-ember: var(--on-ember);
   --color-moss: var(--moss);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);

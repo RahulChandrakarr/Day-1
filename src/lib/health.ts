@@ -73,15 +73,39 @@ export const FEELINGS = [
   { value: "proud", emoji: "💪", label: "Proud" },
 ] as const;
 
+// What to ask after a check-in depends on the habit: quitting something
+// fails for different reasons than not getting around to something.
 export const REASONS = [
-  { value: "stress", label: "Stress" },
-  { value: "busy", label: "Busy" },
-  { value: "craving", label: "Craving" },
-  { value: "social", label: "Social" },
-  { value: "tired", label: "Tired" },
-  { value: "forgot", label: "Forgot" },
-  { value: "other", label: "Other" },
+  { value: "stress", label: "Stress", kinds: ["quit", "build"] },
+  { value: "craving", label: "Craving", kinds: ["quit"] },
+  { value: "social", label: "With friends", kinds: ["quit"] },
+  { value: "boredom", label: "Boredom", kinds: ["quit"] },
+  { value: "autopilot", label: "Out of habit", kinds: ["quit"] },
+  { value: "busy", label: "No time", kinds: ["build"] },
+  { value: "tired", label: "Too tired", kinds: ["build"] },
+  { value: "no_energy", label: "Couldn't be bothered", kinds: ["build"] },
+  { value: "forgot", label: "Forgot", kinds: ["build"] },
+  { value: "unwell", label: "Unwell", kinds: ["quit", "build"] },
+  { value: "travel", label: "Travelling", kinds: ["quit", "build"] },
+  { value: "other", label: "Other", kinds: ["quit", "build"] },
 ] as const;
+
+export const reasonsFor = (kind: "quit" | "build") =>
+  REASONS.filter((r) => (r.kinds as readonly string[]).includes(kind));
+
+export const feelingsFor = (kind: "quit" | "build") =>
+  kind === "quit"
+    ? FEELINGS.map((f) =>
+        f.value === "easy"
+          ? { ...f, label: "No urge" }
+          : f.value === "hard"
+            ? { ...f, label: "Tough" }
+            : f,
+      )
+    : FEELINGS;
+
+export const reasonLabel = (value: string) =>
+  REASONS.find((r) => r.value === value)?.label ?? value;
 
 export type Feeling = (typeof FEELINGS)[number]["value"];
 export type Reason = (typeof REASONS)[number]["value"];

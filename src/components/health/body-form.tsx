@@ -19,7 +19,7 @@ import {
 } from "@/lib/fitness";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink/60 px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 
@@ -132,7 +132,7 @@ export default function BodyForm({
   }
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-6">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">Your details</h3>
         <AnimatePresence>
@@ -153,7 +153,7 @@ export default function BodyForm({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <span className={labelClass}>Sex</span>
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-paper/10 bg-ink/40 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-paper/10 bg-ink p-1">
             {(["male", "female"] as const).map((s) => (
               <button
                 key={s}

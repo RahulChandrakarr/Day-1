@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme";
 import type { Profile } from "@/lib/auth";
-import { isActive, logoutIcon, navItems, usersIcon } from "./nav";
+import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 
 // Desktop and tablet: icon rail at md, full sidebar at lg.
 export default function Sidebar({
@@ -21,6 +21,7 @@ export default function Sidebar({
 
   const links = [
     ...navItems,
+    { href: "/settings", label: "Settings", icon: settingsIcon },
     ...(profile.role === "admin"
       ? [{ href: "/admin/users", label: "Users", icon: usersIcon }]
       : []),

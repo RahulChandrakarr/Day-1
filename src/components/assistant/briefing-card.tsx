@@ -70,7 +70,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
   const busy = loading || streaming;
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+    <section className="relative overflow-hidden rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-ember/15 blur-3xl"

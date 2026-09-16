@@ -7,7 +7,7 @@ import { addAccount } from "@/app/(dashboard)/financial/savings/actions";
 import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink/60 px-4 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 
@@ -19,7 +19,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
   const [state, action, pending] = useActionState(addAccount, initial);
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

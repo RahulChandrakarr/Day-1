@@ -29,7 +29,7 @@ type Status = "idle" | "pending" | "saving" | "saved" | "error";
 const SAVE_DELAY = 900;
 
 const fieldClass =
-  "w-full rounded-xl border border-paper/10 bg-ink/40 px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
+  "w-full rounded-xl border border-paper/10 bg-ink px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
 export default function JournalEditor({
   initial,
@@ -384,36 +384,53 @@ export default function JournalEditor({
             </div>
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:gap-6">
-            <Card title="Wins">
-              <AutoTextarea
-                value={entry.wins}
-                maxLength={2000}
-                minRows={3}
-                onChange={(wins) => update({ wins })}
-                placeholder="What went well?"
-              />
-            </Card>
-            <Card title="Lessons">
-              <AutoTextarea
-                value={entry.lessons}
-                maxLength={2000}
-                minRows={3}
-                onChange={(lessons) => update({ lessons })}
-                placeholder="What did you learn?"
-              />
-            </Card>
-          </div>
+          <details className="group rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+            <summary className="cursor-pointer list-none font-serif text-xl">
+              Wins, lessons and tomorrow
+              <span className="ml-2 text-sm text-paper/40 group-open:hidden">
+                tap to write
+              </span>
+            </summary>
+            <div className="mt-4 flex flex-col gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-paper/55">Wins</p>
+                  <AutoTextarea
+                    value={entry.wins}
+                    maxLength={2000}
+                    minRows={3}
+                    onChange={(wins) => update({ wins })}
+                    placeholder="What went well?"
+                  />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-medium text-paper/55">
+                    Lessons
+                  </p>
+                  <AutoTextarea
+                    value={entry.lessons}
+                    maxLength={2000}
+                    minRows={3}
+                    onChange={(lessons) => update({ lessons })}
+                    placeholder="What did you learn?"
+                  />
+                </div>
+              </div>
+              <div>
+                <p className="mb-1.5 text-xs font-medium text-paper/55">
+                  Tomorrow
+                </p>
+                <AutoTextarea
+                  value={entry.tomorrow}
+                  maxLength={2000}
+                  minRows={2}
+                  onChange={(tomorrow) => update({ tomorrow })}
+                  placeholder="One or two things to start with tomorrow"
+                />
+              </div>
+            </div>
+          </details>
 
-          <Card title="Tomorrow">
-            <AutoTextarea
-              value={entry.tomorrow}
-              maxLength={2000}
-              minRows={2}
-              onChange={(tomorrow) => update({ tomorrow })}
-              placeholder="One or two things to start with tomorrow"
-            />
-          </Card>
         </div>
       </div>
     </div>
@@ -430,7 +447,7 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-5">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
         {aside && <span className="text-xs text-paper/50">{aside}</span>}
@@ -476,7 +493,7 @@ function HabitsCard({
   }
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-5">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">Habits</h3>
         <div className="flex items-baseline gap-3">

@@ -103,7 +103,7 @@ export default async function SavingsPage({
         {tiles.map((tile) => (
           <div
             key={tile.label}
-            className="rounded-2xl border border-paper/10 bg-surface/60 p-4 sm:p-5"
+            className="rounded-[18px] border border-paper/10 bg-surface p-4"
           >
             <p className="text-sm text-paper/55">{tile.label}</p>
             <p
@@ -121,7 +121,7 @@ export default async function SavingsPage({
         <AddAccountForm startOpen={accounts.length === 0} />
       </div>
 
-      <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+      <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 className="font-serif text-2xl">Saved each month</h3>

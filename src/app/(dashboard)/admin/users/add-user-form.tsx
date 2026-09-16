@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { addUser, type AddUserState } from "./actions";
 
 const inputClass =
-  "h-11 rounded-xl border border-paper/10 bg-ink/60 px-4 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 
 export default function AddUserForm() {
   const [state, action, pending] = useActionState<AddUserState, FormData>(

@@ -1,35 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import PageShell from "@/components/dashboard/page-shell";
 import AddEntry from "@/components/finance/add-entry";
-import GymTracker from "@/components/health/gym-tracker";
-import HabitCard from "@/components/health/habit-card";
-import { personBalances } from "@/lib/debts";
+import GymChecklist from "@/components/health/gym-checklist";
+import HabitRow from "@/components/health/habit-row";
 import {
   addDays,
   categoryBreakdown,
   formatMoney,
-  monthRange,
+  formatMonthShort,
   todayISO,
   totalsOf,
 } from "@/lib/finance";
-import {
-  getAccounts,
-  getDebts,
-  getInvestmentEntries,
-  getPeople,
-  getTransactions,
-} from "@/lib/finance-queries";
-import { fullWeek, isoWeekday, streak } from "@/lib/health";
-import {
-  getCurrentBlock,
-  getGymCheckins,
-  getGymPlan,
-  getHabitCheckins,
-} from "@/lib/health-queries";
-import { accountSummaries } from "@/lib/investments";
-import { getHabits, getJournalDays } from "@/lib/journal-queries";
+import { blockWeek } from "@/lib/fitness";
+import { streak } from "@/lib/health";
+import { getOverview } from "@/lib/overview-query";
+import { Empty, Figure, Reminder, SectionHead } from "@/components/ui/kit";
 
 export const metadata: Metadata = {
   title: "Overview · Day One",
@@ -37,145 +23,303 @@ export const metadata: Metadata = {
 
 export default async function OverviewPage() {
   const today = todayISO();
-  const month = today.slice(0, 7);
-  const range = monthRange(month);
-
-  const [
+  const {
     transactions,
-    people,
-    debts,
-    accounts,
-    investments,
+    balances,
+    savingsWorth,
     journalToday,
-    plan,
+    block,
+    planDay,
     gymCheckins,
     habits,
     habitCheckins,
-  ] = await Promise.all([
-    getTransactions({ from: range.from, to: today }),
-    getPeople(),
-    getDebts(),
-    getAccounts(),
-    getInvestmentEntries(),
-    getJournalDays(today, today),
-    getCurrentBlock().then((block) => getGymPlan(block?.id ?? null)),
-    getGymCheckins(today, today),
-    getHabits(),
-    getHabitCheckins(addDays(today, -60), today),
-  ]);
+    moods,
+    bodyLogs,
+  } = await getOverview();
 
   // Money, kept short
   const todayTx = transactions.filter((t) => t.occurred_on === today);
   const spentToday = totalsOf(todayTx).expense;
   const topToday = categoryBreakdown(todayTx, "expense").slice(0, 3);
   const monthNet = totalsOf(transactions).net;
-  const worth = accountSummaries(accounts, investments).reduce(
-    (sum, a) => sum + a.current,
-    0,
-  );
-  const owe = personBalances(people, debts).reduce((sum, p) => sum + p.owe, 0);
+  const worth = savingsWorth;
+  const owe = balances.owe;
 
-  // Gym
-  const week = fullWeek(plan);
-  const gymDay = week[isoWeekday(today) - 1];
-  const hasPlan = week.some((d) => d.rest || d.exercises.length > 0);
+  // Gym: only what's still to tick off today
+  const gymDay = planDay ?? { weekday: 0, title: "", rest: false, exercises: [] };
+  const hasPlan = planDay !== null;
   const doneIds = gymCheckins[today] ?? [];
-  const workoutLeft =
-    !gymDay.rest &&
-    gymDay.exercises.some((e) => !doneIds.includes(e.id));
+  const pendingExercises = gymDay.rest
+    ? []
+    : gymDay.exercises.filter((e) => !doneIds.includes(e.id));
+  const workoutDone =
+    !gymDay.rest && gymDay.exercises.length > 0 && pendingExercises.length === 0;
 
-  // Habits
-  const unchecked = habits.filter(
+  // Habits still to check in
+  const pendingHabits = habits.filter(
     (h) => !habitCheckins.some((c) => c.habit_id === h.id && c.check_date === today),
   );
+  const journalWritten = journalToday;
+  const moneyLogged = todayTx.length > 0;
 
+  // Small reminders for the things without their own card here
   const reminders: ReactNode[] = [];
-  if (journalToday.length === 0)
+  if (!journalWritten)
     reminders.push(
       <Reminder key="journal" href="/daily" emoji="📝" title="Write today's journal" />,
     );
-  if (habits.length > 0 && unchecked.length > 0)
+  if (!moneyLogged)
     reminders.push(
       <Reminder
-        key="habits"
-        href="/health/habits"
-        emoji="✅"
-        title={`Check in ${unchecked.length} habit${unchecked.length === 1 ? "" : "s"}`}
+        key="money"
+        href="/financial/daily"
+        emoji="💸"
+        title="Nothing spent or earned logged today"
       />,
-    );
-  if (workoutLeft && doneIds.length === 0)
-    reminders.push(
-      <Reminder
-        key="gym"
-        href="/health/gym"
-        emoji="🏋️"
-        title={`${gymDay.title || "Workout"} is planned today`}
-      />,
-    );
-  if (todayTx.length === 0)
-    reminders.push(
-      <Reminder key="money" href="/financial/daily" emoji="💸" title="Nothing spent or earned logged today" />,
     );
 
+  // Finished things collapse into one quiet line
+  const finished: string[] = [];
+  if (workoutDone)
+    finished.push(`Workout done (${gymDay.exercises.length} exercises)`);
+  else if (gymDay.rest && hasPlan) finished.push("Rest day");
+  if (habits.length > 0 && pendingHabits.length === 0)
+    finished.push(
+      `All ${habits.length} habit${habits.length === 1 ? "" : "s"} checked in`,
+    );
+  if (journalWritten) finished.push("Journal written");
+  if (moneyLogged) finished.push("Money logged");
+
+  // Something worth knowing, picked from the data
+  const insights: string[] = [];
+
+  let gymStreak = 0;
+  for (let i = 0; i < 30; i++) {
+    const date = addDays(today, -i);
+    const did = (gymCheckins[date] ?? []).length > 0;
+    if (did) gymStreak++;
+    else if (date === today && gymDay.rest) continue; // rest days don't break the run
+    else if (i === 0) continue; // today may still be ahead of you
+    else break;
+  }
+  const sessionsIn = (offset: number) =>
+    Array.from({ length: 7 }, (_, i) => addDays(today, -offset - i)).filter(
+      (date) => (gymCheckins[date] ?? []).length > 0,
+    ).length;
+  const weekSessions = sessionsIn(0);
+  const previousWeekSessions = sessionsIn(7);
+
+  if (gymStreak >= 2)
+    insights.push(`🔥 ${gymStreak} days in a row with a workout done.`);
+  else if (weekSessions > 0)
+    insights.push(
+      `🏋️ ${weekSessions} workout${weekSessions === 1 ? "" : "s"} in the last 7 days${
+        previousWeekSessions
+          ? `, ${weekSessions > previousWeekSessions ? "up from" : weekSessions < previousWeekSessions ? "down from" : "same as"} ${previousWeekSessions} the week before`
+          : ""
+      }.`,
+    );
+
+  for (const habit of habits) {
+    const own = habitCheckins.filter((c) => c.habit_id === habit.id);
+    const run = streak(own, today);
+    const lastWeek = own.filter(
+      (c) => c.check_date >= addDays(today, -6) && c.done,
+    ).length;
+    if (run >= 3) {
+      insights.push(`✅ ${habit.name}: ${run} days running.`);
+    } else if (habit.count_label) {
+      const counts = own
+        .filter((c) => c.check_date >= addDays(today, -6) && c.count !== null)
+        .map((c) => c.count as number);
+      const before = own
+        .filter(
+          (c) =>
+            c.check_date >= addDays(today, -13) &&
+            c.check_date <= addDays(today, -7) &&
+            c.count !== null,
+        )
+        .map((c) => c.count as number);
+      const avg = (list: number[]) =>
+        list.length ? list.reduce((a, b) => a + b, 0) / list.length : null;
+      const now = avg(counts);
+      const then = avg(before);
+      if (now !== null && then !== null && Math.abs(now - then) >= 0.5)
+        insights.push(
+          `${now < then ? "📉" : "📈"} ${habit.name}: ${now.toFixed(1)} ${habit.count_label} a day this week, was ${then.toFixed(1)}.`,
+        );
+      else if (now !== null)
+        insights.push(
+          `${habit.name}: ${now.toFixed(1)} ${habit.count_label} a day this week.`,
+        );
+    } else if (lastWeek > 0) {
+      insights.push(`${habit.name}: kept ${lastWeek} of the last 7 days.`);
+    }
+  }
+
+  const daysSoFar = Number(today.slice(8));
+  const spentThisMonth = totalsOf(transactions).expense;
+  if (spentThisMonth > 0)
+    insights.push(
+      `💸 ${formatMoney(Math.round(spentThisMonth / daysSoFar))} a day on average in ${formatMonthShort(today.slice(0, 7))}${
+        spentToday > 0
+          ? `, ${formatMoney(spentToday)} today`
+          : ", nothing logged today"
+      }.`,
+    );
+
+  const weights = bodyLogs.filter((l) => l.weight_kg);
+  if (weights.length > 1) {
+    const change = weights[weights.length - 1].weight_kg - weights[0].weight_kg;
+    if (Math.abs(change) >= 0.2)
+      insights.push(
+        `⚖️ Weight ${change < 0 ? "down" : "up"} ${Math.abs(change).toFixed(1)} kg this month.`,
+      );
+  }
+
+  const moodValues = moods
+    .map((m) => m.mood)
+    .filter((m): m is number => m !== null);
+  if (moodValues.length >= 3) {
+    const avgMood =
+      moodValues.reduce((a, b) => a + b, 0) / moodValues.length;
+    insights.push(
+      `🙂 Mood averaged ${avgMood.toFixed(1)} of 5 over the last ${moodValues.length} journalled days.`,
+    );
+  }
+
+  const allClear =
+    reminders.length === 0 &&
+    pendingExercises.length === 0 &&
+    pendingHabits.length === 0;
+
+  const dayTotal = gymDay.rest
+    ? habits.length
+    : gymDay.exercises.length + habits.length;
+  const dayDone =
+    (gymDay.rest ? 0 : doneIds.length) + (habits.length - pendingHabits.length);
+  const dayPercent = dayTotal ? Math.round((dayDone / dayTotal) * 100) : 100;
+
   return (
-    <PageShell title="Overview" description="Your life at a glance.">
+    <PageShell title="Overview">
       <Suspense fallback={<div className="h-12" />}>
         <AddEntry />
       </Suspense>
 
+      {/* Today so far: progress ring and a couple of things worth knowing */}
+      <section className="flex items-center gap-3 rounded-2xl bg-paper px-4 py-3.5 text-ink">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: `conic-gradient(var(--ember) ${Math.max(dayPercent, 1) * 3.6}deg, color-mix(in srgb, var(--ink) 18%, transparent) 0)`,
+          }}
+        >
+          <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-paper text-[11px] font-bold">
+            {dayPercent}%
+          </span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ember">
+            {allClear ? "All done today" : "Today so far"}
+          </p>
+          {insights.slice(0, 2).map((line, i) => (
+            <p
+              key={line}
+              className={`text-[13px] ${i === 0 ? "mt-0.5" : "mt-px text-ink/65"}`}
+            >
+              {line}
+            </p>
+          ))}
+          {insights.length === 0 && (
+            <p className="mt-0.5 text-[13px] text-ink/65">
+              Log something and your day starts filling in.
+            </p>
+          )}
+        </div>
+      </section>
+
       {reminders.length > 0 && (
-        <div className="grid gap-2 sm:grid-cols-2">{reminders}</div>
+        <div className="flex flex-col gap-2 lg:flex-row">{reminders}</div>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
-        <Card
-          title={gymDay.rest ? "Rest day" : gymDay.title ? `Today · ${gymDay.title}` : "Today's workout"}
-          link={{ href: "/health/gym", label: hasPlan ? "Gym" : "Plan week" }}
-        >
-          {hasPlan ? (
-            <GymTracker day={gymDay} date={today} doneIds={doneIds} compact />
-          ) : (
-            <Empty href="/health/gym">No gym plan yet. Plan your week →</Empty>
-          )}
-        </Card>
+      {!hasPlan ? (
+        <>
+          <SectionHead title="Today's workout" href="/health/body" link="Set up" />
+          <Empty href="/health/body">
+            No gym plan yet. Build your 4-week plan →
+          </Empty>
+        </>
+      ) : (
+        pendingExercises.length > 0 && (
+          <>
+            <SectionHead
+              title={gymDay.title ? `Today · ${gymDay.title}` : "Today's workout"}
+              href="/health/gym"
+              link="Gym"
+            />
+            <GymChecklist
+              exercises={pendingExercises}
+              date={today}
+              doneBefore={doneIds.length}
+              week={
+                block ? blockWeek(block.start_date, today, block.weeks) : null
+              }
+            />
+          </>
+        )
+      )}
 
-        <Card title="Habits today" link={{ href: "/health/habits", label: "All habits" }}>
-          {habits.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {habits.map((habit) => {
-                const own = habitCheckins.filter((c) => c.habit_id === habit.id);
-                return (
-                  <HabitCard
-                    key={habit.id}
-                    habit={habit}
-                    date={today}
-                    checkin={own.find((c) => c.check_date === today) ?? null}
-                    history={[]}
-                    streak={streak(own, today)}
-                    compact
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
-          )}
-        </Card>
-      </div>
+      {habits.length === 0 ? (
+        <>
+          <SectionHead title="Habits" href="/health/habits" link="All habits" />
+          <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
+        </>
+      ) : (
+        pendingHabits.length > 0 && (
+          <>
+            <SectionHead
+              title="Habits to check in"
+              href="/health/habits"
+              link="All habits"
+            />
+            <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+              {pendingHabits.map((habit, i) => (
+                <HabitRow
+                  key={habit.id}
+                  habit={habit}
+                  date={today}
+                  checkin={null}
+                  streak={streak(
+                    habitCheckins.filter((c) => c.habit_id === habit.id),
+                    today,
+                  )}
+                  first={i === 0}
+                />
+              ))}
+            </ul>
+          </>
+        )
+      )}
 
-      <Card title="Money" link={{ href: "/financial/daily", label: "Finance" }}>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-          <Figure label="Spent today" value={formatMoney(spentToday)} />
+      <SectionHead title="Money" href="/financial/daily" link="Finance" />
+      <section className="rounded-[18px] border border-paper/10 bg-surface px-4 py-1">
+        <div className="grid grid-cols-2">
+          <Figure label="Spent today" value={formatMoney(spentToday)} divide />
           <Figure
             label="Net this month"
             value={`${monthNet < 0 ? "−" : ""}${formatMoney(Math.abs(monthNet))}`}
             tone={monthNet < 0 ? "bad" : "good"}
+            divide
           />
           <Figure label="Savings" value={formatMoney(worth)} />
-          <Figure label="You owe" value={formatMoney(owe)} tone={owe > 0 ? "bad" : undefined} />
+          <Figure
+            label="You owe"
+            value={formatMoney(owe)}
+            tone={owe > 0 ? "bad" : undefined}
+          />
         </div>
         {topToday.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-paper/10 pt-3">
+          <div className="flex flex-wrap items-center gap-2 border-t border-paper/[0.06] py-3">
             <span className="text-xs text-paper/45">Today&apos;s top spends</span>
             {topToday.map((c) => (
               <span
@@ -191,93 +335,19 @@ export default async function OverviewPage() {
             ))}
           </div>
         )}
-      </Card>
+      </section>
+
+      {finished.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 pb-2 text-sm text-paper/45">
+          {finished.map((item) => (
+            <span key={item} className="flex items-center gap-1.5">
+              <span className="text-moss">✓</span>
+              {item}
+            </span>
+          ))}
+        </p>
+      )}
     </PageShell>
   );
 }
 
-function Card({
-  title,
-  link,
-  children,
-}: {
-  title: string;
-  link?: { href: string; label: string };
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-6">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="truncate font-serif text-xl sm:text-2xl">{title}</h2>
-        {link && (
-          <Link
-            href={link.href}
-            className="shrink-0 text-sm text-ember hover:underline"
-          >
-            {link.label} →
-          </Link>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Figure({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: "good" | "bad";
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="truncate text-xs text-paper/50">{label}</p>
-      <p
-        className={`truncate text-lg font-semibold tabular-nums sm:text-xl ${
-          tone === "bad"
-            ? "text-red-700 dark:text-red-300"
-            : tone === "good"
-              ? "text-moss"
-              : ""
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Reminder({
-  href,
-  emoji,
-  title,
-}: {
-  href: string;
-  emoji: string;
-  title: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group flex items-center gap-3 rounded-2xl border border-ember/30 bg-ember/10 px-3 py-2.5 transition hover:border-ember/60"
-    >
-      <span className="text-lg">{emoji}</span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
-      <span className="text-sm text-ember transition group-hover:translate-x-0.5">→</span>
-    </Link>
-  );
-}
-
-function Empty({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="block rounded-2xl border border-dashed border-paper/15 py-8 text-center text-sm text-paper/55 transition hover:border-ember/50 hover:text-paper"
-    >
-      {children}
-    </Link>
-  );
-}

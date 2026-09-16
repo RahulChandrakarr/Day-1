@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme";
 import type { Profile } from "@/lib/auth";
-import { isActive, logoutIcon, navItems, usersIcon } from "./nav";
+import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 
 // Phones: app-style top bar plus a bottom tab bar.
 export default function MobileNav({
@@ -80,6 +80,14 @@ export default function MobileNav({
                     {profile.email}
                   </p>
                 </div>
+                <Link
+                  href="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper"
+                >
+                  {settingsIcon}
+                  Settings
+                </Link>
                 {profile.role === "admin" && (
                   <Link
                     href="/admin/users"

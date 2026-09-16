@@ -15,6 +15,7 @@ import {
   getHabitCheckins,
   getMoodLogs,
 } from "@/lib/health-queries";
+import { reasonLabel } from "@/lib/health";
 import { getHabits } from "@/lib/journal-queries";
 import { buildMonthReport, compareMonths } from "@/lib/reports";
 import type { ReactNode } from "react";
@@ -94,7 +95,7 @@ export default async function ReportPage({
       />
 
       {nothingYet ? (
-        <p className="rounded-3xl border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-paper/50">
+        <p className="rounded-[18px] border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-paper/50">
           Nothing tracked in {formatMonth(month)} yet. Tick off workouts and
           habits and the report fills in.
         </p>
@@ -254,7 +255,7 @@ export default async function ReportPage({
                         )}
                         best streak {h.bestStreak} day
                         {h.bestStreak === 1 ? "" : "s"}
-                        {h.topReason && ` · missed most often: ${h.topReason}`}
+                        {h.topReason && ` · missed most often: ${reasonLabel(h.topReason).toLowerCase()}`}
                       </p>
                     </li>
                   );
@@ -311,7 +312,7 @@ export default async function ReportPage({
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-6">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <h3 className="mb-3 font-serif text-xl sm:text-2xl">{title}</h3>
       {children}
     </section>
@@ -335,7 +336,7 @@ function Tile({
 }) {
   const show = !hideDelta && delta !== null && delta !== 0;
   return (
-    <div className="rounded-2xl border border-paper/10 bg-surface/60 p-4">
+    <div className="rounded-[18px] border border-paper/10 bg-surface p-4">
       <p className="truncate text-sm text-paper/55">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
         {value}
@@ -445,7 +446,7 @@ function Stat({
 
 function Empty({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-paper/10 py-6 text-center text-sm text-paper/40">
+    <p className="rounded-[14px] border border-dashed border-paper/10 py-6 text-center text-sm text-paper/40">
       {children}
     </p>
   );

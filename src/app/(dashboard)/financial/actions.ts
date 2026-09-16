@@ -1,6 +1,7 @@
 "use server";
 
 import { isValidDate } from "@/lib/finance";
+import { refreshSpendPin } from "@/lib/push/today";
 import {
   authedClient,
   parseAmount,
@@ -58,6 +59,7 @@ export async function addTransaction(
   if (error) return fail(error.message);
 
   refresh();
+  await refreshSpendPin();
   return { error: null, ok: true, version: prev.version + 1 };
 }
 
@@ -66,6 +68,7 @@ export async function deleteTransaction(id: string) {
   const supabase = await authedClient();
   await supabase.from("finance_transactions").delete().eq("id", id);
   refresh();
+  await refreshSpendPin();
 }
 
 export async function addCategory(

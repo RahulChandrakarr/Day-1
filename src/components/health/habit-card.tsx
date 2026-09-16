@@ -2,12 +2,12 @@
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { deleteHabit } from "@/app/(dashboard)/daily/actions";
+import { deleteHabit, updateHabit } from "@/app/(dashboard)/daily/actions";
 import { saveHabitCheckin } from "@/app/(dashboard)/health/actions";
 import { addDays, formatShortDate } from "@/lib/finance";
 import {
-  FEELINGS,
-  REASONS,
+  feelingsFor,
+  reasonsFor,
   type Feeling,
   type HabitCheckin,
   type Reason,
@@ -50,6 +50,15 @@ export default function HabitCard({
     reason: checkin?.reason ?? null,
     note: checkin?.note ?? "",
   });
+  const [editing, setEditing] = useState(false);
+  const [settings, setSettings] = useState({
+    kind: habit.kind,
+    count_label: habit.count_label ?? "",
+    daily_limit: habit.daily_limit === null ? "" : String(habit.daily_limit),
+  });
+  const [details, setDetails] = useState(
+    Boolean(checkin?.feeling || checkin?.reason || checkin?.note),
+  );
   const [error, setError] = useState(false);
   const [removing, startRemove] = useTransition();
   const noteTimer = useRef<number | null>(null);
@@ -71,11 +80,20 @@ export default function HabitCard({
     }
     latest.current = next;
     setDraft(next);
+    if (patch.done !== undefined && patch.done !== null) setDetails(false);
     if (noteTimer.current) window.clearTimeout(noteTimer.current);
     if (debounce)
       noteTimer.current = window.setTimeout(() => persist(next), 700);
     else persist(next);
   }
+
+  // What's already answered, shown on the collapsed link
+  const answer = draft.done
+    ? feelingsFor(habit.kind).find((f) => f.value === draft.feeling)?.label
+    : reasonsFor(habit.kind).find((r) => r.value === draft.reason)?.label;
+  const summary = answer
+    ? `${answer}${draft.note ? ` · ${draft.note}` : ""}`
+    : draft.note || null;
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(date, i - 6));
   // Past days from the server; the selected day follows what's on screen
@@ -98,7 +116,7 @@ export default function HabitCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: removing ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className={`rounded-3xl border bg-surface/60 ${
+      className={`rounded-3xl border bg-surface ${
         compact ? "p-3" : "p-4 sm:p-5"
       } ${
         draft.done === true
@@ -144,7 +162,7 @@ export default function HabitCard({
 
       {habit.count_label && (
         <div className="mt-3 flex items-center gap-2">
-          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-ink/40 px-3 py-2">
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-ink px-3 py-2">
             <span className="shrink-0 text-xs text-paper/55">
               {habit.kind === "quit" ? "How many today?" : "How much today?"}
             </span>
@@ -232,58 +250,165 @@ export default function HabitCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="pt-3">
-              <p className="mb-2 text-xs text-paper/55">
-                {draft.done ? "How did it feel?" : "What got in the way?"}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {draft.done
-                  ? FEELINGS.map((f) => (
-                      <Pill
-                        key={f.value}
-                        selected={draft.feeling === f.value}
-                        onClick={() =>
-                          change({
-                            feeling: draft.feeling === f.value ? null : f.value,
-                          })
-                        }
-                      >
-                        {f.emoji} {f.label}
-                      </Pill>
-                    ))
-                  : REASONS.map((r) => (
-                      <Pill
-                        key={r.value}
-                        selected={draft.reason === r.value}
-                        onClick={() =>
-                          change({
-                            reason: draft.reason === r.value ? null : r.value,
-                          })
-                        }
-                      >
-                        {r.label}
-                      </Pill>
-                    ))}
+            <div className="pt-2">
+              {details ? (
+                <>
+                  <p className="mb-2 text-xs text-paper/55">
+                    {draft.done ? "How did it feel?" : "Why not?"}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {draft.done
+                      ? feelingsFor(habit.kind).map((f) => (
+                          <Pill
+                            key={f.value}
+                            selected={draft.feeling === f.value}
+                            onClick={() =>
+                              change({
+                                feeling:
+                                  draft.feeling === f.value ? null : f.value,
+                              })
+                            }
+                          >
+                            {f.emoji} {f.label}
+                          </Pill>
+                        ))
+                      : reasonsFor(habit.kind).map((r) => (
+                          <Pill
+                            key={r.value}
+                            selected={draft.reason === r.value}
+                            onClick={() =>
+                              change({
+                                reason: draft.reason === r.value ? null : r.value,
+                              })
+                            }
+                          >
+                            {r.label}
+                          </Pill>
+                        ))}
+                  </div>
+                  <input
+                    value={draft.note}
+                    maxLength={300}
+                    onChange={(e) =>
+                      change({ note: e.target.value }, { debounce: true })
+                    }
+                    placeholder={
+                      draft.done
+                        ? "Anything to remember? (optional)"
+                        : "What happened? (optional)"
+                    }
+                    className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
+                  />
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setDetails(true)}
+                  className="text-xs text-paper/45 transition hover:text-paper"
+                >
+                  {summary ?? (draft.done ? "+ How did it feel?" : "+ Why not?")}
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false}>
+        {editing && !compact && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-paper/10 bg-ink p-3">
+              <div className="flex rounded-full border border-paper/10 bg-ink p-0.5 text-xs">
+                {(
+                  [
+                    ["build", "Build it"],
+                    ["quit", "Quit / cut down"],
+                  ] as const
+                ).map(([value, text]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={settings.kind === value}
+                    onClick={() => {
+                      setSettings((c) => ({ ...c, kind: value }));
+                      void updateHabit(habit.id, { kind: value });
+                    }}
+                    className={`h-7 rounded-full px-3 font-medium transition ${
+                      settings.kind === value
+                        ? "bg-paper/10 text-paper"
+                        : "text-paper/45 hover:text-paper"
+                    }`}
+                  >
+                    {text}
+                  </button>
+                ))}
               </div>
               <input
-                value={draft.note}
-                maxLength={300}
-                onChange={(e) => change({ note: e.target.value }, { debounce: true })}
-                placeholder={
-                  draft.done ? "Anything to remember? (optional)" : "What happened? (optional)"
+                value={settings.count_label}
+                maxLength={20}
+                onChange={(e) =>
+                  setSettings((c) => ({ ...c, count_label: e.target.value }))
                 }
-                className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-ink/40 px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
+                onBlur={() =>
+                  void updateHabit(habit.id, {
+                    count_label: settings.count_label,
+                    daily_limit:
+                      settings.daily_limit === ""
+                        ? null
+                        : Number(settings.daily_limit),
+                  })
+                }
+                placeholder="Count something? e.g. cigarettes"
+                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
               />
+              {settings.count_label.trim() && (
+                <input
+                  inputMode="numeric"
+                  value={settings.daily_limit}
+                  onChange={(e) =>
+                    setSettings((c) => ({
+                      ...c,
+                      daily_limit: e.target.value.replace(/\D/g, "").slice(0, 4),
+                    }))
+                  }
+                  onBlur={() =>
+                    void updateHabit(habit.id, {
+                      count_label: settings.count_label,
+                      daily_limit:
+                        settings.daily_limit === ""
+                          ? null
+                          : Number(settings.daily_limit),
+                    })
+                  }
+                  placeholder={settings.kind === "quit" ? "Daily max" : "Daily goal"}
+                  aria-label={settings.kind === "quit" ? "Daily maximum" : "Daily goal"}
+                  className="h-8 w-24 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+                />
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {(error || !compact) && (
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs">
-          <span className="text-red-700 dark:text-red-300">
+        <div className="mt-2 flex items-center justify-end gap-2 text-xs">
+          <span className="mr-auto text-red-700 dark:text-red-300">
             {error && "Couldn't save. Tap again to retry."}
           </span>
+          {!compact && (
+            <button
+              type="button"
+              onClick={() => setEditing((v) => !v)}
+              className="rounded-lg px-2 py-1 text-paper/40 transition hover:bg-paper/5 hover:text-paper"
+            >
+              {editing ? "Done" : "Settings"}
+            </button>
+          )}
           {!compact && (
             <button
               type="button"

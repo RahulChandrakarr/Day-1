@@ -21,7 +21,12 @@ import {
   addAccount,
   addInvestmentEntry,
 } from "@/app/(dashboard)/financial/savings/actions";
+import GymChecklist from "@/components/health/gym-checklist";
+import HabitRow from "@/components/health/habit-row";
+import { appendJournalNote } from "@/app/(dashboard)/daily/actions";
 import type { DebtKind } from "@/lib/debts";
+import { streak, type Exercise, type HabitCheckin } from "@/lib/health";
+import { MOODS, type Habit } from "@/lib/journal";
 import {
   ACCOUNT_KINDS,
   isRecurringKind,
@@ -47,7 +52,7 @@ export type EntryPerson = {
 };
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-ink/60 px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 
@@ -67,13 +72,35 @@ const BORROW_OPTIONS: Record<TxType, { kind: DebtKind; label: string }[]> = {
 };
 
 // "+ Add entry" button and the dialog it opens.
-type Variant = "entry" | "borrow" | "savings";
+type Variant =
+  | "entry"
+  | "borrow"
+  | "savings"
+  | "habit"
+  | "journal"
+  | "workout";
 
-const VARIANTS: Record<Variant, { button: string; title: string }> = {
-  entry: { button: "Add entry", title: "Add entry" },
-  borrow: { button: "Add borrow entry", title: "Borrow entry" },
-  savings: { button: "Add savings entry", title: "Savings entry" },
-};
+const VARIANTS: { value: Variant; label: string; title: string }[] = [
+  { value: "entry", label: "Money", title: "Add entry" },
+  { value: "borrow", label: "Borrow", title: "Borrow entry" },
+  { value: "savings", label: "Savings", title: "Savings entry" },
+  { value: "workout", label: "Workout", title: "Today's workout" },
+  { value: "habit", label: "Habits", title: "Habit check-in" },
+  { value: "journal", label: "Journal", title: "Quick note" },
+];
+
+const titleOf = (variant: Variant) =>
+  VARIANTS.find((v) => v.value === variant)?.title ?? "Add entry";
+
+// Which one the page you're on is about
+function variantForPath(pathname: string): Variant {
+  if (pathname.startsWith("/financial/borrow")) return "borrow";
+  if (pathname.startsWith("/financial/savings")) return "savings";
+  if (pathname.startsWith("/health/gym")) return "workout";
+  if (pathname.startsWith("/health/habits")) return "habit";
+  if (pathname.startsWith("/daily")) return "journal";
+  return "entry";
+}
 
 const BORROW_KINDS: { value: DebtKind; label: string }[] = [
   { value: "borrowed", label: "I took" },
@@ -88,27 +115,37 @@ const SAVINGS_KINDS: { value: InvestmentKind; label: string }[] = [
   { value: "value", label: "Update value" },
 ];
 
+// ?add=1 opens the sheet; ?add=journal opens it on that tab
+function addParam(): Variant | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("add");
+  if (!value) return null;
+  return (VARIANTS.find((v) => v.value === value)?.value ?? "entry") as Variant;
+}
+
 export default function EntryDialog({
   categories,
   usage,
   people,
   accounts,
+  habits,
+  habitCheckins,
+  workout,
 }: {
   categories: Category[];
   usage: Record<string, number>;
   people: EntryPerson[];
   accounts: Account[];
+  habits: Habit[];
+  habitCheckins: HabitCheckin[];
+  workout: { exercises: Exercise[]; doneIds: string[]; title: string } | null;
 }) {
-  const [open, setOpen] = useState(false);
+  // ?add=1 comes from the home-screen shortcut and the notification button
+  const [open, setOpen] = useState(() => addParam() !== null);
   const [session, setSession] = useState(0);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // The Borrow and Savings tabs open their own kind of entry
-  const variant: Variant = pathname.startsWith("/financial/borrow")
-    ? "borrow"
-    : pathname.startsWith("/financial/savings")
-      ? "savings"
-      : "entry";
+  const startVariant = addParam() ?? variantForPath(pathname);
 
   // On a past day in Daily, entries default to that day
   const dateParam = searchParams.get("date");
@@ -141,7 +178,7 @@ export default function EntryDialog({
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-6 font-medium text-on-ember shadow-sm transition-colors hover:bg-ember-light md:w-auto md:self-start"
       >
         <span className="text-xl leading-none">+</span>
-        {VARIANTS[variant].button}
+        Add entry
       </motion.button>
 
       <AnimatePresence>
@@ -160,7 +197,7 @@ export default function EntryDialog({
                 key="dialog"
                 role="dialog"
                 aria-modal="true"
-                aria-label={VARIANTS[variant].title}
+                aria-label="Add entry"
                 initial={{ y: "100%", opacity: 0.8 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
@@ -169,11 +206,14 @@ export default function EntryDialog({
               >
                 <EntryForm
                   key={session}
-                  variant={variant}
+                  startVariant={startVariant}
                   accounts={accounts}
                   categories={categories}
                   usage={usage}
                   people={people}
+                  habits={habits}
+                  habitCheckins={habitCheckins}
+                  workout={workout}
                   defaultDate={defaultDate}
                   onClose={() => setOpen(false)}
                 />
@@ -187,16 +227,22 @@ export default function EntryDialog({
 }
 
 function EntryForm({
-  variant,
+  startVariant,
   accounts,
   categories,
   usage,
   people,
+  habits,
+  habitCheckins,
+  workout,
   defaultDate,
   onClose,
 }: {
-  variant: Variant;
+  startVariant: Variant;
   accounts: Account[];
+  habits: Habit[];
+  habitCheckins: HabitCheckin[];
+  workout: { exercises: Exercise[]; doneIds: string[]; title: string } | null;
   categories: Category[];
   usage: Record<string, number>;
   people: EntryPerson[];
@@ -207,6 +253,7 @@ function EntryForm({
   // A category id, "borrow:<kind>", or "" for no category
   const [choice, setChoice] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [variant, setVariant] = useState<Variant>(startVariant);
   const [debtKind, setDebtKind] = useState<DebtKind>("borrowed");
   const [savingsKind, setSavingsKind] = useState<InvestmentKind>("deposit");
   const [savedCount, setSavedCount] = useState(0);
@@ -330,7 +377,7 @@ function EntryForm({
           transition={{ duration: 0.2 }}
           className="overflow-hidden"
         >
-          <div className="flex flex-col gap-3 rounded-xl border border-paper/10 bg-ink/40 p-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-paper/10 bg-ink p-3">
             <div className="flex flex-wrap gap-2">
               {option(
                 "",
@@ -354,12 +401,17 @@ function EntryForm({
   );
 
   const shared = { onSaved, defaultDate, categorySelect, categoryPanel };
+  const tabs = VARIANTS.filter(
+    (v) =>
+      (v.value !== "workout" || (workout && workout.exercises.length > 0)) &&
+      (v.value !== "habit" || habits.length > 0),
+  );
 
   return (
     <>
       <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
         <h2 className="flex-1 font-serif text-xl sm:text-2xl">
-          {VARIANTS[variant].title}
+          {titleOf(variant)}
         </h2>
         <AnimatePresence>
           {showSaved && (
@@ -384,6 +436,24 @@ function EntryForm({
         </button>
       </header>
 
+      <nav className="-mx-1 flex gap-1 overflow-x-auto border-b border-paper/10 px-4 py-2 sm:px-5">
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            aria-pressed={variant === tab.value}
+            onClick={() => setVariant(tab.value)}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${
+              variant === tab.value
+                ? "bg-ember text-on-ember"
+                : "text-paper/55 hover:text-paper"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
       <div
         className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5"
         onClickCapture={(e) => {
@@ -392,7 +462,45 @@ function EntryForm({
             closeAfterSave.current = false;
         }}
       >
-        {variant === "borrow" ? (
+        {variant === "habit" ? (
+          <ul className="flex flex-col gap-2">
+            {habits.map((habit) => (
+              <li
+                key={habit.id}
+                className="rounded-[14px] border border-paper/10 bg-ink"
+              >
+                <ul>
+                  <HabitRow
+                    habit={habit}
+                    date={defaultDate}
+                    checkin={
+                      habitCheckins.find(
+                        (c) =>
+                          c.habit_id === habit.id && c.check_date === defaultDate,
+                      ) ?? null
+                    }
+                    streak={streak(
+                      habitCheckins.filter((c) => c.habit_id === habit.id),
+                      defaultDate,
+                    )}
+                    first
+                  />
+                </ul>
+              </li>
+            ))}
+          </ul>
+        ) : variant === "workout" && workout ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-paper/55">{workout.title}</p>
+            <GymChecklist
+              exercises={workout.exercises}
+              date={defaultDate}
+              doneBefore={workout.doneIds.length}
+            />
+          </div>
+        ) : variant === "journal" ? (
+          <JournalNote date={defaultDate} onSaved={onSaved} />
+        ) : variant === "borrow" ? (
           <>
             <Segmented
               label="What happened"
@@ -905,6 +1013,81 @@ function DaySelect({
 }
 
 // ---------------------------------------------------------------------------
+// Journal: a quick note (and today's mood) without leaving the page
+// ---------------------------------------------------------------------------
+function JournalNote({
+  date,
+  onSaved,
+}: {
+  date: string;
+  onSaved: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [mood, setMood] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function save() {
+    if (!text.trim() && mood === null) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await appendJournalNote(text, date, mood ?? undefined);
+      if (result.ok) {
+        setText("");
+        onSaved();
+      } else setError(result.error);
+    });
+  }
+
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      <div className="grid grid-cols-5 gap-1.5">
+        {MOODS.map((m) => (
+          <button
+            key={m.value}
+            type="button"
+            aria-pressed={mood === m.value}
+            onClick={() => setMood(mood === m.value ? null : m.value)}
+            className={`flex flex-col items-center gap-1 rounded-2xl border py-2 transition ${
+              mood === m.value
+                ? "border-ember/60 bg-ember/15"
+                : "border-paper/10 hover:bg-paper/5"
+            }`}
+          >
+            <span className="text-2xl">{m.emoji}</span>
+            <span className="text-[11px] text-paper/60">{m.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        autoFocus
+        value={text}
+        rows={5}
+        maxLength={2000}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="What's on your mind? This is added to today's journal."
+        className={`${inputClass} h-auto resize-none py-2.5 leading-relaxed`}
+      />
+
+      <ErrorBox error={error} />
+
+      <button
+        type="button"
+        onClick={save}
+        disabled={pending || (!text.trim() && mood === null)}
+        className="h-12 rounded-xl bg-ember font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-50"
+      >
+        {pending ? "Saving…" : "Add to journal"}
+      </button>
+      <p className="text-xs text-paper/40">
+        Longer writing, priorities and habits live on the Daily tab.
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Shared pieces
 // ---------------------------------------------------------------------------
 // Tells the parent about each successful save and refocuses the amount.
@@ -1013,7 +1196,7 @@ function Segmented<T extends string>({
 
   // The highlight slides inside the track, so it isn't thrown off while the dialog animates
   return (
-    <div className="rounded-xl border border-paper/10 bg-ink/40 p-1">
+    <div className="rounded-xl border border-paper/10 bg-ink p-1">
       <div
         role="radiogroup"
         aria-label={label}

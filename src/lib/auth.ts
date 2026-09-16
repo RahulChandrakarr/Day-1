@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type Profile = {
@@ -10,7 +11,8 @@ export type Profile = {
 };
 
 // Returns the signed-in user's profile, or sends them to /login.
-export async function requireProfile() {
+// Cached per request so layouts and pages share one lookup.
+export const requireProfile = cache(async function requireProfile() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
@@ -24,7 +26,7 @@ export async function requireProfile() {
   if (!profile) redirect("/login");
 
   return { supabase, profile };
-}
+});
 
 export async function requireAdmin() {
   const result = await requireProfile();

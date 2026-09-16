@@ -54,7 +54,7 @@ export default function ChatPanel() {
 
   return (
     <section
-      className="relative flex h-[calc(100dvh-14.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[440px] flex-col overflow-hidden rounded-3xl border border-paper/10 bg-surface/60 md:h-[min(80vh,760px)] md:min-h-[520px]"
+      className="relative flex h-[calc(100dvh-14.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[440px] flex-col overflow-hidden rounded-3xl border border-paper/10 bg-surface md:h-[min(80vh,760px)] md:min-h-[520px]"
     >
       <header className="flex items-center gap-2 border-b border-paper/10 px-4 py-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember text-on-ember">

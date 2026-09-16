@@ -43,7 +43,7 @@ export default function GymTracker({
 
   if (day.rest) {
     return (
-      <p className="rounded-2xl border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
+      <p className="rounded-[14px] border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
         😴 Rest day. Recover well.
       </p>
     );
@@ -51,7 +51,7 @@ export default function GymTracker({
 
   if (total === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
+      <p className="rounded-[14px] border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
         Nothing planned for this day.
       </p>
     );
@@ -104,7 +104,7 @@ export default function GymTracker({
                 } ${
                   checked
                     ? "border-moss/40 bg-moss/10"
-                    : "border-paper/10 bg-ink/30 hover:border-paper/25"
+                    : "border-paper/10 bg-ink hover:border-paper/25"
                 }`}
               >
                 <span

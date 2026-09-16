@@ -1,7 +1,9 @@
+import { Card, Figure, toneClass } from "@/components/ui/kit";
 import { formatMoney, type Totals } from "@/lib/finance";
 
 type Tile = { label: string; value: string; hint?: string };
 
+// Income / expenses / net, plus anything a page adds.
 export default function StatTiles({
   totals,
   extra = [],
@@ -11,52 +13,34 @@ export default function StatTiles({
   extra?: Tile[];
   netHint?: string;
 }) {
-  const tiles: (Tile & { swatch?: string })[] = [
-    {
-      label: "Income",
-      value: formatMoney(totals.income),
-      swatch: "bg-chart-income",
-    },
-    {
-      label: "Expenses",
-      value: formatMoney(totals.expense),
-      swatch: "bg-chart-expense",
-    },
+  const tiles = [
+    { label: "Income", value: formatMoney(totals.income), tone: "good" as const },
+    { label: "Expenses", value: formatMoney(totals.expense) },
     {
       label: "Net balance",
       value: `${totals.net < 0 ? "−" : ""}${formatMoney(Math.abs(totals.net))}`,
       hint: netHint ?? (totals.net >= 0 ? "Saved" : "Overspent"),
+      tone: totals.net < 0 ? ("bad" as const) : ("good" as const),
     },
     ...extra,
   ];
 
   return (
-    <div
-      className={`grid grid-cols-2 gap-3 ${
-        tiles.length > 3 ? "lg:grid-cols-4" : "sm:grid-cols-3"
-      }`}
-    >
-      {tiles.map((tile, i) => (
-        <div
-          key={tile.label}
-          className={`rounded-2xl border border-paper/10 bg-surface/60 p-4 sm:p-5 ${
-            tiles.length === 3 && i === 2 ? "col-span-2 sm:col-span-1" : ""
-          }`}
-        >
-          <p className="flex items-center gap-2 text-sm text-paper/55">
-            {tile.swatch && (
-              <span className={`h-2.5 w-2.5 rounded-sm ${tile.swatch}`} />
-            )}
-            {tile.label}
-          </p>
-          <p className="mt-2 text-xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-2xl xl:text-3xl">
-            {tile.value}
-          </p>
-          {tile.hint && (
-            <p className="mt-1 text-xs text-paper/45">{tile.hint}</p>
-          )}
-        </div>
-      ))}
-    </div>
+    <Card padded={false} className="px-4 py-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4">
+        {tiles.map((tile, i) => (
+          <Figure
+            key={tile.label}
+            label={tile.label}
+            value={tile.value}
+            hint={tile.hint}
+            tone={"tone" in tile ? tile.tone : undefined}
+            divide={i < tiles.length - (tiles.length > 2 ? 2 : 1)}
+          />
+        ))}
+      </div>
+    </Card>
   );
 }
+
+export { toneClass };

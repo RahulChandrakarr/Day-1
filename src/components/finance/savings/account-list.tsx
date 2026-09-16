@@ -26,11 +26,11 @@ export default function AccountList({
   const total = accounts.reduce((s, a) => s + Math.max(a.current, 0), 0);
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <h3 className="font-serif text-2xl">Accounts</h3>
 
       {accounts.length === 0 ? (
-        <p className="mt-6 rounded-2xl border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
           No accounts yet. Add your FDs, SIPs, stocks or savings to track them.
         </p>
       ) : (
@@ -86,7 +86,7 @@ function AccountCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: pending ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden rounded-2xl border border-paper/10 bg-ink/30"
+      className="overflow-hidden rounded-2xl border border-paper/10 bg-ink"
     >
       <button
         type="button"

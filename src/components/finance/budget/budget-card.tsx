@@ -45,7 +45,7 @@ export default function BudgetCard({
     mode === "edit" ? budget : mode === "copy" ? previous : null;
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-5 sm:p-6">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-serif text-2xl">
@@ -110,7 +110,7 @@ export default function BudgetCard({
           ) : budget && report ? (
             <BudgetReportView report={report} periodLabel={periodLabel} />
           ) : (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-paper/10 px-4 py-10 text-center">
+            <div className="flex flex-col items-center gap-4 rounded-[14px] border border-dashed border-paper/10 px-4 py-10 text-center">
               <p className="max-w-sm text-sm text-paper/55">
                 Set how much goes to rent, EMI, bills and savings this {noun}.
                 Keep logging as usual and see how the estimate holds up.

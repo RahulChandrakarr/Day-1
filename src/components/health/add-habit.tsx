@@ -50,7 +50,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
   }
 
   return (
-    <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-5">
+    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -63,7 +63,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
           maxLength={40}
           onChange={(e) => setName(e.target.value)}
           placeholder="Add a habit to track, e.g. Quit smoking"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-ink/60 px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
         />
         <button
           type="submit"
@@ -74,7 +74,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
         </button>
       </form>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <div className="flex rounded-full border border-paper/10 bg-ink/40 p-0.5 text-xs">
+        <div className="flex rounded-full border border-paper/10 bg-ink p-0.5 text-xs">
           {(
             [
               ["build", "Build it"],
@@ -99,7 +99,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
           maxLength={20}
           onChange={(e) => setCountLabel(e.target.value)}
           placeholder="Count something? e.g. cigarettes"
-          className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-ink/40 px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+          className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
         />
         {countLabel.trim() && (
           <input
@@ -108,7 +108,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
             onChange={(e) => setLimit(e.target.value.replace(/\D/g, "").slice(0, 4))}
             placeholder={kind === "quit" ? "Daily max" : "Daily goal"}
             aria-label={kind === "quit" ? "Daily maximum" : "Daily goal"}
-            className="h-8 w-24 rounded-full border border-paper/10 bg-ink/40 px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+            className="h-8 w-24 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
           />
         )}
       </div>

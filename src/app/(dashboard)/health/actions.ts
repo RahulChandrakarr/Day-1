@@ -18,8 +18,9 @@ async function authedClient() {
   return supabase;
 }
 
-function refresh() {
-  revalidatePath("/", "layout");
+function refresh(...paths: string[]) {
+  revalidatePath("/");
+  for (const path of paths) revalidatePath(path);
 }
 
 const whole = (value: unknown, min: number, max: number) => {
@@ -123,7 +124,7 @@ export async function saveGymPlan(
     }
   }
 
-  refresh();
+  refresh("/health/gym");
   return { ok: true };
 }
 
@@ -148,7 +149,7 @@ export async function setExerciseDone(
         .eq("exercise_id", exerciseId)
         .eq("check_date", date);
   if (error) return { ok: false, error: error.message };
-  refresh();
+  refresh("/health/gym");
   return { ok: true };
 }
 
@@ -172,7 +173,7 @@ export async function saveHabitCheckin(input: {
       .eq("habit_id", input.habitId)
       .eq("check_date", input.date);
     if (error) return { ok: false, error: error.message };
-    refresh();
+    refresh("/health/habits", "/daily");
     return { ok: true };
   }
 
@@ -202,7 +203,7 @@ export async function saveHabitCheckin(input: {
     { onConflict: "user_id,habit_id,check_date" },
   );
   if (error) return { ok: false, error: error.message };
-  refresh();
+  refresh("/health/habits", "/daily");
   return { ok: true };
 }
 
@@ -262,7 +263,7 @@ export async function saveBodyProfile(input: {
     if (logError) return { ok: false, error: logError.message };
   }
 
-  refresh();
+  refresh("/health/body", "/health/report");
   return { ok: true };
 }
 
@@ -270,7 +271,7 @@ export async function deleteBodyLog(id: string) {
   if (!uuid.test(id)) return;
   const supabase = await authedClient();
   await supabase.from("body_logs").delete().eq("id", id);
-  refresh();
+  refresh("/health/body", "/health/report");
 }
 
 // Builds the next month of training from the saved profile.
@@ -341,6 +342,6 @@ export async function startNextBlock(
     if (exError) return { ok: false, error: exError.message };
   }
 
-  refresh();
+  refresh("/health/gym");
   return { ok: true, id: saved.id };
 }

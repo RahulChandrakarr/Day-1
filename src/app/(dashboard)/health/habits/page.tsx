@@ -7,7 +7,7 @@ import {
   parseDateParam,
   todayISO,
 } from "@/lib/finance";
-import { REASONS, streak } from "@/lib/health";
+import { reasonLabel, streak } from "@/lib/health";
 import { getHabitCheckins } from "@/lib/health-queries";
 import { getHabits } from "@/lib/journal-queries";
 
@@ -44,7 +44,7 @@ export default async function HabitsPage({
       )}
 
       {habits.length === 0 ? (
-        <section className="rounded-3xl border border-dashed border-paper/15 px-6 py-10 text-center">
+        <section className="rounded-[18px] border border-dashed border-paper/15 px-6 py-10 text-center">
           <span className="text-4xl">✅</span>
           <h3 className="mt-2 font-serif text-2xl">Track your habits</h3>
           <p className="mx-auto mt-1 max-w-sm text-sm text-paper/55">
@@ -75,7 +75,7 @@ export default async function HabitsPage({
                   <p className="px-3 text-xs text-paper/45">
                     Most often missed because of{" "}
                     <span className="text-paper/70">
-                      {REASONS.find((r) => r.value === top[0])?.label.toLowerCase()}
+                      {reasonLabel(top[0]).toLowerCase()}
                     </span>{" "}
                     ({top[1]}× in 60 days)
                   </p>

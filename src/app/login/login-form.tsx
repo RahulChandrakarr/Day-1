@@ -167,7 +167,7 @@ export default function LoginForm() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="h-12 rounded-xl border border-paper/10 bg-ink/60 px-4 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                  className="h-12 rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                   placeholder="you@example.com"
                 />
               </label>
@@ -182,7 +182,7 @@ export default function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="h-12 w-full rounded-xl border border-paper/10 bg-ink/60 px-4 pr-16 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                    className="h-12 w-full rounded-xl border border-paper/10 bg-ink px-3 pr-16 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                     placeholder="••••••••"
                   />
                   <button

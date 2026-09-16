@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 const arrow = (dir: "left" | "right") => (
   <svg
@@ -17,9 +18,9 @@ const arrow = (dir: "left" | "right") => (
 );
 
 const stepClass =
-  "flex h-10 w-10 items-center justify-center rounded-xl border border-paper/10 text-paper/70 transition hover:bg-paper/5 hover:text-paper";
+  "flex h-11 w-11 items-center justify-center rounded-full border border-paper/10 bg-surface text-paper/60 transition hover:text-paper active:bg-ink";
 
-// Prev / current / next navigation for a day, month or year.
+// Prev / current / next for a day, month or year.
 export default function PeriodNav({
   label,
   prevHref,
@@ -35,21 +36,23 @@ export default function PeriodNav({
   currentHref: string;
   isCurrent: boolean;
   currentLabel: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Link href={prevHref} className={stepClass} aria-label="Previous">
         {arrow("left")}
       </Link>
-      <h2 className="min-w-0 px-2 text-lg font-medium sm:text-xl">{label}</h2>
+      <h2 className="min-w-0 flex-1 truncate px-1 font-serif text-[22px] leading-tight">
+        {label}
+      </h2>
       <Link href={nextHref} className={stepClass} aria-label="Next">
         {arrow("right")}
       </Link>
       {!isCurrent && (
         <Link
           href={currentHref}
-          className="h-10 rounded-xl border border-paper/10 px-3 text-sm leading-10 text-paper/70 transition hover:bg-paper/5 hover:text-paper"
+          className="flex h-11 items-center rounded-full border border-paper/10 bg-surface px-4 text-sm font-medium text-paper/70 transition hover:text-paper"
         >
           {currentLabel}
         </Link>
