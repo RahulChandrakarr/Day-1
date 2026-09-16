@@ -12,12 +12,15 @@ export async function GET(
   const session = await getApiSession();
   if (!session) return jsonError("Not signed in", 401);
 
-  const { data, error } = await session.supabase
-    .from("ai_messages")
-    .select("id, role, content")
-    .eq("conversation_id", id)
-    .order("created_at", { ascending: true })
-    .limit(200);
+  const [{ data, error }, { data: conversation }] = await Promise.all([
+    session.supabase
+      .from("ai_messages")
+      .select("id, role, content")
+      .eq("conversation_id", id)
+      .order("created_at", { ascending: true })
+      .limit(200),
+    session.supabase.from("ai_conversations").select("persona").eq("id", id).maybeSingle(),
+  ]);
   if (error) return jsonError(error.message, 500);
 
   const messages: AssistantUIMessage[] = data.map((m) => ({
@@ -25,7 +28,7 @@ export async function GET(
     role: m.role as "user" | "assistant",
     parts: [{ type: "text", text: m.content }],
   }));
-  return Response.json(messages);
+  return Response.json({ persona: conversation?.persona ?? "assistant", messages });
 }
 
 export async function DELETE(

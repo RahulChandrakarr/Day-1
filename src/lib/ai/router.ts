@@ -5,23 +5,28 @@ import { SECTION_NAMES, type Section } from "./domains";
 import { dataModel } from "./models";
 import { routerInstructions } from "./prompts";
 
-const Route = z.object({
-  sections: z.array(z.enum(SECTION_NAMES)).min(1).max(4),
-  customQuery: z.boolean(),
-});
-
 export type RouteDecision = { sections: Section[]; customQuery: boolean };
 
-const FALLBACK: RouteDecision = {
-  sections: ["daily", "plan", "health", "finance"],
-  customQuery: false,
-};
+const BROAD: Section[] = ["daily", "plan", "health", "finance"];
 
-// Picks the section agents for a message. Falls back to the broad set on failure.
+// Picks the section agents for a message, only from the allowed ones.
+// Falls back to a broad set on failure.
 export async function routeMessage(
   history: ModelMessage[],
   text: string,
+  allowed: Section[] = SECTION_NAMES,
 ): Promise<RouteDecision> {
+  const fallback: RouteDecision = {
+    sections: allowed.length <= 4 ? allowed : BROAD.filter((s) => allowed.includes(s)),
+    customQuery: false,
+  };
+  const Route = z.object({
+    sections: z
+      .array(z.enum(allowed as [Section, ...Section[]]))
+      .min(1)
+      .max(4),
+    customQuery: z.boolean(),
+  });
   const recent = history
     .slice(-4)
     .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content.slice(0, 300) : ""}`)
@@ -29,7 +34,7 @@ export async function routeMessage(
   try {
     const { output } = await generateText({
       model: dataModel,
-      instructions: routerInstructions(),
+      instructions: routerInstructions(allowed),
       prompt: `${recent ? `Recent conversation:\n${recent}\n\n` : ""}Latest message: ${text}`,
       output: Output.object({ schema: Route }),
       temperature: 0,
@@ -39,6 +44,6 @@ export async function routeMessage(
     return { sections: [...new Set(output.sections)], customQuery: output.customQuery };
   } catch (error) {
     console.error("[assistant] router failed:", error);
-    return FALLBACK;
+    return fallback;
   }
 }

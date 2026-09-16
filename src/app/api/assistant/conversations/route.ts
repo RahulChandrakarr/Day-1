@@ -6,7 +6,7 @@ export async function GET() {
 
   const { data, error } = await session.supabase
     .from("ai_conversations")
-    .select("id, title, updated_at")
+    .select("id, title, persona, updated_at")
     .order("updated_at", { ascending: false })
     .limit(30);
   if (error) return jsonError(error.message, 500);
