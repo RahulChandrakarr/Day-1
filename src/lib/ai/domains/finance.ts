@@ -24,7 +24,25 @@ import {
   getTransactions,
 } from "@/lib/finance-queries";
 import { accountSummaries, netSaved } from "@/lib/investments";
+import { addTransaction, deleteTransaction } from "@/app/(dashboard)/financial/actions";
+import { addDebt } from "@/app/(dashboard)/financial/borrow/actions";
+import { addInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
+import { DEBT_KINDS } from "@/lib/debts";
+import { accountKindLabel } from "@/lib/investments";
 import type { Supabase } from "../types";
+import {
+  changed,
+  confirmedInput,
+  failed,
+  idInput,
+  formData,
+  INITIAL_FORM,
+  monthInput,
+  NEEDS_CONFIRMATION,
+  pick,
+  type Domain,
+  type ToolContext,
+} from "./common";
 
 const date = z
   .string()
@@ -34,6 +52,7 @@ const date = z
 // Compact row shape for the model: no ids, no timestamps.
 function row(t: Transaction) {
   return {
+    id: t.id,
     date: t.occurred_on,
     type: t.type,
     amount: t.amount,
@@ -108,7 +127,7 @@ function planVsActual(
   };
 }
 
-export function financeTools() {
+function financeReadTools() {
   return {
     get_finance_overview: tool({
       description:
@@ -153,6 +172,191 @@ export function financeTools() {
     }),
   };
 }
+
+function financeWriteTools(ctx: ToolContext) {
+  return {
+    get_budget: tool({
+      description:
+        "The user's own spending plan for a month (YYYY-MM) or year (YYYY) compared with what actually happened: planned vs spent per category, income, savings target, money to return/collect.",
+      inputSchema: z.object({
+        month: monthInput.optional(),
+        year: z.number().int().min(2000).max(2200).optional(),
+      }),
+      execute: async ({ month, year }) => {
+        const scope = month ? "month" : "year";
+        const key = month ?? String(year ?? Number(ctx.today.slice(0, 4)));
+        const { from, to } = month ? monthRange(month) : { from: `${key}-01-01`, to: `${key}-12-31` };
+        const [budget, transactions, debts, investments] = await Promise.all([
+          getBudget(scope, key),
+          getTransactions({ from, to }),
+          getDebts({ from, to }),
+          getInvestmentEntries({ from, to }),
+        ]);
+        if (!budget) return { period: key, plan: null, note: "No plan made for this period." };
+        const report = budgetReport(budget, scope, key, { transactions, debts, investments }, ctx.today);
+        return {
+          period: key,
+          planned: report.planned,
+          spent: report.actual,
+          income: report.income,
+          savings: report.savings,
+          progress: report.progress,
+          categories: [...report.rows, ...report.unplanned].map((r) => ({
+            category: r.name,
+            planned: r.planned,
+            spent: r.actual,
+            left: r.planned - r.actual,
+          })),
+          toReturn: report.repay.map((r) => ({ person: r.name, planned: r.planned, done: r.actual })),
+          toCollect: report.collect.map((r) => ({ person: r.name, planned: r.planned, done: r.actual })),
+        };
+      },
+    }),
+
+    get_borrow: tool({
+      description: "Money the user owes people and money people owe the user, per person, with recent entries.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const [people, debts] = await Promise.all([getPeople(), getDebts()]);
+        return personBalances(people, debts).map((p) => ({
+          person: p.name,
+          userOwes: p.owe,
+          owesUser: p.owed,
+          lastEntry: p.lastOn,
+          recent: p.entries.slice(0, 5).map((e) => ({
+            date: e.occurred_on,
+            kind: e.kind,
+            amount: e.amount,
+            note: e.note,
+          })),
+        }));
+      },
+    }),
+
+    get_savings: tool({
+      description: "Savings & investment accounts: money put in, current worth, gain, SIP details and recent entries.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const [accounts, entries] = await Promise.all([getAccounts(), getInvestmentEntries()]);
+        return accountSummaries(accounts, entries).map((a) => ({
+          account: a.name,
+          type: accountKindLabel(a.kind),
+          putIn: a.invested,
+          worthNow: a.current,
+          gain: a.gain,
+          valueUpdatedOn: a.valuedOn,
+          sip: a.sip_amount ? { amount: a.sip_amount, day: a.sip_day } : null,
+          recent: a.entries.slice(0, 5).map((e) => ({ date: e.occurred_on, kind: e.kind, amount: e.amount })),
+        }));
+      },
+    }),
+
+    add_transaction: tool({
+      description: "Log money spent (expense) or received (income).",
+      inputSchema: z.object({
+        type: z.enum(["expense", "income"]),
+        amount: z.number().positive(),
+        category: z.string().max(40).optional().describe("Existing category name; omit if unsure"),
+        date: date,
+        description: z.string().max(200).optional(),
+        period: z.enum(["daily", "monthly", "yearly"]).default("daily").describe("monthly/yearly for recurring bills"),
+      }),
+      execute: async ({ type, amount, category, date: on, description, period }) => {
+        let categoryId: string | null = null;
+        let categoryName: string | null = null;
+        if (category) {
+          const options = (await getCategories()).filter((c) => c.type === type);
+          const found = pick(options, category, (c) => c.name);
+          if ("error" in found) return failed(`${found.error} Ask which category to use, or log it without one.`);
+          categoryId = found.item.id;
+          categoryName = found.item.name;
+        }
+        const result = await addTransaction(
+          INITIAL_FORM,
+          formData({ type, amount, category_id: categoryId, occurred_on: on, description, period }),
+        );
+        if (!result.ok) return failed(result.error ?? "Couldn't save.");
+        return changed(
+          ctx,
+          `Logged ${type} of ₹${amount}${categoryName ? ` in ${categoryName}` : ""} on ${on}${description ? ` (${description})` : ""}.`,
+        );
+      },
+    }),
+
+    add_debt: tool({
+      description:
+        "Log borrowing: borrowed (user took money), repaid (user paid back), lent (user gave money), received (user got money back).",
+      inputSchema: z.object({
+        kind: z.enum(DEBT_KINDS.map((k) => k.kind) as ["borrowed", "repaid", "lent", "received"]),
+        person: z.string().min(1).max(60),
+        amount: z.number().positive(),
+        date: date,
+        note: z.string().max(200).optional(),
+        countInBalance: z.boolean().default(false).describe("Also count it in the day's income/spending balance"),
+      }),
+      execute: async ({ kind, person, amount, date: on, note, countInBalance }) => {
+        const result = await addDebt(
+          INITIAL_FORM,
+          formData({ kind, person, amount, occurred_on: on, note, in_balance: countInBalance ? "yes" : "no" }),
+        );
+        if (!result.ok) return failed(result.error ?? "Couldn't save.");
+        return changed(ctx, `Logged: ${kind} ₹${amount} with ${person} on ${on}.`);
+      },
+    }),
+
+    add_investment_entry: tool({
+      description: "Log money put into or taken out of a savings/investment account, or update its current value.",
+      inputSchema: z.object({
+        account: z.string().min(1),
+        kind: z.enum(["deposit", "withdrawal", "value"]),
+        amount: z.number().min(0),
+        date: date,
+        note: z.string().max(200).optional(),
+      }),
+      execute: async ({ account, kind, amount, date: on, note }) => {
+        const found = pick(await getAccounts(), account, (a) => a.name);
+        if ("error" in found) return failed(found.error);
+        const result = await addInvestmentEntry(
+          INITIAL_FORM,
+          formData({ account_id: found.item.id, kind, amount, occurred_on: on, note }),
+        );
+        if (!result.ok) return failed(result.error ?? "Couldn't save.");
+        return changed(ctx, `${found.item.name}: ${kind} ₹${amount} on ${on}.`);
+      },
+    }),
+
+    delete_transaction: tool({
+      description: "Delete a money entry by id (from list_transactions). Confirm with the user first.",
+      inputSchema: z.object({ id: idInput, describe: z.string().optional(), confirmed: confirmedInput }),
+      execute: async ({ id, describe, confirmed }) => {
+        if (!confirmed) return { ...NEEDS_CONFIRMATION, wouldDelete: describe ?? id };
+        await deleteTransaction(id);
+        return changed(ctx, `Deleted the entry${describe ? ` (${describe})` : ""}.`);
+      },
+    }),
+  };
+}
+
+export const finance: Domain = {
+  labels: {
+    get_finance_overview: "Adding up your money…",
+    list_transactions: "Checking your transactions…",
+    list_categories: "Looking at your categories…",
+    get_budget: "Comparing with your plan…",
+    get_borrow: "Checking who owes what…",
+    get_savings: "Checking your savings…",
+    add_transaction: "Logging the entry…",
+    add_debt: "Logging the borrow entry…",
+    add_investment_entry: "Updating your savings…",
+    delete_transaction: "Removing the entry…",
+  },
+  prompt: `FINANCE
+- Money is Indian Rupees; show it like ₹1,23,456. The <finance> block holds this month so far, last month, this month's plan, borrow balances and savings; use tools for other periods or details.
+- For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
+- Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates.
+- When logging an expense, pick an existing category (list_categories) that clearly fits; if none fits, log it without a category and say so.`,
+  tools: (ctx) => ({ ...financeReadTools(), ...financeWriteTools(ctx) }),
+};
 
 // Always-available baseline so simple questions need no tool calls.
 export async function financeSnapshot(supabase: Supabase) {

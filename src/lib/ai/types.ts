@@ -9,8 +9,14 @@ export type Evidence = {
   output: unknown;
 };
 
-// Chat messages carry a transient "status" data part while the data agent works.
+// Things the assistant asks the open page to do.
+export type AssistantAction =
+  | { kind: "theme"; value: "light" | "dark" }
+  | { kind: "refresh" };
+
+// Chat messages carry transient "status" (what the agent is doing) and
+// "action" (theme change, page refresh) data parts.
 export type AssistantUIMessage = UIMessage<
   never,
-  { status: { label: string } }
+  { status: { label: string }; action: AssistantAction }
 >;

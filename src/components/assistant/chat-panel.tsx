@@ -15,10 +15,13 @@ import {
 import Markdown from "./markdown";
 
 const STARTERS = [
-  "How am I doing this month?",
-  "Where did most of my money go this month?",
-  "Compare my spending with last month",
-  "Which day of the week do I spend the most?",
+  "How's my day going?",
+  "What's my workout today?",
+  "Give me my weekly report",
+  "What's on my to-do list?",
+  "How are my habits this week?",
+  "How am I doing with money this month?",
+  "What documents do I have?",
 ];
 
 function textOf(message: AssistantUIMessage) {
@@ -110,7 +113,7 @@ export default function ChatPanel() {
             <div>
               <p className="font-serif text-3xl">Hi {name}.</p>
               <p className="mt-1 text-sm text-paper/55">
-                Ask me anything about your money — I&apos;ll look it up.
+                Ask about your day, plans, health, money or documents, or tell me what to add or change.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

@@ -1,20 +1,34 @@
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
+  isStepCount,
   streamText,
   toUIMessageStream,
   type ModelMessage,
 } from "ai";
 import { z } from "zod";
-import { buildSnapshot } from "@/lib/ai/domains";
+import { buildAgent, financeSnapshot } from "@/lib/ai/domains";
+import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
-import { runDataAgent } from "@/lib/ai/pipeline";
-import { answerInstructions } from "@/lib/ai/prompts";
+import { agentInstructions } from "@/lib/ai/prompts";
+import { routeMessage } from "@/lib/ai/router";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
-import type { AssistantUIMessage } from "@/lib/ai/types";
+import { todayCard } from "@/lib/ai/snapshot";
+import type { AssistantAction, AssistantUIMessage } from "@/lib/ai/types";
+import { todayISO } from "@/lib/finance";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
+
+const SECTION_STATUS: Record<string, string> = {
+  daily: "Looking at your day…",
+  plan: "Opening your plan…",
+  health: "Checking your health…",
+  finance: "Looking at your money…",
+  documents: "Looking through your documents…",
+  reports: "Putting your report together…",
+  settings: "Checking your settings…",
+};
 
 const Body = z.object({
   conversationId: z.uuid(),
@@ -50,7 +64,7 @@ export async function POST(req: Request) {
       .gte("created_at", since(ms));
 
   // Everything independent runs in parallel.
-  const [minute, day, conversation, history, snapshot, schema] =
+  const [minute, day, conversation, history] =
     await Promise.all([
       countSince(60_000),
       countSince(86_400_000),
@@ -73,8 +87,6 @@ export async function POST(req: Request) {
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: false })
         .limit(12),
-      buildSnapshot(supabase),
-      getSchemaText(supabase),
     ]);
 
   if ((minute.count ?? 0) >= LIMIT_PER_MINUTE)
@@ -84,9 +96,6 @@ export async function POST(req: Request) {
   if (!conversation.data) return jsonError("Conversation not found", 404);
 
   const past = (history.data ?? []).reverse();
-  const priorEvidence = [...past]
-    .reverse()
-    .find((m) => m.role === "assistant" && m.evidence)?.evidence;
   const historyMessages: ModelMessage[] = past.map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
@@ -103,6 +112,8 @@ export async function POST(req: Request) {
     if (insertError) return jsonError("Couldn't save your message", 500);
   }
 
+  const today = todayISO();
+
   const stream = createUIMessageStream<AssistantUIMessage>({
     onError: friendlyError,
     execute: async ({ writer }) => {
@@ -111,40 +122,57 @@ export async function POST(req: Request) {
         writer.write({ type: "data-status", data: { label }, transient: true });
       status("Thinking…");
 
-      // Stage 1: gather data
-      const { evidence } = await runDataAgent({
-        supabase,
-        profile,
-        schema,
-        snapshot,
-        history: historyMessages,
-        priorEvidence,
-        userText: text,
-        onStatus: status,
-      });
-      if (evidence.length) status("Writing your answer…");
+      // 1. Router picks the sections; the today card loads meanwhile.
+      const [route, today_] = await Promise.all([
+        routeMessage(historyMessages, text),
+        todayCard(today).catch(() => null),
+      ]);
+      const sql = route.customQuery || route.sections.includes("finance");
+      const [schema, finance] = await Promise.all([
+        sql ? getSchemaText(supabase) : null,
+        route.sections.includes("finance") ? financeSnapshot(supabase).catch(() => null) : null,
+      ]);
+      status(SECTION_STATUS[route.sections[0]] ?? "Thinking…");
 
-      // Stage 2: answer (keeps running and saves even if the tab closes)
+      // 2. The section agent looks things up, makes changes and answers.
+      const emit = (action: AssistantAction) =>
+        writer.write({ type: "data-action", data: action, transient: true });
+      const agent = buildAgent({ supabase, profile, today, emit }, route.sections, { sql });
+      const announced = new Set<string>();
+
+      const context = [
+        `<today>${JSON.stringify(today_)}</today>`,
+        finance ? `<finance>${JSON.stringify(finance)}</finance>` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
       const answer = streamText({
         model: answerModel,
-        instructions: answerInstructions(firstName(profile)),
-        messages: [
-          ...historyMessages,
-          {
-            role: "user",
-            content: `<data>${JSON.stringify({ snapshot, evidence })}</data>\n\n${text}`,
-          },
-        ],
+        instructions: agentInstructions(firstName(profile), agent.prompts, schema),
+        messages: [...historyMessages, { role: "user", content: `${context}\n\n${text}` }],
+        tools: agent.tools,
+        stopWhen: isStepCount(8),
         temperature: 0.3,
-        maxOutputTokens: 1200,
+        maxOutputTokens: 1500,
         providerOptions: answerProviderOptions,
-        onEnd: async ({ text: answerText }) => {
+        onToolExecutionStart: ({ toolCall }) => {
+          const label = agent.labels[toolCall.toolName];
+          if (label && !announced.has(label)) {
+            announced.add(label);
+            status(label);
+          }
+        },
+        onEnd: async ({ text: answerText, steps }) => {
           if (!answerText.trim()) return;
+          const evidence = steps
+            .flatMap((step) => step.toolResults)
+            .map((r) => compact(r.toolName, r.input, r.output));
           await supabase.from("ai_messages").insert({
             conversation_id: conversationId,
             role: "assistant",
             content: answerText.slice(0, 20000),
-            evidence: evidence.length ? evidence : null,
+            evidence: evidence.length ? { sections: route.sections, tools: evidence } : null,
           });
         },
       });

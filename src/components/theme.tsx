@@ -19,6 +19,19 @@ export function ThemeScript() {
   );
 }
 
+// Applies a theme with the short colour transition and remembers it.
+export function setTheme(theme: "light" | "dark") {
+  const root = document.documentElement;
+  root.classList.add("theme-transition");
+  root.classList.toggle("dark", theme === "dark");
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // Storage unavailable (private mode); the theme still applies for this visit.
+  }
+  window.setTimeout(() => root.classList.remove("theme-transition"), 320);
+}
+
 function subscribe(onChange: () => void) {
   const observer = new MutationObserver(onChange);
   observer.observe(document.documentElement, {
@@ -79,16 +92,7 @@ export function ThemeToggle({
   const isDark = useIsDark();
 
   function toggle() {
-    const root = document.documentElement;
-    const next = !root.classList.contains("dark");
-    root.classList.add("theme-transition");
-    root.classList.toggle("dark", next);
-    try {
-      localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
-    } catch {
-      // Storage unavailable (private mode); the theme still applies for this visit.
-    }
-    window.setTimeout(() => root.classList.remove("theme-transition"), 320);
+    setTheme(document.documentElement.classList.contains("dark") ? "light" : "dark");
   }
 
   const label = isDark ? "Switch to light mode" : "Switch to dark mode";

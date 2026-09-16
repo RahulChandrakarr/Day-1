@@ -249,3 +249,17 @@ export async function setTodoDone(
   todos[at] = { ...todos[at], done: Boolean(done) };
   return writeTodos(supabase, date, todos);
 }
+
+// Replace the whole to-do list for a day (used by the assistant)
+export async function replaceTodos(
+  todos: { text: string; done?: boolean }[],
+  date: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!isValidDate(date)) return { ok: false, error: "Invalid date." };
+  const list = (Array.isArray(todos) ? todos : [])
+    .map((t) => ({ text: text(t?.text, 200).trim(), done: Boolean(t?.done) }))
+    .filter((t) => t.text);
+  if (list.length > 50) return { ok: false, error: "A day holds up to 50 to-dos." };
+  const supabase = await authedClient();
+  return writeTodos(supabase, date, list);
+}

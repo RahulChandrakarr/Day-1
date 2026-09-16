@@ -2,6 +2,12 @@
 
 import { Streamdown } from "streamdown";
 
+// Links inside the app (PDF reports, pages) open without the safety prompt
+const linkSafety = {
+  enabled: true,
+  onLinkCheck: (url: string) => url.startsWith("/") && !url.startsWith("//"),
+};
+
 export default function Markdown({
   children,
   streaming = false,
@@ -15,6 +21,7 @@ export default function Markdown({
       mode={streaming ? "streaming" : "static"}
       isAnimating={streaming}
       controls={false}
+      linkSafety={linkSafety}
     >
       {children}
     </Streamdown>

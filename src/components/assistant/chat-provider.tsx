@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { setTheme } from "@/components/theme";
 import type { AssistantUIMessage } from "@/lib/ai/types";
 
 type ChatContextValue = ReturnType<typeof useChat<AssistantUIMessage>> & {
@@ -57,6 +59,9 @@ export default function ChatProvider({
     initial: AssistantUIMessage[];
   }>(() => ({ id: crypto.randomUUID(), initial: [] }));
   const [statusLabel, setStatusLabel] = useState<string | null>(null);
+  const router = useRouter();
+  // Set when the assistant changed data, so pages refresh after the answer
+  const dataChanged = useRef(false);
 
   // The chat id doubles as the conversation id; only the new text is sent.
   const [transport] = useState(
@@ -78,8 +83,18 @@ export default function ChatProvider({
     transport,
     onData: (part) => {
       if (part.type === "data-status") setStatusLabel(part.data.label);
+      if (part.type === "data-action") {
+        if (part.data.kind === "theme") setTheme(part.data.value);
+        else dataChanged.current = true;
+      }
     },
-    onFinish: () => setStatusLabel(null),
+    onFinish: () => {
+      setStatusLabel(null);
+      if (dataChanged.current) {
+        dataChanged.current = false;
+        router.refresh();
+      }
+    },
     onError: () => setStatusLabel(null),
   });
 

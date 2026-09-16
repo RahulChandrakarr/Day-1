@@ -31,12 +31,3 @@ export function compact(
   }
   return { tool, input, output: trimmed };
 }
-
-export const STATUS_LABELS: Record<string, string> = {
-  get_finance_overview: "Adding up your money…",
-  list_transactions: "Checking your transactions…",
-  list_categories: "Looking at your categories…",
-  get_profile: "Checking your profile…",
-  list_users: "Looking up users…",
-  run_sql: "Digging through your data…",
-};
