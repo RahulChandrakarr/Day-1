@@ -13,6 +13,8 @@ export type PlanGoal = {
   notes: string;
   target_value: number | null;
   unit: string | null;
+  start_month: number; // 1-12
+  end_month: number; // 1-12
   position: number;
 };
 
@@ -68,6 +70,46 @@ export function weekDays(month: string, week: number) {
 
 export const monthsOfYear = (year: number) =>
   Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`);
+
+const monthKey = (year: number, month: number) =>
+  `${year}-${String(month).padStart(2, "0")}`;
+
+// The months a goal runs in, e.g. 2026-03 … 2026-06
+export const goalMonths = (goal: Pick<PlanGoal, "year" | "start_month" | "end_month">) =>
+  monthsOfYear(goal.year).filter((m) => {
+    const n = Number(m.slice(5));
+    return n >= goal.start_month && n <= goal.end_month;
+  });
+
+export const goalActiveIn = (
+  goal: Pick<PlanGoal, "year" | "start_month" | "end_month">,
+  month: string,
+) => goalMonths(goal).includes(month);
+
+export function goalRange(goal: Pick<PlanGoal, "year" | "start_month" | "end_month">) {
+  const end = monthKey(goal.year, goal.end_month);
+  return {
+    from: `${monthKey(goal.year, goal.start_month)}-01`,
+    to: `${end}-${String(daysInMonth(end)).padStart(2, "0")}`,
+  };
+}
+
+// Share of the goal's own time that has passed (0..1)
+export function goalElapsed(
+  goal: Pick<PlanGoal, "year" | "start_month" | "end_month">,
+  today: string,
+) {
+  const { from, to } = goalRange(goal);
+  const start = Date.parse(`${from}T00:00:00Z`);
+  const end = Date.parse(`${to}T00:00:00Z`) + 86_400_000;
+  const now = Date.parse(`${today}T00:00:00Z`);
+  return Math.min(Math.max((now - start) / (end - start), 0), 1);
+}
+
+export const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 // Which items fall inside a month / week / day
 export function itemsIn(
@@ -129,7 +171,7 @@ export function goalProgress(
         ? weekRange(scope.month, scope.week)
         : scope.month
           ? { from: `${scope.month}-01`, to: `${scope.month}-${String(daysInMonth(scope.month)).padStart(2, "0")}` }
-          : { from: `${goal.year}-01-01`, to: `${goal.year}-12-31` };
+          : goalRange(goal);
     const amount = progressIn(
       logs.filter((l) => l.goal_id === goal.id),
       range,
@@ -167,7 +209,9 @@ export function periodTarget(
   );
   const monthTarget = monthItems.length
     ? monthItems.reduce((sum, i) => sum + (i.target_value ?? 0), 0)
-    : goal.target_value / 12;
+    : goalActiveIn(goal, month)
+      ? goal.target_value / goalMonths(goal).length
+      : 0;
   if (!scope.week && !scope.day) return monthTarget;
   const week = scope.week ?? weekOfMonth(scope.day!);
   const weekItems = items.filter(
@@ -196,7 +240,7 @@ export function splitAcrossMonths(
   logged: number,
   fromMonth: string,
 ) {
-  const months = monthsOfYear(goal.year).filter((m) => m >= fromMonth);
+  const months = goalMonths(goal).filter((m) => m >= fromMonth);
   const remaining = Math.max((goal.target_value ?? 0) - logged, 0);
   const share = months.length ? remaining / months.length : 0;
   return months.map((month) => ({

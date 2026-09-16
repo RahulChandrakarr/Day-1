@@ -5,27 +5,28 @@ import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
 import ProgressBar from "@/components/plan/progress-bar";
 import { Card, DarkCard, Empty } from "@/components/ui/kit";
 import { formatMonthShort, parseYearParam, todayISO } from "@/lib/finance";
-import { goalProgress, monthsOfYear } from "@/lib/plans";
+import {
+  goalActiveIn,
+  goalElapsed,
+  goalMonths,
+  goalProgress,
+  MONTH_NAMES,
+  monthsOfYear,
+} from "@/lib/plans";
 import { getPlanYear } from "@/lib/plan-queries";
-
-// How much of the year has gone, for the "ahead / behind" marker
-function yearElapsed(year: number, today: string) {
-  const now = Date.parse(`${today}T00:00:00Z`);
-  const start = Date.parse(`${year}-01-01T00:00:00Z`);
-  const end = Date.parse(`${year + 1}-01-01T00:00:00Z`);
-  return Math.min(Math.max((now - start) / (end - start), 0), 1);
-}
 
 export default async function PlanYearPage({ searchParams }: PageProps<"/plan">) {
   const today = todayISO();
   const year = parseYearParam((await searchParams).year);
   const currentMonth = today.slice(0, 7);
   const { goals, items, logs } = await getPlanYear(year);
-  const elapsed = yearElapsed(year, today);
 
   const progress = goals.map((g) => goalProgress(g, items, logs));
   const measured = progress.filter((p) => p.ratio !== null);
-  const behind = measured.filter((p) => (p.ratio ?? 0) + 0.05 < elapsed).length;
+  const behind = goals.filter((g, i) => {
+    const p = progress[i];
+    return p.ratio !== null && p.ratio + 0.05 < goalElapsed(g, today);
+  }).length;
   const overall = measured.length
     ? measured.reduce((s, p) => s + (p.ratio ?? 0), 0) / measured.length
     : 0;
@@ -58,8 +59,9 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
               {year} so far
             </p>
             <p className="mt-0.5 text-[13px]">
-              {goals.length} goal{goals.length === 1 ? "" : "s"} ·{" "}
-              {Math.round(elapsed * 100)}% of the year gone
+              {goals.length} goal{goals.length === 1 ? "" : "s"}
+              {year === Number(today.slice(0, 4)) &&
+                ` · ${Math.round((Number(today.slice(5, 7)) / 12) * 100)}% of the year gone`}
             </p>
             <p className="text-[13px] text-ink/65">
               {behind > 0
@@ -90,6 +92,13 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
                     <span className="text-2xl leading-none">{goal.emoji}</span>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-serif text-xl leading-tight">{goal.title}</h3>
+                      <p className="text-xs text-paper/45">
+                        {goal.start_month === 1 && goal.end_month === 12
+                          ? "All year"
+                          : `${MONTH_NAMES[goal.start_month - 1]} – ${MONTH_NAMES[goal.end_month - 1]}`}{" "}
+                        · {goalMonths(goal).length} month
+                        {goalMonths(goal).length === 1 ? "" : "s"}
+                      </p>
                       {goal.notes && (
                         <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-paper/55">
                           {goal.notes}
@@ -100,7 +109,11 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
                   </div>
 
                   <div className="mt-3">
-                    <ProgressBar progress={p} unit={goal.unit} elapsed={elapsed} />
+                    <ProgressBar
+                      progress={p}
+                      unit={goal.unit}
+                      elapsed={goalElapsed(goal, today)}
+                    />
                   </div>
 
                   {/* Month by month */}
@@ -109,6 +122,19 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
                       const mp = goalProgress(goal, items, logs, { month });
                       const ratio = mp.ratio ?? 0;
                       const past = month < currentMonth;
+                      if (!goalActiveIn(goal, month))
+                        return (
+                          <span
+                            key={month}
+                            aria-hidden
+                            className="flex flex-col items-center gap-1 opacity-25"
+                          >
+                            <span className="h-10 w-full rounded-md border border-dashed border-paper/20" />
+                            <span className="text-[9px] text-paper/40">
+                              {formatMonthShort(month).slice(0, 1)}
+                            </span>
+                          </span>
+                        );
                       return (
                         <Link
                           key={month}
@@ -139,19 +165,27 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan">)
                       <SplitButton
                         goal={goal}
                         mode="months"
-                        period={year === Number(today.slice(0, 4)) ? currentMonth : `${year}-01`}
+                        period={
+                          goalActiveIn(goal, currentMonth)
+                            ? currentMonth
+                            : goalMonths(goal)[0]
+                        }
                         label="Split evenly across months"
                       />
                     )}
                     <Link
-                      href={`/plan/month?month=${year === Number(today.slice(0, 4)) ? currentMonth : `${year}-01`}`}
+                      href={`/plan/month?month=${
+                        goalActiveIn(goal, currentMonth)
+                          ? currentMonth
+                          : goalMonths(goal)[0]
+                      }`}
                       className="rounded-full px-3 py-1.5 text-xs font-semibold text-ember hover:bg-ember/10"
                     >
                       Plan this month →
                     </Link>
                   </div>
 
-                  {goal.target_value && year === Number(today.slice(0, 4)) && (
+                  {goal.target_value && goalActiveIn(goal, currentMonth) && (
                     <div className="mt-3">
                       <LogProgress goal={goal} date={today} />
                     </div>

@@ -10,7 +10,7 @@ export async function getPlanYear(year: number) {
   const [goals, items, logs] = await Promise.all([
     supabase
       .from("plan_goals")
-      .select("id, year, title, emoji, notes, target_value, unit, position")
+      .select("id, year, title, emoji, notes, target_value, unit, start_month, end_month, position")
       .eq("year", year)
       .eq("archived", false)
       .order("position")
@@ -72,7 +72,7 @@ export async function getPlanDay(date: string) {
   const { data, error } = await supabase
     .from("plan_items")
     .select(
-      "id, goal_id, level, period, title, notes, target_value, done, position, goal:plan_goals(id, year, title, emoji, notes, target_value, unit, position)",
+      "id, goal_id, level, period, title, notes, target_value, done, position, goal:plan_goals(id, year, title, emoji, notes, target_value, unit, start_month, end_month, position)",
     )
     .eq("level", "day")
     .eq("period", date)

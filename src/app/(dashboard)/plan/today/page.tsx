@@ -10,6 +10,7 @@ import {
   todayISO,
 } from "@/lib/finance";
 import {
+  goalActiveIn,
   formatAmount,
   goalProgress,
   periodTarget,
@@ -22,10 +23,13 @@ export default async function PlanTodayPage({
 }: PageProps<"/plan/today">) {
   const today = todayISO();
   const date = parseDateParam((await searchParams).date);
-  const { goals, items, logs } = await getPlanYear(Number(date.slice(0, 4)));
+  const month = date.slice(0, 7);
+  const { goals: allGoals, items, logs } = await getPlanYear(Number(date.slice(0, 4)));
+  // Only goals running this month
+  const goals = allGoals.filter((g) => goalActiveIn(g, month));
   const dayItems = items.filter((i) => i.level === "day" && i.period === date);
   const done = dayItems.filter((i) => i.done).length;
-  const month = date.slice(0, 7);
+
   const week = weekOfMonth(date);
   const numeric = goals.filter((g) => g.target_value);
 
@@ -41,7 +45,11 @@ export default async function PlanTodayPage({
       />
 
       {goals.length === 0 ? (
-        <Empty href="/plan">Add a yearly goal first →</Empty>
+        <Empty href="/plan">
+          {allGoals.length === 0
+            ? "Add a yearly goal first →"
+            : "No goals run in this month. Check the start and end months on the Year tab →"}
+        </Empty>
       ) : (
         <>
           <DarkCard>

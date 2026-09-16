@@ -12,7 +12,7 @@ const TRIGGERS = {
   primary: primaryButtonClass,
   link: "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-ember hover:bg-ember/10",
 };
-import type { PlanGoal } from "@/lib/plans";
+import { MONTH_NAMES, type PlanGoal } from "@/lib/plans";
 
 const EMOJIS = ["🎯", "💰", "💪", "📚", "💻", "🧘", "✈️", "🏠", "❤️", "🎨", "🚭", "📈"];
 const UNITS = ["₹", "kg", "books", "km", "hours", "days", "%"];
@@ -38,6 +38,12 @@ export default function GoalSheet({
     goal?.target_value ? String(goal.target_value) : "",
   );
   const [unit, setUnit] = useState(goal?.unit ?? "₹");
+  // New goals start this month when planning the current year
+  const thisYear = new Date().getFullYear() === year;
+  const [startMonth, setStartMonth] = useState(
+    goal?.start_month ?? (thisYear ? new Date().getMonth() + 1 : 1),
+  );
+  const [endMonth, setEndMonth] = useState(goal?.end_month ?? 12);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -52,6 +58,8 @@ export default function GoalSheet({
         notes,
         target_value: target,
         unit,
+        start_month: startMonth,
+        end_month: endMonth,
       });
       if (!result.ok) {
         setError(result.error);
@@ -142,6 +150,44 @@ export default function GoalSheet({
               className={inputClass}
             />
           </Field>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Starts">
+              <select
+                value={startMonth}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setStartMonth(value);
+                  if (value > endMonth) setEndMonth(value);
+                }}
+                className={inputClass}
+              >
+                {MONTH_NAMES.map((name, i) => (
+                  <option key={name} value={i + 1}>
+                    {name} {year}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Ends">
+              <select
+                value={endMonth}
+                onChange={(e) => setEndMonth(Number(e.target.value))}
+                className={inputClass}
+              >
+                {MONTH_NAMES.map((name, i) => (
+                  <option key={name} value={i + 1} disabled={i + 1 < startMonth}>
+                    {name} {year}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <p className="-mt-2 text-xs text-paper/40">
+            {endMonth - startMonth + 1} month
+            {endMonth - startMonth === 0 ? "" : "s"}. Monthly targets and tasks
+            are spread across these months only.
+          </p>
 
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <Field label="Number to reach" hint="(optional)">

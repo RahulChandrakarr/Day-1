@@ -43,6 +43,8 @@ export async function saveGoal(input: {
   notes?: string;
   target_value?: number | string | null;
   unit?: string | null;
+  start_month?: number;
+  end_month?: number;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const title = clean(input.title, 80);
   if (!title) return { ok: false, error: "Give the goal a name." };
@@ -50,7 +52,19 @@ export async function saveGoal(input: {
   if (!Number.isInteger(year) || year < 2000 || year > 2200)
     return { ok: false, error: "Invalid year." };
   const target = amountOrNull(input.target_value);
+  const startMonth = Number(input.start_month ?? 1);
+  const endMonth = Number(input.end_month ?? 12);
+  if (
+    !Number.isInteger(startMonth) ||
+    !Number.isInteger(endMonth) ||
+    startMonth < 1 ||
+    endMonth > 12 ||
+    startMonth > endMonth
+  )
+    return { ok: false, error: "The end month must come after the start month." };
   const row = {
+    start_month: startMonth,
+    end_month: endMonth,
     year,
     title,
     emoji: clean(input.emoji, 8) || "🎯",
@@ -98,7 +112,7 @@ export async function splitGoalByMonth(goalId: string, fromMonth: string): Promi
   const supabase = await authedClient();
   const { data: goal, error } = await supabase
     .from("plan_goals")
-    .select("id, year, title, emoji, notes, target_value, unit, position")
+    .select("id, year, title, emoji, notes, target_value, unit, start_month, end_month, position")
     .eq("id", goalId)
     .single();
   if (error || !goal) return { ok: false, error: error?.message ?? "Unknown goal." };
@@ -116,6 +130,8 @@ export async function splitGoalByMonth(goalId: string, fromMonth: string): Promi
     logged,
     fromMonth,
   );
+  if (split.length === 0)
+    return { ok: false, error: "This goal has no months left to split into." };
   const unit = goal.unit ?? "";
 
   // Replace existing month targets from this month on
@@ -148,7 +164,11 @@ export async function splitMonthByWeek(goalId: string, month: string): Promise<R
     return { ok: false, error: "Invalid request." };
   const supabase = await authedClient();
   const [{ data: goal }, { data: monthItems }] = await Promise.all([
-    supabase.from("plan_goals").select("title, target_value, unit").eq("id", goalId).single(),
+    supabase
+      .from("plan_goals")
+      .select("title, target_value, unit, start_month, end_month")
+      .eq("id", goalId)
+      .single(),
     supabase
       .from("plan_items")
       .select("target_value")
@@ -159,7 +179,9 @@ export async function splitMonthByWeek(goalId: string, month: string): Promise<R
   if (!goal) return { ok: false, error: "Unknown goal." };
   const monthTarget =
     (monthItems ?? []).reduce((s, i) => s + Number(i.target_value ?? 0), 0) ||
-    (goal.target_value ? Number(goal.target_value) / 12 : 0);
+    (goal.target_value
+      ? Number(goal.target_value) / (goal.end_month - goal.start_month + 1)
+      : 0);
   if (!monthTarget)
     return { ok: false, error: "Set this month's target first." };
 

@@ -10,6 +10,7 @@ import {
   todayISO,
 } from "@/lib/finance";
 import {
+  goalActiveIn,
   goalProgress,
   weekDays,
   weekOfMonth,
@@ -32,7 +33,9 @@ export default async function PlanWeekPage({
         ? weekOfMonth(today)
         : 1;
 
-  const { goals, items, logs } = await getPlanYear(Number(month.slice(0, 4)));
+  const { goals: allGoals, items, logs } = await getPlanYear(Number(month.slice(0, 4)));
+  // Only goals running this month
+  const goals = allGoals.filter((g) => goalActiveIn(g, month));
   const { from, to } = weekRange(month, week);
   const days = weekDays(month, week);
   const elapsed =
@@ -55,7 +58,11 @@ export default async function PlanWeekPage({
       />
 
       {goals.length === 0 ? (
-        <Empty href="/plan">Add a yearly goal first →</Empty>
+        <Empty href="/plan">
+          {allGoals.length === 0
+            ? "Add a yearly goal first →"
+            : "No goals run in this month. Check the start and end months on the Year tab →"}
+        </Empty>
       ) : (
         <>
           <SectionHead title="This week's targets" href={`/plan/month?month=${month}`} link="Month" />

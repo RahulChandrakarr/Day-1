@@ -12,6 +12,7 @@ import {
   todayISO,
 } from "@/lib/finance";
 import {
+  goalActiveIn,
   formatAmount,
   goalProgress,
   periodTarget,
@@ -26,7 +27,9 @@ export default async function PlanMonthPage({
 }: PageProps<"/plan/month">) {
   const today = todayISO();
   const month = parseMonthParam((await searchParams).month);
-  const { goals, items, logs } = await getPlanYear(Number(month.slice(0, 4)));
+  const { goals: allGoals, items, logs } = await getPlanYear(Number(month.slice(0, 4)));
+  // Only goals running this month
+  const goals = allGoals.filter((g) => goalActiveIn(g, month));
   const isCurrent = month === today.slice(0, 7);
   const elapsed = isCurrent
     ? Number(today.slice(8)) / daysInMonth(month)
@@ -47,7 +50,11 @@ export default async function PlanMonthPage({
       />
 
       {goals.length === 0 ? (
-        <Empty href="/plan">Add a yearly goal first →</Empty>
+        <Empty href="/plan">
+          {allGoals.length === 0
+            ? "Add a yearly goal first →"
+            : "No goals run in this month. Check the start and end months on the Year tab →"}
+        </Empty>
       ) : (
         goals.map((goal) => {
           const p = goalProgress(goal, items, logs, { month });
