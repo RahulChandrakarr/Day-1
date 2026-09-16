@@ -177,3 +177,75 @@ export async function appendJournalNote(
   revalidatePath("/daily");
   return { ok: true };
 }
+
+// ---------------------------------------------------------------------------
+// To-dos: the same list as the journal's priorities for that day
+// ---------------------------------------------------------------------------
+type Todo = { text: string; done: boolean };
+
+async function readTodos(
+  supabase: Awaited<ReturnType<typeof authedClient>>,
+  date: string,
+) {
+  const { data } = await supabase
+    .from("journal_entries")
+    .select("priorities")
+    .eq("entry_date", date)
+    .maybeSingle<{ priorities: Todo[] }>();
+  return (data?.priorities ?? []).filter((p) => p?.text?.trim());
+}
+
+async function writeTodos(
+  supabase: Awaited<ReturnType<typeof authedClient>>,
+  date: string,
+  todos: Todo[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { error } = await supabase.from("journal_entries").upsert(
+    {
+      entry_date: date,
+      priorities: todos.slice(0, 50),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,entry_date" },
+  );
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/");
+  revalidatePath("/daily");
+  return { ok: true };
+}
+
+export async function addTodos(
+  texts: string[],
+  date: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!isValidDate(date)) return { ok: false, error: "Invalid date." };
+  const fresh = (Array.isArray(texts) ? texts : [])
+    .map((t) => text(t, 200).trim())
+    .filter(Boolean)
+    .map((t) => ({ text: t, done: false }));
+  if (fresh.length === 0) return { ok: false, error: "Write a to-do first." };
+  const supabase = await authedClient();
+  const todos = await readTodos(supabase, date);
+  if (todos.length + fresh.length > 50)
+    return { ok: false, error: "A day holds up to 50 to-dos." };
+  return writeTodos(supabase, date, [...todos, ...fresh]);
+}
+
+// Matched by position and text, so a list changed elsewhere isn't mangled
+export async function setTodoDone(
+  date: string,
+  index: number,
+  todoText: string,
+  done: boolean,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!isValidDate(date)) return { ok: false, error: "Invalid date." };
+  const supabase = await authedClient();
+  const todos = await readTodos(supabase, date);
+  const at =
+    todos[index]?.text === todoText
+      ? index
+      : todos.findIndex((t) => t.text === todoText);
+  if (at < 0) return { ok: false, error: "That to-do changed. Refresh and try again." };
+  todos[at] = { ...todos[at], done: Boolean(done) };
+  return writeTodos(supabase, date, todos);
+}

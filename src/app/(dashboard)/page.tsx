@@ -19,6 +19,9 @@ import { getPlanDay } from "@/lib/plan-queries";
 import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
 import { Empty, ReminderChip, SectionHead } from "@/components/ui/kit";
+import TodoList from "@/components/dashboard/todo-list";
+import { AddNoteButton, AddTodoButton } from "@/components/dashboard/quick-add";
+import { getJournalEntry } from "@/lib/journal-queries";
 
 export const metadata: Metadata = {
   title: "Overview · Day One",
@@ -39,7 +42,15 @@ export default async function OverviewPage() {
     moods,
     bodyLogs,
   } = await getOverview();
-  const plan = await getPlanDay(today);
+  const [plan, journal] = await Promise.all([
+    getPlanDay(today),
+    getJournalEntry(today),
+  ]);
+  // To-dos are the journal's priorities for today
+  const todos = journal.entry.priorities
+    .filter((p) => p.text.trim())
+    .map((p, index) => ({ ...p, index }));
+  const pendingTodos = todos.filter((t) => !t.done);
   const pendingPlan = plan.items.filter((i) => !i.done);
 
   // Money, kept short
@@ -72,15 +83,6 @@ export default async function OverviewPage() {
   if (!journalWritten)
     reminders.push(
       <ReminderChip key="journal" href="/daily" emoji="📝" title="Journal" />,
-    );
-  if (!moneyLogged)
-    reminders.push(
-      <ReminderChip
-        key="money"
-        href="/financial/daily?add=entry"
-        emoji="💸"
-        title="Log money"
-      />,
     );
 
   // Finished things collapse into one quiet line
@@ -193,6 +195,8 @@ export default async function OverviewPage() {
     );
   }
 
+  if (todos.length > 0 && pendingTodos.length === 0)
+    finished.push(`All ${todos.length} to-do${todos.length === 1 ? "" : "s"} done`);
   if (plan.items.length > 0 && pendingPlan.length === 0)
     finished.push(`All ${plan.items.length} plan tasks done`);
 
@@ -200,16 +204,19 @@ export default async function OverviewPage() {
     reminders.length === 0 &&
     pendingExercises.length === 0 &&
     pendingHabits.length === 0 &&
-    pendingPlan.length === 0;
+    pendingPlan.length === 0 &&
+    pendingTodos.length === 0;
 
   const dayTotal =
     (gymDay.rest ? 0 : gymDay.exercises.length) +
     habits.length +
-    plan.items.length;
+    plan.items.length +
+    todos.length;
   const dayDone =
     (gymDay.rest ? 0 : doneIds.length) +
     (habits.length - pendingHabits.length) +
-    (plan.items.length - pendingPlan.length);
+    (plan.items.length - pendingPlan.length) +
+    (todos.length - pendingTodos.length);
   const dayPercent = dayTotal ? Math.round((dayDone / dayTotal) * 100) : 100;
 
   const GYM_LIMIT = 4;
@@ -218,9 +225,13 @@ export default async function OverviewPage() {
   return (
     <PageShell title="Overview">
       <div className="flex flex-col gap-3">
-        <Suspense fallback={<div className="h-12" />}>
-          <AddEntry />
-        </Suspense>
+        <div className="grid grid-cols-3 gap-2">
+          <Suspense fallback={<div className="h-12 rounded-2xl bg-ember/60" />}>
+            <AddEntry compact />
+          </Suspense>
+          <AddTodoButton date={today} />
+          <AddNoteButton />
+        </div>
 
         {/* Today so far: ring, one insight, what's done */}
         <section className="flex items-center gap-3 rounded-2xl bg-paper px-3.5 py-3 text-ink">
@@ -253,6 +264,17 @@ export default async function OverviewPage() {
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             {reminders}
           </div>
+        )}
+
+        {pendingTodos.length > 0 && (
+          <>
+            <SectionHead
+              title="To do"
+              href="/daily"
+              link={`${todos.length - pendingTodos.length}/${todos.length}`}
+            />
+            <TodoList date={today} todos={pendingTodos} />
+          </>
         )}
 
         <TodayTasks

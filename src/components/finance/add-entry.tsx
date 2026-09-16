@@ -18,7 +18,7 @@ import { getHabits } from "@/lib/journal-queries";
 import EntryDialog from "./entry-dialog";
 
 // "+ Add entry" button with everything the add sheet can log.
-export default async function AddEntry() {
+export default async function AddEntry({ compact = false }: { compact?: boolean }) {
   const today = todayISO();
   const [categories, usage, people, debts, accounts, habits, habitCheckins, gym] =
     await Promise.all([
@@ -43,6 +43,7 @@ export default async function AddEntry() {
 
   return (
     <EntryDialog
+      compact={compact}
       categories={categories}
       usage={usage}
       people={personBalances(people, debts).map(({ id, name, owe, owed }) => ({

@@ -131,7 +131,9 @@ export default function EntryDialog({
   habits,
   habitCheckins,
   workout,
+  compact = false,
 }: {
+  compact?: boolean;
   categories: Category[];
   usage: Record<string, number>;
   people: EntryPerson[];
@@ -175,10 +177,14 @@ export default function EntryDialog({
           setSession((n) => n + 1);
           setOpen(true);
         }}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-6 font-medium text-on-ember shadow-sm transition-colors hover:bg-ember-light md:w-auto md:self-start"
+        className={
+          compact
+            ? "flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-ember px-2 text-[15px] font-semibold text-on-ember shadow-sm transition-colors hover:bg-ember-light"
+            : "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-6 font-medium text-on-ember shadow-sm transition-colors hover:bg-ember-light md:w-auto md:self-start"
+        }
       >
         <span className="text-xl leading-none">+</span>
-        Add entry
+        {compact ? "Entry" : "Add entry"}
       </motion.button>
 
       <AnimatePresence>
