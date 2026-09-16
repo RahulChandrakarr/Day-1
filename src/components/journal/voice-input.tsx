@@ -16,6 +16,7 @@ type Recognition = {
   onresult: ((event: SpeechEvent) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
+  onstart: (() => void) | null;
   start: () => void;
   stop: () => void;
   abort: () => void;
@@ -58,6 +59,7 @@ export default function VoiceInput({
   const [error, setError] = useState<string | null>(null);
   const recognition = useRef<Recognition | null>(null);
   const wantListening = useRef(false);
+  const lastWritten = useRef<{ text: string; at: number } | null>(null);
   const onTextRef = useRef(onText);
 
   useEffect(() => {
@@ -84,17 +86,45 @@ export default function VoiceInput({
     setError(null);
     const rec = new Ctor();
     rec.lang = code;
-    rec.continuous = true;
+    // Chrome on Android repeats finished phrases in continuous mode, which
+    // doubled the words. There we listen one phrase at a time and restart.
+    const android = /Android/i.test(navigator.userAgent);
+    rec.continuous = !android;
     rec.interimResults = true;
+
+    // Each result is written once per session, and the same phrase arriving
+    // again straight away is ignored.
+    let written = new Set<number>();
+    rec.onstart = () => {
+      written = new Set<number>();
+    };
 
     rec.onresult = (event) => {
       let pending = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
         const text = result[0].transcript.trim();
         if (!text) continue;
-        if (result.isFinal) onTextRef.current(text);
-        else pending += `${text} `;
+        if (!result.isFinal) {
+          if (i >= event.resultIndex) pending += `${text} `;
+          continue;
+        }
+        if (written.has(i)) continue;
+        written.add(i);
+        const now = Date.now();
+        const last = lastWritten.current;
+        const recent = last && now - last.at < 5000;
+        const said = text.toLowerCase();
+        const before = last?.text.toLowerCase() ?? "";
+        // Same phrase again: skip it
+        if (recent && said === before) continue;
+        // Longer phrase that repeats the last one: add only the new words
+        const fresh =
+          recent && said.startsWith(`${before} `)
+            ? text.slice(before.length).trim()
+            : text;
+        lastWritten.current = { text, at: now };
+        if (fresh) onTextRef.current(fresh);
       }
       setInterim(pending.trim());
     };
