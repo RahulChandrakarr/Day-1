@@ -204,7 +204,7 @@ async function buildPayload(
     return {
       title: `${rows.length} plan task${rows.length === 1 ? "" : "s"} today`,
       body: rows.map((r) => `${r.emoji} ${r.title}`).join(" · ").slice(0, 180),
-      url: "/plan/today",
+      url: "/plan",
       tag: "plan",
     };
   }

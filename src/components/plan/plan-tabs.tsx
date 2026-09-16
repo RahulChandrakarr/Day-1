@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/plan", label: "Year", exact: true },
-  { href: "/plan/month", label: "Month" },
+  { href: "/plan", label: "Today", exact: true },
   { href: "/plan/week", label: "Week" },
-  { href: "/plan/today", label: "Today" },
+  { href: "/plan/month", label: "Month" },
+  { href: "/plan/year", label: "Year" },
   { href: "/plan/notes", label: "Notes" },
 ];
 

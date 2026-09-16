@@ -297,3 +297,24 @@ export function Reminder({
     </Link>
   );
 }
+
+// Small nudge chip for a single row of reminders
+export function ReminderChip({
+  href,
+  emoji,
+  title,
+}: {
+  href: string;
+  emoji: string;
+  title: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-paper/10 bg-surface px-3 text-[13px] font-medium transition active:bg-ink"
+    >
+      <span>{emoji}</span>
+      {title}
+    </Link>
+  );
+}

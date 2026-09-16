@@ -58,7 +58,7 @@ export default async function PlanWeekPage({
       />
 
       {goals.length === 0 ? (
-        <Empty href="/plan">
+        <Empty href="/plan/year">
           {allGoals.length === 0
             ? "Add a yearly goal first →"
             : "No goals run in this month. Check the start and end months on the Year tab →"}

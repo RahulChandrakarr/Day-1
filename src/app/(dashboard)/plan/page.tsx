@@ -1,200 +1,113 @@
-import Link from "next/link";
 import PeriodNav from "@/components/finance/period-nav";
-import GoalSheet from "@/components/plan/goal-sheet";
-import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
+import { LogProgress } from "@/components/plan/goal-actions";
+import ItemList from "@/components/plan/item-list";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, DarkCard, Empty } from "@/components/ui/kit";
-import { formatMonthShort, parseYearParam, todayISO } from "@/lib/finance";
+import { Card, DarkCard, Empty, SectionHead } from "@/components/ui/kit";
+import {
+  addDays,
+  formatFullDate,
+  parseDateParam,
+  todayISO,
+} from "@/lib/finance";
 import {
   goalActiveIn,
-  goalElapsed,
-  goalMonths,
+  formatAmount,
   goalProgress,
-  MONTH_NAMES,
-  monthsOfYear,
+  periodTarget,
+  weekOfMonth,
 } from "@/lib/plans";
 import { getPlanYear } from "@/lib/plan-queries";
 
-export default async function PlanYearPage({ searchParams }: PageProps<"/plan">) {
+export default async function PlanTodayPage({
+  searchParams,
+}: PageProps<"/plan">) {
   const today = todayISO();
-  const year = parseYearParam((await searchParams).year);
-  const currentMonth = today.slice(0, 7);
-  const { goals, items, logs } = await getPlanYear(year);
+  const date = parseDateParam((await searchParams).date);
+  const month = date.slice(0, 7);
+  const { goals: allGoals, items, logs } = await getPlanYear(Number(date.slice(0, 4)));
+  // Only goals running this month
+  const goals = allGoals.filter((g) => goalActiveIn(g, month));
+  const dayItems = items.filter((i) => i.level === "day" && i.period === date);
+  const done = dayItems.filter((i) => i.done).length;
 
-  const progress = goals.map((g) => goalProgress(g, items, logs));
-  const measured = progress.filter((p) => p.ratio !== null);
-  const behind = goals.filter((g, i) => {
-    const p = progress[i];
-    return p.ratio !== null && p.ratio + 0.05 < goalElapsed(g, today);
-  }).length;
-  const overall = measured.length
-    ? measured.reduce((s, p) => s + (p.ratio ?? 0), 0) / measured.length
-    : 0;
+  const week = weekOfMonth(date);
+  const numeric = goals.filter((g) => g.target_value);
 
   return (
     <div className="flex flex-col gap-4">
       <PeriodNav
-        label={`${year} plan`}
-        prevHref={`/plan?year=${year - 1}`}
-        nextHref={`/plan?year=${year + 1}`}
+        label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
+        prevHref={`/plan?date=${addDays(date, -1)}`}
+        nextHref={`/plan?date=${addDays(date, 1)}`}
         currentHref="/plan"
-        isCurrent={year === Number(today.slice(0, 4))}
-        currentLabel="This year"
+        isCurrent={date === today}
+        currentLabel="Today"
       />
 
-      {goals.length > 0 && (
-        <DarkCard className="flex items-center gap-3">
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: `conic-gradient(var(--ember) ${Math.max(overall * 360, 2)}deg, color-mix(in srgb, var(--ink) 18%, transparent) 0)`,
-            }}
-          >
-            <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-paper text-[11px] font-bold">
-              {Math.round(overall * 100)}%
-            </span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ember">
-              {year} so far
-            </p>
-            <p className="mt-0.5 text-[13px]">
-              {goals.length} goal{goals.length === 1 ? "" : "s"}
-              {year === Number(today.slice(0, 4)) &&
-                ` · ${Math.round((Number(today.slice(5, 7)) / 12) * 100)}% of the year gone`}
-            </p>
-            <p className="text-[13px] text-ink/65">
-              {behind > 0
-                ? `${behind} goal${behind === 1 ? "" : "s"} behind pace`
-                : measured.length
-                  ? "Everything on pace"
-                  : "Add tasks or log progress to start tracking"}
-            </p>
-          </div>
-        </DarkCard>
-      )}
-
-      <GoalSheet year={year} label="＋ New goal" />
-
       {goals.length === 0 ? (
-        <Empty>
-          Start with what you want this year to be about: saving, fitness,
-          learning, career. Each goal breaks down into months, weeks and days.
+        <Empty href="/plan/year">
+          {allGoals.length === 0
+            ? "Add a yearly goal first →"
+            : "No goals run in this month. Check the start and end months on the Year tab →"}
         </Empty>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {goals.map((goal, index) => {
-            const p = progress[index];
-            return (
-              <li key={goal.id}>
-                <Card>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl leading-none">{goal.emoji}</span>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-serif text-xl leading-tight">{goal.title}</h3>
-                      <p className="text-xs text-paper/45">
-                        {goal.start_month === 1 && goal.end_month === 12
-                          ? "All year"
-                          : `${MONTH_NAMES[goal.start_month - 1]} – ${MONTH_NAMES[goal.end_month - 1]}`}{" "}
-                        · {goalMonths(goal).length} month
-                        {goalMonths(goal).length === 1 ? "" : "s"}
-                      </p>
-                      {goal.notes && (
-                        <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-paper/55">
-                          {goal.notes}
-                        </p>
-                      )}
-                    </div>
-                    <GoalSheet year={year} goal={goal} label="Edit" variant="link" />
-                  </div>
+        <>
+          <DarkCard>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ember">
+              {dayItems.length === 0
+                ? "Nothing planned yet"
+                : done === dayItems.length
+                  ? "Day complete 🎉"
+                  : `${done} of ${dayItems.length} done`}
+            </p>
+            <p className="mt-0.5 text-[13px] text-ink/70">
+              Week {week} of the month. Every task here moves a yearly goal.
+            </p>
+          </DarkCard>
 
-                  <div className="mt-3">
-                    <ProgressBar
-                      progress={p}
-                      unit={goal.unit}
-                      elapsed={goalElapsed(goal, today)}
-                    />
-                  </div>
+          <SectionHead title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week" />
+          <Card>
+            <ItemList
+              goals={goals}
+              level="day"
+              period={date}
+              items={dayItems}
+              placeholder="What will you do today?"
+              showGoal
+            />
+          </Card>
 
-                  {/* Month by month */}
-                  <div className="mt-3 grid grid-cols-12 gap-1">
-                    {monthsOfYear(year).map((month) => {
-                      const mp = goalProgress(goal, items, logs, { month });
-                      const ratio = mp.ratio ?? 0;
-                      const past = month < currentMonth;
-                      if (!goalActiveIn(goal, month))
-                        return (
-                          <span
-                            key={month}
-                            aria-hidden
-                            className="flex flex-col items-center gap-1 opacity-25"
-                          >
-                            <span className="h-10 w-full rounded-md border border-dashed border-paper/20" />
-                            <span className="text-[9px] text-paper/40">
-                              {formatMonthShort(month).slice(0, 1)}
+          {numeric.length > 0 && (
+            <>
+              <SectionHead title="Log progress" />
+              <ul className="flex flex-col gap-3">
+                {numeric.map((goal) => {
+                  const p = goalProgress(goal, items, logs, { month, week });
+                  const dayTarget = periodTarget(goal, items, { day: date });
+                  return (
+                    <li key={goal.id}>
+                      <Card>
+                        <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold">
+                            {goal.emoji} {goal.title}
+                          </p>
+                          {dayTarget !== null && (
+                            <span className="shrink-0 text-xs text-paper/45">
+                              ~{formatAmount(dayTarget, goal.unit)} a day
                             </span>
-                          </span>
-                        );
-                      return (
-                        <Link
-                          key={month}
-                          href={`/plan/month?month=${month}`}
-                          title={`${formatMonthShort(month)}: ${mp.ratio === null ? "nothing planned" : `${Math.round(ratio * 100)}%`}`}
-                          className="flex flex-col items-center gap-1"
-                        >
-                          <span className="flex h-10 w-full items-end overflow-hidden rounded-md bg-paper/[0.07]">
-                            <span
-                              className={`w-full rounded-md ${
-                                ratio >= 1 ? "bg-moss" : past && ratio < 1 && mp.ratio !== null ? "bg-[#d98e4a]" : "bg-ember"
-                              }`}
-                              style={{ height: `${Math.max(ratio * 100, mp.ratio === null ? 0 : 6)}%` }}
-                            />
-                          </span>
-                          <span
-                            className={`text-[9px] ${month === currentMonth ? "font-bold text-ember" : "text-paper/40"}`}
-                          >
-                            {formatMonthShort(month).slice(0, 1)}
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {goal.target_value && (
-                      <SplitButton
-                        goal={goal}
-                        mode="months"
-                        period={
-                          goalActiveIn(goal, currentMonth)
-                            ? currentMonth
-                            : goalMonths(goal)[0]
-                        }
-                        label="Split evenly across months"
-                      />
-                    )}
-                    <Link
-                      href={`/plan/month?month=${
-                        goalActiveIn(goal, currentMonth)
-                          ? currentMonth
-                          : goalMonths(goal)[0]
-                      }`}
-                      className="rounded-full px-3 py-1.5 text-xs font-semibold text-ember hover:bg-ember/10"
-                    >
-                      Plan this month →
-                    </Link>
-                  </div>
-
-                  {goal.target_value && goalActiveIn(goal, currentMonth) && (
-                    <div className="mt-3">
-                      <LogProgress goal={goal} date={today} />
-                    </div>
-                  )}
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+                          )}
+                        </div>
+                        <ProgressBar progress={p} unit={goal.unit} />
+                        <p className="mb-2 mt-0.5 text-xs text-paper/40">This week</p>
+                        <LogProgress goal={goal} date={date} />
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </>
       )}
     </div>
   );

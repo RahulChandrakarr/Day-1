@@ -69,6 +69,14 @@ export async function getNotes(): Promise<Note[]> {
 // Today's tasks with their goal, for Overview and the journal
 export async function getPlanDay(date: string) {
   const supabase = await createClient();
+  const monthNumber = Number(date.slice(5, 7));
+  const activeGoals = supabase
+    .from("plan_goals")
+    .select("id", { count: "exact", head: true })
+    .eq("year", Number(date.slice(0, 4)))
+    .eq("archived", false)
+    .lte("start_month", monthNumber)
+    .gte("end_month", monthNumber);
   const { data, error } = await supabase
     .from("plan_items")
     .select(
@@ -78,6 +86,7 @@ export async function getPlanDay(date: string) {
     .eq("period", date)
     .order("position");
   if (error) throw new Error(error.message);
+  const { count: goalCount } = await activeGoals;
   const rows = data ?? [];
   const goals = new Map<string, PlanGoal>();
   const items: PlanItem[] = rows.map((row) => {
@@ -96,5 +105,5 @@ export async function getPlanDay(date: string) {
       position: row.position,
     };
   });
-  return { items, goals: [...goals.values()] };
+  return { items, goals: [...goals.values()], goalCount: goalCount ?? 0 };
 }

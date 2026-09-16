@@ -8,36 +8,67 @@ export default function TodayTasks({
   date,
   goals,
   items,
+  goalCount = 0,
   hideWhenDone = false,
+  limit,
   title = "Today's plan",
 }: {
   date: string;
   goals: PlanGoal[];
   items: PlanItem[];
+  goalCount?: number;
   hideWhenDone?: boolean;
+  limit?: number;
   title?: string;
 }) {
   const pending = items.filter((i) => !i.done);
-  if (items.length === 0 || (hideWhenDone && pending.length === 0)) return null;
+  const doneCount = items.length - pending.length;
+  const href = `/plan?date=${date}`;
+
+  // Goals exist but nothing is planned for the day yet
+  if (items.length === 0) {
+    if (goalCount === 0) return null;
+    return (
+      <Link
+        href={href}
+        className="flex min-h-11 items-center gap-3 rounded-[14px] border border-dashed border-ember/40 bg-ember/5 px-4 py-2.5"
+      >
+        <span className="text-base">🗓️</span>
+        <span className="min-w-0 flex-1 text-sm font-medium">
+          Plan today: {goalCount} goal{goalCount === 1 ? "" : "s"} running
+        </span>
+        <span className="text-ember">→</span>
+      </Link>
+    );
+  }
+
+  if (hideWhenDone && pending.length === 0) return null;
+
+  const list = hideWhenDone ? pending : items;
+  const shown = limit ? list.slice(0, limit) : list;
+  const hidden = list.length - shown.length;
 
   return (
     <>
-      <SectionHead title={title} href={`/plan/today?date=${date}`} link="Plan" />
-      <section className="rounded-[18px] border border-paper/10 bg-surface px-4 py-2">
+      <SectionHead
+        title={title}
+        href={href}
+        link={`${doneCount}/${items.length}`}
+      />
+      <section className="rounded-[18px] border border-paper/10 bg-surface px-4 py-1.5">
         <ItemList
           goals={goals}
           level="day"
           period={date}
-          items={hideWhenDone ? pending : items}
+          items={shown}
           placeholder="Add a task for today"
           showGoal
         />
-        <p className="pb-1 pt-2 text-xs text-paper/40">
-          {items.length - pending.length} of {items.length} done ·{" "}
-          <Link href="/plan" className="text-ember">
-            see how it moves your year
+        {hidden > 0 && (
+          <Link href={href} className="block pb-1.5 pt-1 text-xs font-semibold text-ember">
+            +{hidden} more →
           </Link>
-        </p>
+        )}
       </section>
     </>
   );
