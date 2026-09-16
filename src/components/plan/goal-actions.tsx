@@ -1,0 +1,101 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import {
+  logProgress,
+  splitGoalByMonth,
+  splitMonthByWeek,
+} from "@/app/(dashboard)/plan/actions";
+import type { PlanGoal } from "@/lib/plans";
+
+// "Log ₹5,000" for goals with a number
+export function LogProgress({ goal, date }: { goal: PlanGoal; date: string }) {
+  const router = useRouter();
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  if (!goal.target_value) return null;
+
+  function save() {
+    setError(null);
+    startTransition(async () => {
+      const result = await logProgress({ goalId: goal.id, amount, date });
+      if (result.ok) {
+        setAmount("");
+        router.refresh();
+      } else setError(result.error);
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 rounded-xl bg-ink px-2.5 py-1.5">
+        <span className="shrink-0 text-xs text-paper/55">Log progress</span>
+        <input
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value.replace(/[^\d.\-]/g, ""))}
+          onKeyDown={(e) => e.key === "Enter" && save()}
+          placeholder={goal.unit === "₹" ? "₹ amount" : goal.unit ?? "amount"}
+          aria-label={`Progress toward ${goal.title}`}
+          className="h-8 min-w-0 flex-1 bg-transparent text-right text-[15px] font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-paper/30"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={pending || !amount}
+          className="h-8 shrink-0 rounded-lg bg-moss px-3 text-xs font-semibold text-white disabled:opacity-40"
+        >
+          {pending ? "…" : "+ Log"}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-700 dark:text-red-300">{error}</p>}
+    </div>
+  );
+}
+
+export function SplitButton({
+  goal,
+  mode,
+  period,
+  label,
+}: {
+  goal: PlanGoal;
+  mode: "months" | "weeks";
+  period: string; // first month to fill, or the month to split
+  label: string;
+}) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <span className="inline-flex flex-col">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (
+            mode === "months" &&
+            !confirm("Replace monthly targets from this month on with an even split?")
+          )
+            return;
+          setError(null);
+          startTransition(async () => {
+            const result =
+              mode === "months"
+                ? await splitGoalByMonth(goal.id, period)
+                : await splitMonthByWeek(goal.id, period);
+            if (result.ok) router.refresh();
+            else setError(result.error);
+          });
+        }}
+        className="rounded-full border border-paper/15 px-3 py-1.5 text-xs font-semibold text-paper/70 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+      >
+        {pending ? "Splitting…" : label}
+      </button>
+      {error && <span className="mt-1 text-xs text-red-700 dark:text-red-300">{error}</span>}
+    </span>
+  );
+}

@@ -6,7 +6,8 @@ export type ReminderKind =
   | "habits"
   | "gym"
   | "money"
-  | "spend_pin";
+  | "spend_pin"
+  | "plan";
 
 export type ReminderSetting = {
   kind: ReminderKind;
@@ -29,6 +30,14 @@ export const REMINDERS: {
     hint: "Your assistant's summary of money, gym and habits",
     emoji: "☀️",
     hour: 6,
+    minute: 0,
+  },
+  {
+    kind: "plan",
+    title: "Today's plan",
+    hint: "Your plan tasks for the day, if you have any",
+    emoji: "🗓️",
+    hour: 7,
     minute: 0,
   },
   {

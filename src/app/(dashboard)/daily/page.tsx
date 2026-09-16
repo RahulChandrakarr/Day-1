@@ -11,6 +11,8 @@ import {
 } from "@/lib/finance";
 import { getHabitCheckins } from "@/lib/health-queries";
 import { MOODS } from "@/lib/journal";
+import { getPlanDay } from "@/lib/plan-queries";
+import TodayTasks from "@/components/plan/today-tasks";
 import {
   getHabits,
   getJournalDays,
@@ -35,12 +37,14 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
   const weekStart = addDays(date, -offset);
   const week = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const [{ entry, exists }, habits, days, habitCheckins] = await Promise.all([
-    getJournalEntry(date),
-    getHabits(),
-    getJournalDays(week[0], week[6]),
-    getHabitCheckins(date, date),
-  ]);
+  const [{ entry, exists }, habits, days, habitCheckins, plan] =
+    await Promise.all([
+      getJournalEntry(date),
+      getHabits(),
+      getJournalDays(week[0], week[6]),
+      getHabitCheckins(date, date),
+      getPlanDay(date),
+    ]);
   const byDate = new Map(days.map((d) => [d.entry_date, d]));
 
   return (
@@ -90,6 +94,13 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
             );
           })}
         </nav>
+
+        <TodayTasks
+          date={date}
+          goals={plan.goals}
+          items={plan.items}
+          title={date === today ? "Today's plan" : "Plan for this day"}
+        />
 
         <JournalEditor
           key={date}

@@ -5,7 +5,7 @@ import type { ReminderKind } from "@/lib/reminders";
 import { clearSpendPin, refreshSpendPin } from "@/lib/push/today";
 import { createClient } from "@/lib/supabase/server";
 
-const KINDS = ["briefing", "journal", "habits", "gym", "money", "spend_pin"];
+const KINDS = ["briefing", "journal", "habits", "gym", "money", "spend_pin", "plan"];
 
 export async function saveReminder(input: {
   kind: ReminderKind;

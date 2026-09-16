@@ -7,7 +7,7 @@ import { APP_TIMEZONE } from "@/lib/finance";
 
 export const maxDuration = 60;
 
-type Kind = "briefing" | "journal" | "habits" | "gym" | "money";
+type Kind = "briefing" | "journal" | "habits" | "gym" | "money" | "plan";
 
 type Due = {
   user_id: string;
@@ -187,6 +187,25 @@ async function buildPayload(
       body: `${planned} exercises waiting. Tick them off as you go.`,
       url: "/health/gym",
       tag: "gym",
+    };
+  }
+
+  if (item.kind === "plan") {
+    const { rows } = await client.query<{ title: string; emoji: string }>(
+      `select i.title, g.emoji
+         from plan_items i
+         join plan_goals g on g.id = i.goal_id
+        where i.user_id = $1 and i.level = 'day' and i.period = $2 and not i.done
+        order by i.position
+        limit 5`,
+      [item.user_id, date],
+    );
+    if (rows.length === 0) return null;
+    return {
+      title: `${rows.length} plan task${rows.length === 1 ? "" : "s"} today`,
+      body: rows.map((r) => `${r.emoji} ${r.title}`).join(" · ").slice(0, 180),
+      url: "/plan/today",
+      tag: "plan",
     };
   }
 

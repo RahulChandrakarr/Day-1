@@ -1,0 +1,106 @@
+import PeriodNav from "@/components/finance/period-nav";
+import { LogProgress } from "@/components/plan/goal-actions";
+import ItemList from "@/components/plan/item-list";
+import ProgressBar from "@/components/plan/progress-bar";
+import { Card, DarkCard, Empty, SectionHead } from "@/components/ui/kit";
+import {
+  addDays,
+  formatFullDate,
+  parseDateParam,
+  todayISO,
+} from "@/lib/finance";
+import {
+  formatAmount,
+  goalProgress,
+  periodTarget,
+  weekOfMonth,
+} from "@/lib/plans";
+import { getPlanYear } from "@/lib/plan-queries";
+
+export default async function PlanTodayPage({
+  searchParams,
+}: PageProps<"/plan/today">) {
+  const today = todayISO();
+  const date = parseDateParam((await searchParams).date);
+  const { goals, items, logs } = await getPlanYear(Number(date.slice(0, 4)));
+  const dayItems = items.filter((i) => i.level === "day" && i.period === date);
+  const done = dayItems.filter((i) => i.done).length;
+  const month = date.slice(0, 7);
+  const week = weekOfMonth(date);
+  const numeric = goals.filter((g) => g.target_value);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PeriodNav
+        label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
+        prevHref={`/plan/today?date=${addDays(date, -1)}`}
+        nextHref={`/plan/today?date=${addDays(date, 1)}`}
+        currentHref="/plan/today"
+        isCurrent={date === today}
+        currentLabel="Today"
+      />
+
+      {goals.length === 0 ? (
+        <Empty href="/plan">Add a yearly goal first →</Empty>
+      ) : (
+        <>
+          <DarkCard>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ember">
+              {dayItems.length === 0
+                ? "Nothing planned yet"
+                : done === dayItems.length
+                  ? "Day complete 🎉"
+                  : `${done} of ${dayItems.length} done`}
+            </p>
+            <p className="mt-0.5 text-[13px] text-ink/70">
+              Week {week} of the month. Every task here moves a yearly goal.
+            </p>
+          </DarkCard>
+
+          <SectionHead title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week" />
+          <Card>
+            <ItemList
+              goals={goals}
+              level="day"
+              period={date}
+              items={dayItems}
+              placeholder="What will you do today?"
+              showGoal
+            />
+          </Card>
+
+          {numeric.length > 0 && (
+            <>
+              <SectionHead title="Log progress" />
+              <ul className="flex flex-col gap-3">
+                {numeric.map((goal) => {
+                  const p = goalProgress(goal, items, logs, { month, week });
+                  const dayTarget = periodTarget(goal, items, { day: date });
+                  return (
+                    <li key={goal.id}>
+                      <Card>
+                        <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold">
+                            {goal.emoji} {goal.title}
+                          </p>
+                          {dayTarget !== null && (
+                            <span className="shrink-0 text-xs text-paper/45">
+                              ~{formatAmount(dayTarget, goal.unit)} a day
+                            </span>
+                          )}
+                        </div>
+                        <ProgressBar progress={p} unit={goal.unit} />
+                        <p className="mb-2 mt-0.5 text-xs text-paper/40">This week</p>
+                        <LogProgress goal={goal} date={date} />
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

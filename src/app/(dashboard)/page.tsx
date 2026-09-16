@@ -15,6 +15,8 @@ import {
 import { blockWeek } from "@/lib/fitness";
 import { streak } from "@/lib/health";
 import { getOverview } from "@/lib/overview-query";
+import { getPlanDay } from "@/lib/plan-queries";
+import TodayTasks from "@/components/plan/today-tasks";
 import { Empty, Figure, Reminder, SectionHead } from "@/components/ui/kit";
 
 export const metadata: Metadata = {
@@ -36,6 +38,8 @@ export default async function OverviewPage() {
     moods,
     bodyLogs,
   } = await getOverview();
+  const plan = await getPlanDay(today);
+  const pendingPlan = plan.items.filter((i) => !i.done);
 
   // Money, kept short
   const todayTx = transactions.filter((t) => t.occurred_on === today);
@@ -188,16 +192,23 @@ export default async function OverviewPage() {
     );
   }
 
+  if (plan.items.length > 0 && pendingPlan.length === 0)
+    finished.push(`All ${plan.items.length} plan tasks done`);
+
   const allClear =
     reminders.length === 0 &&
     pendingExercises.length === 0 &&
-    pendingHabits.length === 0;
+    pendingHabits.length === 0 &&
+    pendingPlan.length === 0;
 
-  const dayTotal = gymDay.rest
-    ? habits.length
-    : gymDay.exercises.length + habits.length;
+  const dayTotal =
+    (gymDay.rest ? 0 : gymDay.exercises.length) +
+    habits.length +
+    plan.items.length;
   const dayDone =
-    (gymDay.rest ? 0 : doneIds.length) + (habits.length - pendingHabits.length);
+    (gymDay.rest ? 0 : doneIds.length) +
+    (habits.length - pendingHabits.length) +
+    (plan.items.length - pendingPlan.length);
   const dayPercent = dayTotal ? Math.round((dayDone / dayTotal) * 100) : 100;
 
   return (
@@ -241,6 +252,13 @@ export default async function OverviewPage() {
       {reminders.length > 0 && (
         <div className="flex flex-col gap-2 lg:flex-row">{reminders}</div>
       )}
+
+      <TodayTasks
+        date={today}
+        goals={plan.goals}
+        items={plan.items}
+        hideWhenDone
+      />
 
       {!hasPlan ? (
         <>
