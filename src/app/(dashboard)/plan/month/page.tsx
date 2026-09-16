@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PdfLink from "@/components/settings/pdf-link";
 import PeriodNav from "@/components/finance/period-nav";
 import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
 import ItemList from "@/components/plan/item-list";
@@ -48,6 +49,9 @@ export default async function PlanMonthPage({
         isCurrent={isCurrent}
         currentLabel="This month"
       />
+      <div className="-mt-2 flex justify-end">
+        <PdfLink href={`/api/reports/plan?month=${month}`} label="Month PDF" />
+      </div>
 
       {goals.length === 0 ? (
         <Empty href="/plan/year">

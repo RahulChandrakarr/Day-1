@@ -44,3 +44,17 @@ export async function getHabits() {
   if (error) throw new Error(error.message);
   return data ?? [];
 }
+
+// Full journal pages in a date range, oldest first (for the PDF report).
+export async function getJournalRange(from: string, to: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .select(ENTRY_COLUMNS)
+    .gte("entry_date", from)
+    .lte("entry_date", to)
+    .order("entry_date")
+    .returns<JournalEntry[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => normalizeEntry(row.entry_date, row));
+}

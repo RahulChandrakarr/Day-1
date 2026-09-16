@@ -9,7 +9,7 @@ import Sheet from "@/components/ui/sheet";
 import { inputClass, primaryButtonClass } from "@/components/ui/kit";
 
 export const quickButtonClass =
-  "flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl border border-paper/10 bg-surface px-2 text-[15px] font-medium transition active:bg-ink";
+  "flex h-12 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-2xl border border-paper/10 bg-surface px-2 text-[15px] font-medium transition active:bg-ink";
 
 // "To do" button: add one or more to-dos to today's list (the journal priorities).
 export function AddTodoButton({ date }: { date: string }) {

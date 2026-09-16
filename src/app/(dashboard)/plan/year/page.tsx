@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PdfLink from "@/components/settings/pdf-link";
 import PeriodNav from "@/components/finance/period-nav";
 import GoalSheet from "@/components/plan/goal-sheet";
 import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
@@ -41,6 +42,9 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
         isCurrent={year === Number(today.slice(0, 4))}
         currentLabel="This year"
       />
+      <div className="-mt-2 flex justify-end">
+        <PdfLink href={`/api/reports/plan?year=${year}`} label="Year PDF" />
+      </div>
 
       {goals.length > 0 && (
         <DarkCard className="flex items-center gap-3">

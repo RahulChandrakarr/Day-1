@@ -1,23 +1,8 @@
 import PeriodNav from "@/components/finance/period-nav";
-import {
-  addMonths,
-  formatMonth,
-  monthRange,
-  parseMonthParam,
-  todayISO,
-} from "@/lib/finance";
-import {
-  getAllPlanDays,
-  getBlocks,
-  getBodyLogsBetween,
-  getBodyProfile,
-  getGymCheckins,
-  getHabitCheckins,
-  getMoodLogs,
-} from "@/lib/health-queries";
+import PdfLink from "@/components/settings/pdf-link";
+import { addMonths, formatMonth, parseMonthParam } from "@/lib/finance";
 import { reasonLabel } from "@/lib/health";
-import { getHabits } from "@/lib/journal-queries";
-import { buildMonthReport, compareMonths } from "@/lib/reports";
+import { loadHealthReport } from "@/lib/health-report";
 import type { ReactNode } from "react";
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
@@ -25,63 +10,11 @@ const pct = (value: number) => `${Math.round(value * 100)}%`;
 export default async function ReportPage({
   searchParams,
 }: PageProps<"/health/report">) {
-  const today = todayISO();
   const month = parseMonthParam((await searchParams).month);
-  const previousMonth = addMonths(month, -1);
-  const range = monthRange(month);
-  const previousRange = monthRange(previousMonth);
-
-  const [
-    planByBlock,
-    blocks,
-    gymCheckins,
-    habits,
-    habitCheckins,
-    bodyLogs,
-    earlierLogs,
-    moods,
-    profile,
-  ] = await Promise.all([
-    getAllPlanDays(),
-    getBlocks(),
-    getGymCheckins(previousRange.from, range.to),
-    getHabits(),
-    getHabitCheckins(previousRange.from, range.to),
-    getBodyLogsBetween(range.from, range.to),
-    getBodyLogsBetween(previousRange.from, previousRange.to),
-    getMoodLogs(previousRange.from, range.to),
-    getBodyProfile(),
-  ]);
-
-  const shared = {
-    today,
-    planByBlock,
-    blocks,
-    gymCheckins,
-    habits,
-    habitCheckins,
-    moods,
-    heightCm: profile?.height_cm ?? null,
-  };
-  const report = buildMonthReport({
-    ...shared,
-    month,
-    bodyLogs,
-    previousWeight: earlierLogs[earlierLogs.length - 1]?.weight_kg ?? null,
-  });
-  const previous = buildMonthReport({
-    ...shared,
-    month: previousMonth,
-    bodyLogs: earlierLogs,
-    previousWeight: null,
-  });
-  const changes = compareMonths(report, previous);
+  const { today, previousMonth, habits, report, previous, changes, nothingYet } =
+    await loadHealthReport(month);
   const growth = changes.filter((c) => c.good);
   const lows = changes.filter((c) => !c.good);
-  const nothingYet =
-    report.gym.doneSessions === 0 &&
-    report.habits.every((h) => h.tracked === 0) &&
-    report.body.entries === 0;
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -93,6 +26,9 @@ export default async function ReportPage({
         isCurrent={month === today.slice(0, 7)}
         currentLabel="This month"
       />
+      <div className="-mt-2 flex justify-end">
+        <PdfLink href={`/api/reports/health?month=${month}`} label="Download PDF" />
+      </div>
 
       {nothingYet ? (
         <p className="rounded-[18px] border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-paper/50">

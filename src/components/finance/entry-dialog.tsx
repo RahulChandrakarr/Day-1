@@ -184,7 +184,7 @@ export default function EntryDialog({
         }
       >
         <span className="text-xl leading-none">+</span>
-        {compact ? "Entry" : "Add entry"}
+        {compact ? "Add" : "Add entry"}
       </motion.button>
 
       <AnimatePresence>

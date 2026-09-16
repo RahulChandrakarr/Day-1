@@ -7,6 +7,7 @@ export type Profile = {
   email: string;
   full_name: string | null;
   role: "admin" | "user";
+  avatar_path: string | null;
   created_at: string;
 };
 

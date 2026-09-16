@@ -1,4 +1,5 @@
 import BudgetCard from "@/components/finance/budget/budget-card";
+import PdfLink from "@/components/settings/pdf-link";
 import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
@@ -59,6 +60,9 @@ export default async function MonthlyFinancePage({
         isCurrent={month === thisMonth}
         currentLabel="This month"
       />
+      <div className="-mt-2 flex justify-end">
+        <PdfLink href={`/api/reports/finance?month=${month}`} label="Month PDF" />
+      </div>
 
       <StatTiles
         totals={totals}

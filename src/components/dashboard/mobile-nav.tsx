@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Avatar from "./avatar";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,9 +13,11 @@ import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 // Phones: app-style top bar plus a bottom tab bar.
 export default function MobileNav({
   profile,
+  avatarUrl = null,
   alerts = [],
 }: {
   profile: Profile;
+  avatarUrl?: string | null;
   alerts?: string[];
 }) {
   const pathname = usePathname();
@@ -61,9 +64,9 @@ export default function MobileNav({
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Account menu"
             aria-expanded={menuOpen}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/10 text-sm font-medium"
+            className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-paper/10 text-sm font-medium"
           >
-            {name.charAt(0).toUpperCase()}
+            <Avatar url={avatarUrl} name={name} />
           </button>
           <AnimatePresence>
             {menuOpen && (

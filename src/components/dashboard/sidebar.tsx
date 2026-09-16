@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Avatar from "./avatar";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
@@ -11,9 +12,11 @@ import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 // Desktop and tablet: icon rail at md, full sidebar at lg.
 export default function Sidebar({
   profile,
+  avatarUrl = null,
   alerts = [],
 }: {
   profile: Profile;
+  avatarUrl?: string | null;
   alerts?: string[];
 }) {
   const pathname = usePathname();
@@ -92,8 +95,8 @@ export default function Sidebar({
 
       <div className="flex flex-col gap-2 border-t border-paper/10 pt-4">
         <div className="flex items-center justify-center gap-3 px-1 lg:justify-start lg:px-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-paper/10 text-sm font-medium">
-            {name.charAt(0).toUpperCase()}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper/10 text-sm font-medium">
+            <Avatar url={avatarUrl} name={name} />
           </span>
           <div className="hidden min-w-0 lg:block">
             <p className="truncate text-sm font-medium">{name}</p>

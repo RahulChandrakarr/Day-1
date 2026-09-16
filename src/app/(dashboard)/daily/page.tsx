@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PdfLink from "@/components/settings/pdf-link";
 import Link from "next/link";
 import PageShell from "@/components/dashboard/page-shell";
 import PeriodNav from "@/components/finance/period-nav";
@@ -62,6 +63,9 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
           isCurrent={date === today}
           currentLabel="Today"
         />
+        <div className="-mt-2 flex justify-end">
+          <PdfLink href={`/api/reports/journal?month=${date.slice(0, 7)}`} label="Month PDF" />
+        </div>
 
         <nav aria-label="This week" className="grid grid-cols-7 gap-1.5">
           {week.map((d) => {
