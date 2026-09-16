@@ -1,52 +1,64 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import {
+  iconProps,
+  SectionMenuButton,
+  SectionSidebar,
+  type NavSection,
+} from "@/components/ui/section-nav";
 
-const sections = [
-  { href: "/settings/notifications", label: "Notifications", emoji: "🔔", hint: "Reminders & alerts" },
-  { href: "/settings/profile", label: "Profile", emoji: "👤", hint: "You, photo, body" },
-  { href: "/settings/documents", label: "Documents", emoji: "📁", hint: "Your saved files" },
-  { href: "/settings/reports", label: "Reports", emoji: "📄", hint: "Download PDFs" },
+const sections: NavSection[] = [
+  {
+    href: "/settings/notifications",
+    label: "Notifications",
+    hint: "Reminders & alerts",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    ),
+  },
+  {
+    href: "/settings/profile",
+    label: "Profile",
+    hint: "You, photo, body",
+    icon: (
+      <svg {...iconProps}>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    ),
+  },
+  {
+    href: "/settings/documents",
+    label: "Documents",
+    hint: "Your saved files",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/settings/reports",
+    label: "Reports",
+    hint: "Download PDFs",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+        <path d="M14 3v6h6M12 12v6M9 15l3 3 3-3" />
+      </svg>
+    ),
+  },
 ];
 
-// Sidebar on wide screens, a scrolling tab row on phones.
-export default function SettingsNav() {
-  const pathname = usePathname();
-  const active = sections.find((s) => pathname.startsWith(s.href))?.href;
+export function SettingsSidebar() {
+  return <SectionSidebar sections={sections} label="Settings sections" />;
+}
 
+export function SettingsMenuButton() {
   return (
-    <nav aria-label="Settings sections" className="md:sticky md:top-6 md:w-56 md:shrink-0 md:self-start">
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-col md:gap-1 md:overflow-visible md:rounded-2xl md:border md:border-paper/10 md:bg-surface md:p-2">
-        {sections.map((s) => {
-          const isActive = s.href === active;
-          return (
-            <li key={s.href} className="shrink-0">
-              <Link
-                href={s.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex h-10 items-center gap-2 whitespace-nowrap rounded-full px-3.5 text-sm font-semibold transition-colors md:h-auto md:rounded-xl md:px-3 md:py-2.5 ${
-                  isActive
-                    ? "bg-ember text-on-ember"
-                    : "border border-paper/10 bg-surface text-paper/65 hover:text-paper md:border-0 md:bg-transparent md:hover:bg-paper/5"
-                }`}
-              >
-                <span aria-hidden>{s.emoji}</span>
-                <span className="md:flex md:flex-col">
-                  {s.label}
-                  <span
-                    className={`hidden text-xs font-normal md:block ${
-                      isActive ? "text-on-ember/70" : "text-paper/45"
-                    }`}
-                  >
-                    {s.hint}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <SectionMenuButton sections={sections} label="Settings sections" title="Settings" />
   );
 }
