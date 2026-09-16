@@ -144,7 +144,7 @@ export default function TalkPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-4">
         {turns.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <span className="text-4xl" aria-hidden>
@@ -177,7 +177,7 @@ export default function TalkPanel() {
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-3 border-t border-paper/10 px-4 pb-4 pt-5">
+      <div className="flex flex-col items-center gap-3 pb-2 pt-4">
         {!supported ? (
           <p role="alert" className="text-center text-sm text-red-700 dark:text-red-300">
             Voice isn&apos;t supported in this browser. Try Chrome, Edge or Safari, or use Ask mode.

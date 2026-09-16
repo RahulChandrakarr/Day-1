@@ -64,21 +64,20 @@ export default function PersonaPicker() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-w-0 items-center gap-2 rounded-xl px-1.5 py-1 text-left transition hover:bg-paper/5"
+        title={`${persona.name} — change persona`}
         aria-label={`Persona: ${persona.name}. Change`}
+        className="flex h-10 min-w-0 max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-xl border border-paper/10 bg-surface pl-1 pr-2 transition hover:bg-paper/5"
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ember/15 text-lg" aria-hidden>
           {persona.emoji}
         </span>
-        <span className="min-w-0">
-          <span className="flex items-center gap-1 font-serif text-lg leading-tight">
-            <span className="truncate">{persona.name}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="shrink-0 text-paper/45">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </span>
-          <span className="block truncate text-xs text-paper/45">{persona.tagline}</span>
-        </span>
+        {/* The default assistant needs no label; other personas show their name */}
+        {persona.id !== "assistant" && (
+          <span className="truncate text-sm font-semibold">{persona.name}</span>
+        )}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="shrink-0 text-paper/45">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </button>
 
       <Sheet

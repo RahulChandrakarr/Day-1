@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function AssistantPage() {
   return (
-    <PageShell title="Assistant" description="Ask about your data.">
+    <PageShell title="Assistant">
       <div className="mx-auto w-full max-w-3xl">
         <ChatPanel />
       </div>

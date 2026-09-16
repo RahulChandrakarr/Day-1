@@ -11,15 +11,17 @@ const MODES: { value: ChatMode; label: string }[] = [
 export default function ModeSwitch({
   mode,
   onChange,
+  className = "",
 }: {
   mode: ChatMode;
   onChange: (mode: ChatMode) => void;
+  className?: string;
 }) {
   return (
     <div
       role="radiogroup"
       aria-label="Assistant mode"
-      className="relative grid shrink-0 grid-cols-2 rounded-xl border border-paper/10 bg-ink p-0.5 text-[13px] font-semibold"
+      className={`relative grid shrink-0 grid-cols-2 rounded-xl border border-paper/10 bg-surface p-0.5 text-sm font-semibold ${className}`}
     >
       <span
         aria-hidden
@@ -34,7 +36,7 @@ export default function ModeSwitch({
           role="radio"
           aria-checked={mode === m.value}
           onClick={() => onChange(m.value)}
-          className={`relative h-8 px-3 transition-colors ${
+          className={`relative h-9 px-4 transition-colors ${
             mode === m.value ? "text-on-ember" : "text-paper/55 hover:text-paper"
           }`}
         >

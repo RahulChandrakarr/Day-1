@@ -52,19 +52,19 @@ export default function ChatPanel() {
   }, [messages, statusLabel]);
 
   return (
-    <section className="relative flex h-[calc(100dvh-14.5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[440px] flex-col overflow-hidden rounded-3xl border border-paper/10 bg-surface md:h-[min(80vh,760px)] md:min-h-[520px]">
-      <header className="flex items-center gap-1.5 border-b border-paper/10 px-3 py-2.5">
-        <div className="min-w-0 flex-1">
-          <PersonaPicker />
+    <section className="relative flex h-[calc(100dvh-11rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[420px] flex-col md:h-[calc(100dvh-10rem)] md:min-h-[520px]">
+      <header className="flex items-center gap-1.5 border-b border-paper/10 pb-3">
+        <PersonaPicker />
+        <div className="flex min-w-0 flex-1 justify-center">
+          <ModeSwitch mode={mode} onChange={setMode} className="w-full max-w-52" />
         </div>
-        <ModeSwitch mode={mode} onChange={setMode} />
         <button
           type="button"
           onClick={() => setHistoryOpen((v) => !v)}
           aria-expanded={historyOpen}
           title="Past chats"
           aria-label="Past chats"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
         >
           <HistoryIcon />
         </button>
@@ -76,7 +76,7 @@ export default function ChatPanel() {
           }}
           title="New chat"
           aria-label="New chat"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
         >
           <PlusIcon />
         </button>
@@ -99,22 +99,12 @@ export default function ChatPanel() {
               stickToBottom.current =
                 el.scrollHeight - el.scrollTop - el.clientHeight < 80;
             }}
-            className="min-h-0 flex-1 overflow-y-auto px-4 py-5"
+            className="min-h-0 flex-1 overflow-y-auto px-1 py-5"
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col justify-end gap-4">
-                <div>
-                  <p className="text-3xl" aria-hidden>
-                    {persona.emoji}
-                  </p>
-                  <p className="font-serif text-3xl">Hi {name}.</p>
-                  <p className="mt-1 text-sm text-paper/55">
-                    {persona.id === "assistant"
-                      ? "Ask about your day, plans, health, money or documents, or tell me what to add or change."
-                      : `${persona.name}: ${persona.tagline}.`}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                <p className="font-serif text-3xl">Hi {name}.</p>
+                <div className="grid grid-cols-2 gap-2">
                   {starters.map((s, i) => (
                     <motion.button
                       key={s}
@@ -123,7 +113,7 @@ export default function ChatPanel() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 * i }}
                       onClick={() => send(s)}
-                      className="rounded-full border border-paper/10 px-3 py-1.5 text-left text-sm text-paper/70 transition hover:border-paper/25 hover:bg-paper/5 hover:text-paper"
+                      className="min-h-11 rounded-2xl border border-paper/10 px-3 py-2 text-left text-[13px] leading-snug text-paper/70 transition hover:border-paper/25 hover:bg-paper/5 hover:text-paper"
                     >
                       {s}
                     </motion.button>
@@ -266,9 +256,9 @@ function Composer({
         e.preventDefault();
         submit();
       }}
-      className="border-t border-paper/10 p-3"
+      className="pt-2"
     >
-      <div className="flex items-end gap-2 rounded-2xl border border-paper/10 bg-ink/60 p-1.5 transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
+      <div className="flex items-end gap-1.5 rounded-2xl border border-paper/10 bg-surface p-1.5 shadow-sm transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
         <textarea
           ref={ref}
           rows={1}
