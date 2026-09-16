@@ -20,6 +20,7 @@ import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
 import { Empty, ReminderChip, SectionHead } from "@/components/ui/kit";
 import TodoList from "@/components/dashboard/todo-list";
+import BriefingToggle from "@/components/assistant/briefing-toggle";
 import { AddNoteButton, AddTodoButton } from "@/components/dashboard/quick-add";
 import { getJournalEntry } from "@/lib/journal-queries";
 
@@ -259,6 +260,8 @@ export default async function OverviewPage() {
             )}
           </div>
         </section>
+
+        <BriefingToggle />
 
         {reminders.length > 0 && (
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
