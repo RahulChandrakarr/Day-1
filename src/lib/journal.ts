@@ -2,7 +2,13 @@
 
 export type Priority = { text: string; done: boolean };
 
-export type Habit = { id: string; name: string };
+export type Habit = {
+  id: string;
+  name: string;
+  kind: "build" | "quit";
+  count_label: string | null; // e.g. "cigarettes"; null = no number tracked
+  daily_limit: number | null; // max for quit habits, min for build habits
+};
 
 export type JournalEntry = {
   entry_date: string; // YYYY-MM-DD

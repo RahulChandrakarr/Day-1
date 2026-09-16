@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 const tabs = [
   { href: "/health/gym", label: "Gym", emoji: "🏋️" },
   { href: "/health/habits", label: "Habits", emoji: "✅" },
+  { href: "/health/body", label: "Body", emoji: "📊" },
+  { href: "/health/report", label: "Report", emoji: "📈" },
 ];
 
 export default function HealthTabs() {
@@ -14,7 +16,7 @@ export default function HealthTabs() {
 
   return (
     <nav aria-label="Health sections">
-      <ul className="grid grid-cols-2 gap-1 rounded-2xl border border-paper/10 bg-paper/[0.03] p-1 sm:inline-grid sm:w-80">
+      <ul className="grid grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4 border border-paper/10 bg-paper/[0.03] p-1 sm:inline-grid sm:w-[34rem]">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (

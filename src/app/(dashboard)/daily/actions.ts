@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isValidDate } from "@/lib/finance";
-import type { JournalEntry } from "@/lib/journal";
+import type { Habit, JournalEntry } from "@/lib/journal";
 import { createClient } from "@/lib/supabase/server";
 
 const uuid = /^[0-9a-f-]{36}$/i;
@@ -61,15 +61,30 @@ export async function saveJournal(
 
 export async function addHabit(
   name: string,
-): Promise<{ ok: true; habit: { id: string; name: string } } | { ok: false; error: string }> {
+  options: {
+    kind?: "build" | "quit";
+    count_label?: string | null;
+    daily_limit?: number | null;
+  } = {},
+): Promise<{ ok: true; habit: Habit } | { ok: false; error: string }> {
   const clean = String(name ?? "").trim().replace(/\s+/g, " ");
   if (!clean || clean.length > 40)
     return { ok: false, error: "Habit names are 1–40 characters." };
+  const label = String(options.count_label ?? "").trim().slice(0, 20);
+  const limit = Number(options.daily_limit);
   const supabase = await authedClient();
   const { data, error } = await supabase
     .from("journal_habits")
-    .insert({ name: clean })
-    .select("id, name")
+    .insert({
+      name: clean,
+      kind: options.kind === "quit" ? "quit" : "build",
+      count_label: label || null,
+      daily_limit:
+        label && Number.isInteger(limit) && limit >= 0 && limit <= 1000
+          ? limit
+          : null,
+    })
+    .select("id, name, kind, count_label, daily_limit")
     .single();
   if (error)
     return {

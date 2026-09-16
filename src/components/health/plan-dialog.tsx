@@ -64,11 +64,13 @@ export default function PlanDialog({
   week,
   startDay,
   label,
+  blockId = null,
   variant = "secondary",
 }: {
   week: PlanDay[];
   startDay: number;
   label: string;
+  blockId?: string | null;
   variant?: "primary" | "secondary";
 }) {
   const [open, setOpen] = useState(false);
@@ -130,6 +132,7 @@ export default function PlanDialog({
                   key={session}
                   week={week}
                   startDay={startDay}
+                  blockId={blockId}
                   onClose={() => setOpen(false)}
                 />
               </motion.div>
@@ -144,10 +147,12 @@ export default function PlanDialog({
 function PlanEditor({
   week,
   startDay,
+  blockId,
   onClose,
 }: {
   week: PlanDay[];
   startDay: number;
+  blockId: string | null;
   onClose: () => void;
 }) {
   const [days, setDays] = useState(() => toDraft(week));
@@ -210,6 +215,7 @@ function PlanEditor({
                 note: e.note,
               })),
         })),
+        blockId,
       );
       if (result.ok) onClose();
       else setError(result.error);

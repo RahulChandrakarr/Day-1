@@ -21,6 +21,7 @@ const weekdayNarrow = new Intl.DateTimeFormat("en-IN", {
 
 type Draft = {
   done: boolean | null;
+  count: number | null;
   feeling: Feeling | null;
   reason: Reason | null;
   note: string;
@@ -44,6 +45,7 @@ export default function HabitCard({
 }) {
   const [draft, setDraft] = useState<Draft>({
     done: checkin?.done ?? null,
+    count: checkin?.count ?? null,
     feeling: checkin?.feeling ?? null,
     reason: checkin?.reason ?? null,
     note: checkin?.note ?? "",
@@ -84,6 +86,7 @@ export default function HabitCard({
       habit_id: habit.id,
       check_date: date,
       done: draft.done,
+      count: draft.count,
       feeling: draft.feeling,
       reason: draft.reason,
       note: draft.note,
@@ -138,6 +141,60 @@ export default function HabitCard({
           </ul>
         )}
       </div>
+
+      {habit.count_label && (
+        <div className="mt-3 flex items-center gap-2">
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-ink/40 px-3 py-2">
+            <span className="shrink-0 text-xs text-paper/55">
+              {habit.kind === "quit" ? "How many today?" : "How much today?"}
+            </span>
+            <input
+              inputMode="numeric"
+              value={draft.count ?? ""}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+                const value = raw === "" ? null : Number(raw);
+                // Logging a number counts as a check-in on its own
+                change(
+                  {
+                    count: value,
+                    done:
+                      value === null
+                        ? latest.current.done
+                        : habit.daily_limit === null
+                          ? true
+                          : habit.kind === "quit"
+                            ? value <= habit.daily_limit
+                            : value >= habit.daily_limit,
+                  },
+                  { debounce: true },
+                );
+              }}
+              placeholder="0"
+              aria-label={`${habit.name}: ${habit.count_label} today`}
+              className="w-16 bg-transparent text-right text-lg font-semibold tabular-nums text-paper outline-none placeholder:text-paper/25"
+            />
+            <span className="shrink-0 text-sm text-paper/45">
+              {habit.count_label}
+            </span>
+          </label>
+          {habit.daily_limit !== null && (
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${
+                draft.count === null
+                  ? "text-paper/40"
+                  : (habit.kind === "quit"
+                        ? draft.count <= habit.daily_limit
+                        : draft.count >= habit.daily_limit)
+                    ? "bg-moss/15 text-moss"
+                    : "bg-red-500/10 text-red-700 dark:text-red-300"
+              }`}
+            >
+              {habit.kind === "quit" ? "max" : "goal"} {habit.daily_limit}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button

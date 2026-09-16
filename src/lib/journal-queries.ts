@@ -38,7 +38,7 @@ export async function getHabits() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("journal_habits")
-    .select("id, name")
+    .select("id, name, kind, count_label, daily_limit")
     .order("created_at", { ascending: true })
     .returns<Habit[]>();
   if (error) throw new Error(error.message);

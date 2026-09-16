@@ -23,6 +23,7 @@ import {
 } from "@/lib/finance-queries";
 import { fullWeek, isoWeekday, streak } from "@/lib/health";
 import {
+  getCurrentBlock,
   getGymCheckins,
   getGymPlan,
   getHabitCheckins,
@@ -57,7 +58,7 @@ export default async function OverviewPage() {
     getAccounts(),
     getInvestmentEntries(),
     getJournalDays(today, today),
-    getGymPlan(),
+    getCurrentBlock().then((block) => getGymPlan(block?.id ?? null)),
     getGymCheckins(today, today),
     getHabits(),
     getHabitCheckins(addDays(today, -60), today),

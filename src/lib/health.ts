@@ -25,6 +25,9 @@ export type Exercise = {
   weight_kg: number | null;
   minutes: number | null;
   note: string | null;
+  muscle?: string | null;
+  rest_seconds?: number | null;
+  rir?: number | null;
 };
 
 export type PlanDay = {
@@ -48,7 +51,12 @@ export function fullWeek(days: PlanDay[]): PlanDay[] {
 }
 
 // "3 × 12 · 40 kg · 10 min"
-export function exerciseTarget(e: Omit<Exercise, "id" | "name" | "note">) {
+export function exerciseTarget(e: {
+  sets: number | null;
+  reps: number | null;
+  minutes: number | null;
+  weight_kg?: number | null;
+}) {
   const parts: string[] = [];
   if (e.sets && e.reps) parts.push(`${e.sets} × ${e.reps}`);
   else if (e.sets) parts.push(`${e.sets} sets`);
@@ -82,6 +90,7 @@ export type HabitCheckin = {
   habit_id: string;
   check_date: string;
   done: boolean;
+  count: number | null;
   feeling: Feeling | null;
   reason: Reason | null;
   note: string;

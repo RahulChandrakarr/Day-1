@@ -3,6 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { setExerciseDone } from "@/app/(dashboard)/health/actions";
+import { type BlockWeek, weekTarget } from "@/lib/fitness";
 import { exerciseTarget, type PlanDay } from "@/lib/health";
 
 // Today's exercises from the plan, ticked off one by one.
@@ -10,11 +11,13 @@ export default function GymTracker({
   day,
   date,
   doneIds,
+  week = null,
   compact = false,
 }: {
   day: PlanDay;
   date: string;
   doneIds: string[];
+  week?: BlockWeek | null;
   compact?: boolean;
 }) {
   const [, startTransition] = useTransition();
@@ -78,7 +81,17 @@ export default function GymTracker({
       <ul className="flex flex-col gap-2">
         {day.exercises.map((e, i) => {
           const checked = done.includes(e.id);
-          const target = exerciseTarget(e);
+          const target = exerciseTarget({ ...weekTarget(e, week), weight_kg: e.weight_kg });
+          const details = [
+            e.muscle,
+            e.rest_seconds ? `${e.rest_seconds}s rest` : null,
+            e.rir !== null && e.rir !== undefined && !week?.deload
+              ? `leave ${e.rir} in reserve`
+              : null,
+            e.note,
+          ]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <li key={e.id}>
               <button
@@ -131,9 +144,9 @@ export default function GymTracker({
                     )}
                     {e.name}
                   </span>
-                  {!compact && e.note && (
+                  {!compact && details && (
                     <span className="block truncate text-xs text-paper/45">
-                      {e.note}
+                      {details}
                     </span>
                   )}
                 </span>

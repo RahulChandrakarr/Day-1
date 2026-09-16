@@ -1,15 +1,22 @@
 import Link from "next/link";
 import PeriodNav from "@/components/finance/period-nav";
 import GymTracker from "@/components/health/gym-tracker";
+import NextBlock from "@/components/health/next-block";
 import PlanDialog from "@/components/health/plan-dialog";
 import {
   addDays,
   formatFullDate,
+  formatShortDate,
   parseDateParam,
   todayISO,
 } from "@/lib/finance";
+import { blockEnd, blockWeek } from "@/lib/fitness";
 import { fullWeek, isoWeekday, WEEKDAYS } from "@/lib/health";
-import { getGymCheckins, getGymPlan } from "@/lib/health-queries";
+import {
+  getCurrentBlock,
+  getGymCheckins,
+  getGymPlan,
+} from "@/lib/health-queries";
 
 export default async function GymPage({ searchParams }: PageProps<"/health/gym">) {
   const today = todayISO();
@@ -18,16 +25,27 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
   const weekStart = addDays(date, -(weekday - 1));
   const weekEnd = addDays(weekStart, 6);
 
+  const block = await getCurrentBlock();
   const [plan, checkins] = await Promise.all([
-    getGymPlan(),
+    getGymPlan(block?.id ?? null),
     getGymCheckins(weekStart, weekEnd),
   ]);
   const week = fullWeek(plan);
   const day = week[weekday - 1];
   const hasPlan = week.some((d) => d.rest || d.exercises.length > 0);
+  const blockWeekNow = block ? blockWeek(block.start_date, date, block.weeks) : null;
+  const ends = block ? blockEnd(block.start_date, block.weeks) : null;
+  const finished = Boolean(block && ends && today > ends);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
+      {finished && block && (
+        <NextBlock
+          blockNumber={block.number}
+          summary={`Your ${block.weeks}-week block ran to ${formatShortDate(ends!)}. Build the next month and keep the progress going.`}
+        />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PeriodNav
           label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
@@ -38,7 +56,12 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           currentLabel="Today"
         />
         {hasPlan && (
-          <PlanDialog week={week} startDay={weekday} label="✏️ Edit plan" />
+          <PlanDialog
+            week={week}
+            startDay={weekday}
+            blockId={block?.id ?? null}
+            label="✏️ Edit plan"
+          />
         )}
       </div>
 
@@ -46,40 +69,70 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
         <section className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-paper/15 px-6 py-12 text-center">
           <span className="text-4xl">🏋️</span>
           <div>
-            <h3 className="font-serif text-2xl">Plan your gym week</h3>
+            <h3 className="font-serif text-2xl">Build your training plan</h3>
             <p className="mt-1 max-w-sm text-sm text-paper/55">
-              Choose what you train each day, with sets, reps, weight or time.
-              You set it once; every day you just tick exercises off.
+              Add your height, weight and goal, and the app builds a 4-week plan
+              for you: weeks 1–3 get harder, week 4 is lighter so you recover.
             </p>
           </div>
-          <PlanDialog
-            week={week}
-            startDay={weekday}
-            label="Create weekly plan"
-            variant="primary"
-          />
+          <Link
+            href="/health/body"
+            className="flex h-11 items-center rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
+          >
+            Start with your body details
+          </Link>
         </section>
       ) : (
         <>
           <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-6">
-            <div className="mb-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-paper/45">
-                {WEEKDAYS[weekday - 1].label}
-              </p>
-              <h3 className="font-serif text-2xl sm:text-3xl">
-                {day.rest ? "Rest day" : day.title || "Workout"}
-              </h3>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wider text-paper/45">
+                  {WEEKDAYS[weekday - 1].label}
+                  {block && ` · ${block.name}`}
+                </p>
+                <h3 className="font-serif text-2xl sm:text-3xl">
+                  {day.rest ? "Rest day" : day.title || "Workout"}
+                </h3>
+              </div>
+              {blockWeekNow && (
+                <span
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                    blockWeekNow.deload
+                      ? "bg-moss/15 text-moss"
+                      : "bg-ember/15 text-ember"
+                  }`}
+                >
+                  {blockWeekNow.label}
+                  {blockWeekNow.deload && " · deload"}
+                </span>
+              )}
             </div>
+
+            {blockWeekNow && !day.rest && (
+              <p className="mb-4 rounded-2xl border border-paper/10 bg-ink/30 px-3 py-2 text-sm text-paper/60">
+                {blockWeekNow.advice}
+              </p>
+            )}
+
             <GymTracker
               key={date}
               day={day}
               date={date}
               doneIds={checkins[date] ?? []}
+              week={blockWeekNow}
             />
           </section>
 
           <section className="rounded-3xl border border-paper/10 bg-surface/60 p-4 sm:p-6">
-            <h3 className="mb-3 font-serif text-xl sm:text-2xl">This week</h3>
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h3 className="font-serif text-xl sm:text-2xl">This week</h3>
+              {block && ends && (
+                <span className="text-xs text-paper/45">
+                  Block ends {formatShortDate(ends)}
+                </span>
+              )}
+            </div>
             <ul className="grid grid-cols-7 gap-1.5">
               {week.map((d, i) => {
                 const dayDate = addDays(weekStart, i);
