@@ -144,8 +144,28 @@ export function createListener(
   return { finish, abort: close };
 }
 
+// Hindi text is read with a Hindi voice even when the chosen language is English
+const DEVANAGARI = /[\u{0900}-\u{097F}]/u;
+
+// Money as a person would say it. The grouping commas in "₹1,23,456" make the
+// engine read the digits one by one, so they go; lakh/crore only above 1 lakh,
+// since the engine already says smaller numbers well ("8500" → eight thousand
+// five hundred), and "8.5 thousand" would come out as "eight point five".
+function spokenAmount(digits: string, hindi: boolean) {
+  const n = Number(digits.replace(/,/g, ""));
+  const [rupees, lakh, crore] = hindi ? ["रुपये", "लाख", "करोड़"] : ["rupees", "lakh", "crore"];
+  if (!Number.isFinite(n)) return `${digits} ${rupees}`;
+  const trim = (v: number) => Number(v.toFixed(2)).toString();
+  if (n >= 1e7) return `${trim(n / 1e7)} ${crore} ${rupees}`;
+  if (n >= 1e5) return `${trim(n / 1e5)} ${lakh} ${rupees}`;
+  return `${n} ${rupees}`;
+}
+
 // Markdown → plain sentences that sound right when spoken.
+// Sentence punctuation (. ? !) is deliberately kept: the speech engine uses it
+// for pauses and intonation. Only the markup that gets vocalised is stripped.
 export function speakable(markdown: string) {
+  const hindi = DEVANAGARI.test(markdown);
   return markdown
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
@@ -153,14 +173,25 @@ export function speakable(markdown: string) {
     .replace(/^\s*\|?\s*:?-{2,}.*$/gm, " ")
     .replace(/\|/g, ", ")
     .replace(/^#+\s*/gm, "")
+    .replace(/^\s*\d+[.)]\s+/gm, "")
     .replace(/^\s*[-*•]\s+/gm, "")
     .replace(/[*_`~>#]/g, "")
-    .replace(/₹\s?/g, "₹")
+    .replace(/₹\s?([\d,]+)/g, (_, d: string) => spokenAmount(d, hindi))
+    .replace(/(\d)\s*%/g, hindi ? "$1 प्रतिशत" : "$1 percent")
     .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+    .replace(/[–—→]/g, ", ")
+    // "Label: value" is read as the word "colon" by some voices — make it a pause.
+    // Colons between digits (10:30, 3:1) are left alone; voices read those fine.
+    .replace(/\s*(?:(?<!\d):|:(?!\d))\s*/g, ", ")
     .replace(/\n{2,}/g, ". ")
     .replace(/\n/g, ". ")
     .replace(/\s+/g, " ")
-    .replace(/(\. ){2,}/g, ". ")
+    .replace(/\s+([,.])/g, "$1")
+    .replace(/,\s*([.!?])/g, "$1")
+    .replace(/([.!?])\s*,/g, "$1")
+    .replace(/(,\s*){2,}/g, ", ")
+    .replace(/(\.\s*){2,}/g, ". ")
+    .replace(/^[\s,.]+/, "")
     .trim();
 }
 
@@ -183,9 +214,6 @@ function voicesReady() {
     setTimeout(done, 1000);
   });
 }
-
-// Hindi text is read with a Hindi voice even when the chosen language is English
-const DEVANAGARI = /[\u{0900}-\u{097F}]/u;
 
 let speakToken = 0;
 
@@ -222,8 +250,11 @@ async function speakChunks(text: string, lang: SpeechLang, token: number) {
   if (token !== speakToken) return;
   const voiceLang: SpeechLang = DEVANAGARI.test(text) ? "hi-IN" : lang;
   const voice = pickVoice(voiceLang);
-  // Short chunks: long utterances get cut off in Chrome
-  const chunks = speakable(text).match(/[^.!?।]+[.!?।]*/g) ?? [];
+  // Whole sentences: short utterances avoid Chrome's cut-off, and keeping the
+  // trailing punctuation lets the voice fall or lift at the end of each one.
+  // A sentence ends only at punctuation followed by a space, so "1.23 lakh"
+  // and "12.5 percent" aren't split into two utterances mid-number.
+  const chunks = speakable(text).match(/.+?(?:[.!?।]+(?=\s|$)|$)/g) ?? [];
   for (const chunk of chunks) {
     if (token !== speakToken) return;
     const line = chunk.trim();

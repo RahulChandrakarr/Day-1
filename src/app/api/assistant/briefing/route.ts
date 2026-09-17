@@ -39,8 +39,8 @@ export async function POST(req: Request) {
   const result = streamText({
     model: answerModel,
     instructions: briefingInstructions(firstName(profile)),
-    prompt: `<data>${JSON.stringify(context)}</data>\n\nWrite today's briefing.`,
-    temperature: 0.4,
+    prompt: `<data>${JSON.stringify(context)}</data>\n\nWrite today's check-in message.`,
+    temperature: 0.8,
     maxOutputTokens: 700,
     providerOptions: answerProviderOptions,
     onEnd: async ({ text }) => {

@@ -1,5 +1,9 @@
 import "server-only";
 import type { ToolSet } from "ai";
+import { addDays, todayISO } from "@/lib/finance";
+import { MOODS } from "@/lib/journal";
+import { getJournalEntry } from "@/lib/journal-queries";
+import { todayCard } from "../snapshot";
 import type { Supabase } from "../types";
 import { safe, type Domain, type ToolContext } from "./common";
 import { daily } from "./daily";
@@ -40,7 +44,25 @@ export function buildAgent(ctx: ToolContext, sections: Section[], { sql }: { sql
 
 export { financeSnapshot };
 
+// Everything the morning check-in talks about: today, how yesterday went, and money.
 export async function buildBriefingContext(supabase: Supabase) {
-  const [finance] = await Promise.all([financeBriefingContext(supabase)]);
-  return { finance };
+  const today = todayISO();
+  const [card, yesterday, finance] = await Promise.all([
+    todayCard(today),
+    getJournalEntry(addDays(today, -1)),
+    financeBriefingContext(supabase),
+  ]);
+  const { entry } = yesterday;
+  return {
+    today: card,
+    yesterday: yesterday.exists
+      ? {
+          mood: MOODS.find((m) => m.value === entry.mood)?.label ?? null,
+          notes: entry.notes.slice(0, 300),
+          wins: entry.wins.slice(0, 200),
+          plannedForToday: entry.tomorrow.slice(0, 300),
+        }
+      : { journalWritten: false },
+    finance,
+  };
 }

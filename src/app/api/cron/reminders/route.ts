@@ -281,8 +281,8 @@ async function writeBriefing(client: Client, item: Due, date: string) {
   const result = await generateText({
     model: answerModel,
     instructions: briefingInstructions(item.name?.split(" ")[0] ?? "there"),
-    prompt: `<data>${JSON.stringify(context)}</data>\n\nWrite this morning's briefing.`,
-    temperature: 0.4,
+    prompt: `<data>${JSON.stringify(context)}</data>\n\nWrite today's check-in message.`,
+    temperature: 0.8,
     maxOutputTokens: 700,
     providerOptions: answerProviderOptions,
   });

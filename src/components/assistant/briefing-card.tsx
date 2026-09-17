@@ -88,7 +88,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
               ? "Writing…"
               : updatedAt
                 ? `Updated ${time.format(new Date(updatedAt))}`
-                : "Written by your assistant"}
+                : "Your morning check-in"}
           </p>
         </div>
         <button
@@ -121,7 +121,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
               className="flex flex-col gap-2.5"
               role="status"
             >
-              <p className="text-sm text-paper/50">Reading your week…</p>
+              <p className="text-sm text-paper/50">Catching up on your day…</p>
               {[92, 78, 85, 60].map((w, i) => (
                 <motion.span
                   key={i}
