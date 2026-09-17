@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { isValidDate, todayISO } from "@/lib/finance";
 import type { BodyProfile } from "@/lib/fitness";
-import { generateBlock } from "@/lib/workout-generator";
-import { FEELINGS, REASONS, type PlanDay } from "@/lib/health";
+import { generateBlock, prepForDay } from "@/lib/workout-generator";
+import { FEELINGS, REASONS, type Phase, type PlanDay } from "@/lib/health";
 import { createClient } from "@/lib/supabase/server";
 
 const uuid = /^[0-9a-f-]{36}$/i;
@@ -29,6 +29,9 @@ const whole = (value: unknown, min: number, max: number) => {
     ? null
     : Math.min(Math.max(Math.round(n), min), max);
 };
+
+const phaseOf = (value: unknown): Phase =>
+  value === "warmup" || value === "cooldown" ? value : "main";
 
 // Replaces the weekly plan, inside a block when one is given.
 // Exercises keep their id (and their check-offs) when edited.
@@ -67,6 +70,7 @@ export async function saveGymPlan(
             : Math.min(Math.max(Number(e.weight_kg) || 0, 0), 9999),
         minutes: whole(e?.minutes, 1, 600),
         note: String(e?.note ?? "").trim().slice(0, 120) || null,
+        phase: phaseOf(e?.phase),
       }))
       .filter((e) => e.name)
       .slice(0, 40);
@@ -116,6 +120,7 @@ export async function saveGymPlan(
         weight_kg: e.weight_kg,
         minutes: e.minutes,
         note: e.note,
+        phase: e.phase,
       };
       const { error: exError } = e.id
         ? await supabase.from("gym_plan_exercises").update(row).eq("id", e.id)
@@ -124,6 +129,68 @@ export async function saveGymPlan(
     }
   }
 
+  refresh("/health/gym");
+  return { ok: true };
+}
+
+// Gives every workout day in a plan a warm-up and a cool-down, for plans
+// made before those existed. Days that already have them are left alone.
+export async function addWarmupsAndStretches(
+  blockId: string | null = null,
+): Promise<Result> {
+  if (blockId !== null && !uuid.test(blockId))
+    return { ok: false, error: "Invalid plan." };
+
+  const supabase = await authedClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const { data: profile } = await supabase
+    .from("body_profile")
+    .select("equipment")
+    .maybeSingle<Pick<BodyProfile, "equipment">>();
+  const daysQuery = supabase
+    .from("gym_plan_days")
+    .select("id, weekday, title, rest, exercises:gym_plan_exercises(position, phase)");
+  const { data: days, error } = await (blockId
+    ? daysQuery.eq("block_id", blockId)
+    : daysQuery.is("block_id", null)
+  ).returns<
+    {
+      id: string;
+      weekday: number;
+      title: string;
+      rest: boolean;
+      exercises: { position: number; phase: Phase }[];
+    }[]
+  >();
+  if (error) return { ok: false, error: error.message };
+
+  const rows = [];
+  for (const day of days ?? []) {
+    if (day.rest || day.exercises.length === 0) continue;
+    if (day.exercises.some((e) => e.phase !== "main")) continue;
+    const { warmup, cooldown } = prepForDay(
+      day.title,
+      profile?.equipment ?? "full_gym",
+      `${auth?.claims?.sub ?? ""}:${day.weekday}`,
+    );
+    const first = Math.min(...day.exercises.map((e) => e.position));
+    const last = Math.max(...day.exercises.map((e) => e.position));
+    rows.push(
+      ...warmup.map((e, i) => ({
+        ...e,
+        day_id: day.id,
+        position: first - warmup.length + i,
+      })),
+      ...cooldown.map((e, i) => ({ ...e, day_id: day.id, position: last + 1 + i })),
+    );
+  }
+
+  if (rows.length) {
+    const { error: insertError } = await supabase
+      .from("gym_plan_exercises")
+      .insert(rows);
+    if (insertError) return { ok: false, error: insertError.message };
+  }
   refresh("/health/gym");
   return { ok: true };
 }
@@ -294,7 +361,8 @@ export async function startNextBlock(
     .select("id", { count: "exact", head: true });
   const number = (count ?? 0) + 1;
   const start = startDate && isValidDate(startDate) ? startDate : todayISO();
-  const block = generateBlock(profile, number);
+  const { data: auth } = await supabase.auth.getClaims();
+  const block = generateBlock(profile, number, auth?.claims?.sub ?? "");
 
   const { data: saved, error } = await supabase
     .from("gym_blocks")
@@ -337,6 +405,7 @@ export async function startNextBlock(
         rest_seconds: e.rest_seconds,
         rir: e.rir,
         note: e.note,
+        phase: e.phase,
       })),
     );
     if (exError) return { ok: false, error: exError.message };

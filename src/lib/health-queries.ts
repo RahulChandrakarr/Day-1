@@ -1,6 +1,6 @@
 import "server-only";
 import type { BodyLog, BodyProfile } from "@/lib/fitness";
-import type { Exercise, HabitCheckin, PlanDay } from "@/lib/health";
+import { phaseRank, type Exercise, type HabitCheckin, type PlanDay } from "@/lib/health";
 import { createClient } from "@/lib/supabase/server";
 
 type DayRow = Omit<PlanDay, "exercises"> & {
@@ -12,7 +12,7 @@ export async function getGymPlan(blockId: string | null): Promise<PlanDay[]> {
   let query = supabase
     .from("gym_plan_days")
     .select(
-      "weekday, title, rest, exercises:gym_plan_exercises(id, name, sets, reps, weight_kg, minutes, note, position, muscle, rest_seconds, rir)",
+      "weekday, title, rest, exercises:gym_plan_exercises(id, name, sets, reps, weight_kg, minutes, note, position, muscle, rest_seconds, rir, phase)",
     )
     .order("weekday");
   query = blockId ? query.eq("block_id", blockId) : query.is("block_id", null);
@@ -23,7 +23,7 @@ export async function getGymPlan(blockId: string | null): Promise<PlanDay[]> {
     title: d.title,
     rest: d.rest,
     exercises: [...d.exercises]
-      .sort((a, b) => a.position - b.position)
+      .sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase) || a.position - b.position)
       .map((e) => ({
         id: e.id,
         name: e.name,
@@ -35,6 +35,7 @@ export async function getGymPlan(blockId: string | null): Promise<PlanDay[]> {
         muscle: e.muscle ?? null,
         rest_seconds: e.rest_seconds ?? null,
         rir: e.rir ?? null,
+        phase: e.phase ?? "main",
       })),
   }));
 }
@@ -151,7 +152,7 @@ export async function getAllPlanDays(): Promise<Record<string, PlanDay[]>> {
   const { data, error } = await supabase
     .from("gym_plan_days")
     .select(
-      "block_id, weekday, title, rest, exercises:gym_plan_exercises(id, name, sets, reps, weight_kg, minutes, note, position, muscle, rest_seconds, rir)",
+      "block_id, weekday, title, rest, exercises:gym_plan_exercises(id, name, sets, reps, weight_kg, minutes, note, position, muscle, rest_seconds, rir, phase)",
     )
     .order("weekday")
     .returns<(DayRow & { block_id: string | null })[]>();
@@ -164,7 +165,7 @@ export async function getAllPlanDays(): Promise<Record<string, PlanDay[]>> {
       title: d.title,
       rest: d.rest,
       exercises: [...d.exercises]
-        .sort((a, b) => a.position - b.position)
+        .sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase) || a.position - b.position)
         .map((e) => ({
           id: e.id,
           name: e.name,
@@ -176,6 +177,7 @@ export async function getAllPlanDays(): Promise<Record<string, PlanDay[]>> {
           muscle: e.muscle ?? null,
           rest_seconds: e.rest_seconds ?? null,
           rir: e.rir ?? null,
+          phase: e.phase ?? "main",
         })),
     });
   }

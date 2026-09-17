@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PeriodNav from "@/components/finance/period-nav";
+import AddPrep from "@/components/health/add-prep";
 import GymTracker from "@/components/health/gym-tracker";
 import NextBlock from "@/components/health/next-block";
 import PlanDialog from "@/components/health/plan-dialog";
@@ -36,6 +37,11 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
   const blockWeekNow = block ? blockWeek(block.start_date, date, block.weeks) : null;
   const ends = block ? blockEnd(block.start_date, block.weeks) : null;
   const finished = Boolean(block && ends && today > ends);
+  // Plans from before warm-ups existed get a one-tap way to add them
+  const missingPrep =
+    !finished &&
+    week.some((d) => !d.rest && d.exercises.length > 0) &&
+    !week.some((d) => d.exercises.some((e) => (e.phase ?? "main") !== "main"));
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -64,6 +70,8 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           />
         )}
       </div>
+
+      {missingPrep && <AddPrep blockId={block?.id ?? null} />}
 
       {!hasPlan ? (
         <section className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-paper/15 px-6 py-12 text-center">

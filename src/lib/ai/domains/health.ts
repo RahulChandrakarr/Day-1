@@ -82,6 +82,7 @@ export async function gymDay(date: string) {
             : day.exercises.map((e) => ({
                 id: e.id,
                 name: e.name,
+                phase: e.phase ?? "main",
                 muscle: e.muscle ?? null,
                 target: exerciseTarget(e),
                 restSeconds: e.rest_seconds ?? null,

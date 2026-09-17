@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { saveGymPlan } from "@/app/(dashboard)/health/actions";
-import { WEEKDAYS, type Exercise, type PlanDay } from "@/lib/health";
+import { WEEKDAYS, type Exercise, type Phase, type PlanDay } from "@/lib/health";
 
 type DraftExercise = {
   key: string;
@@ -14,6 +14,7 @@ type DraftExercise = {
   weight_kg: string;
   minutes: string;
   note: string;
+  phase: Phase;
 };
 
 type DraftDay = {
@@ -39,6 +40,7 @@ function toDraft(week: PlanDay[]): DraftDay[] {
       weight_kg: str(e.weight_kg),
       minutes: str(e.minutes),
       note: e.note ?? "",
+      phase: e.phase ?? "main",
     })),
   }));
 }
@@ -52,6 +54,7 @@ const blankExercise = (): DraftExercise => ({
   weight_kg: "",
   minutes: "",
   note: "",
+  phase: "main",
 });
 
 const inputClass =
@@ -59,6 +62,12 @@ const inputClass =
 const smallLabel = "text-[11px] uppercase tracking-wider text-paper/45";
 
 const SUGGESTED_TITLES = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Cardio", "Full body"];
+
+const PHASES: { value: Phase; label: string; active: string }[] = [
+  { value: "warmup", label: "Warm-up", active: "border-ember/50 bg-ember/15 text-ember" },
+  { value: "main", label: "Main", active: "border-paper/30 bg-paper/10 text-paper" },
+  { value: "cooldown", label: "Cool-down", active: "border-moss/50 bg-moss/15 text-moss" },
+];
 
 export default function PlanDialog({
   week,
@@ -213,6 +222,7 @@ function PlanEditor({
                 weight_kg: e.weight_kg === "" ? null : Number(e.weight_kg),
                 minutes: e.minutes === "" ? null : Number(e.minutes),
                 note: e.note,
+                phase: e.phase,
               })),
         })),
         blockId,
@@ -379,15 +389,39 @@ function PlanEditor({
                         </label>
                       ))}
                     </div>
-                    <input
-                      value={e.note}
-                      maxLength={120}
-                      onChange={(ev) =>
-                        updateExercise(e.key, { note: ev.target.value })
-                      }
-                      placeholder="Note (optional), e.g. slow negatives"
-                      className={`${inputClass} mt-2 ml-7 w-[calc(100%-1.75rem)]`}
-                    />
+                    <div
+                      role="radiogroup"
+                      aria-label="Part of the workout"
+                      className="mt-2 flex flex-wrap gap-1.5 pl-7"
+                    >
+                      {PHASES.map((p) => (
+                        <button
+                          key={p.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={e.phase === p.value}
+                          onClick={() => updateExercise(e.key, { phase: p.value })}
+                          className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                            e.phase === p.value
+                              ? p.active
+                              : "border-paper/10 text-paper/55 hover:bg-paper/5 hover:text-paper"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-2 pl-7">
+                      <input
+                        value={e.note}
+                        maxLength={120}
+                        onChange={(ev) =>
+                          updateExercise(e.key, { note: ev.target.value })
+                        }
+                        placeholder="Note (optional), e.g. slow negatives"
+                        className={inputClass}
+                      />
+                    </div>
                   </motion.li>
                 ))}
               </AnimatePresence>

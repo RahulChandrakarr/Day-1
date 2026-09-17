@@ -3,6 +3,8 @@
 import { useOptimistic, useTransition } from "react";
 import { motion } from "framer-motion";
 import { setExerciseDone } from "@/app/(dashboard)/health/actions";
+import { CategoryIcon } from "@/components/health/exercise-icons";
+import { categoryFromExercise } from "@/lib/exercise-library";
 import { type BlockWeek, weekTarget } from "@/lib/fitness";
 import { exerciseTarget, type Exercise } from "@/lib/health";
 
@@ -54,8 +56,10 @@ export default function GymChecklist({
       <ul>
         {exercises.map((exercise) => {
           const checked = done.includes(exercise.id);
+          const phase = exercise.phase ?? "main";
+          // Warm-up and cool-down stay the same every week of the block
           const target = exerciseTarget({
-            ...weekTarget(exercise, week),
+            ...weekTarget(exercise, phase === "main" ? week : null),
             weight_kg: exercise.weight_kg,
           });
           return (
@@ -82,14 +86,43 @@ export default function GymChecklist({
                   {checked && "✓"}
                 </span>
                 <span
-                  className={`flex-1 text-[15px] font-medium ${
-                    checked ? "text-paper/45 line-through" : ""
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                    phase === "warmup"
+                      ? "bg-ember/15 text-ember"
+                      : phase === "cooldown"
+                        ? "bg-moss/15 text-moss"
+                        : "bg-paper/[0.06] text-paper/60"
                   }`}
                 >
-                  {exercise.name}
+                  <CategoryIcon
+                    category={categoryFromExercise(exercise.name, exercise.muscle, exercise.phase)}
+                    size={16}
+                  />
                 </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`block break-words text-[15px] font-medium leading-snug ${
+                      checked ? "text-paper/45 line-through" : ""
+                    }`}
+                  >
+                    {exercise.name}
+                  </span>
+                  {(phase !== "main" || target) && (
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-paper/45 sm:hidden">
+                      {phase !== "main" && (
+                        <span>{phase === "warmup" ? "Warm-up" : "Cool-down"}</span>
+                      )}
+                      {target && <span className="font-semibold tabular-nums">{target}</span>}
+                    </span>
+                  )}
+                </span>
+                {phase !== "main" && (
+                  <span className="hidden shrink-0 text-xs text-paper/45 sm:inline">
+                    {phase === "warmup" ? "Warm-up" : "Cool-down"}
+                  </span>
+                )}
                 {target && (
-                  <span className="shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold text-paper/55">
+                  <span className="hidden shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold text-paper/55 sm:inline-block">
                     {target}
                   </span>
                 )}

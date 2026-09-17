@@ -17,6 +17,8 @@ export function isoWeekday(date: string) {
   return ((new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7) + 1;
 }
 
+export type Phase = "warmup" | "main" | "cooldown";
+
 export type Exercise = {
   id: string;
   name: string;
@@ -28,7 +30,13 @@ export type Exercise = {
   muscle?: string | null;
   rest_seconds?: number | null;
   rir?: number | null;
+  phase?: Phase | null;
 };
+
+const PHASE_ORDER: Record<Phase, number> = { warmup: 0, main: 1, cooldown: 2 };
+
+// Warm-up first, cool-down last; untagged exercises count as main work
+export const phaseRank = (phase?: Phase | null) => PHASE_ORDER[phase ?? "main"];
 
 export type PlanDay = {
   weekday: number;

@@ -2,7 +2,7 @@ import "server-only";
 import type { DebtEntry } from "@/lib/debts";
 import { monthRange, todayISO, type Transaction } from "@/lib/finance";
 import type { InvestmentEntry } from "@/lib/investments";
-import { isoWeekday, type HabitCheckin, type PlanDay } from "@/lib/health";
+import { isoWeekday, phaseRank, type HabitCheckin, type PlanDay } from "@/lib/health";
 import type { Habit } from "@/lib/journal";
 import { createClient } from "@/lib/supabase/server";
 
@@ -92,10 +92,12 @@ export async function getOverview(): Promise<OverviewData> {
     planDay: snapshot.plan_day
       ? {
           ...snapshot.plan_day,
-          exercises: snapshot.plan_day.exercises.map((e) => ({
-            ...e,
-            weight_kg: e.weight_kg === null ? null : num(e.weight_kg),
-          })),
+          exercises: snapshot.plan_day.exercises
+            .map((e) => ({
+              ...e,
+              weight_kg: e.weight_kg === null ? null : num(e.weight_kg),
+            }))
+            .sort((a, b) => phaseRank(a.phase) - phaseRank(b.phase)),
         }
       : null,
     gymCheckins: snapshot.gym_checkins ?? {},
