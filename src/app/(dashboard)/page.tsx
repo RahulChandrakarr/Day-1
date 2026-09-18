@@ -15,6 +15,8 @@ import {
 import { blockWeek } from "@/lib/fitness";
 import { streak } from "@/lib/health";
 import { getOverview } from "@/lib/overview-query";
+import TransactionList from "@/components/finance/transaction-list";
+import { getBankAccounts, getCategories, getRecentTransactions } from "@/lib/finance-queries";
 import { getPlanDay } from "@/lib/plan-queries";
 import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
@@ -32,8 +34,6 @@ export default async function OverviewPage() {
   const today = todayISO();
   const {
     transactions,
-    balances,
-    savingsWorth,
     journalToday,
     block,
     planDay,
@@ -43,9 +43,12 @@ export default async function OverviewPage() {
     moods,
     bodyLogs,
   } = await getOverview();
-  const [plan, journal] = await Promise.all([
+  const [plan, journal, banks, recent, categories] = await Promise.all([
     getPlanDay(today),
     getJournalEntry(today),
+    getBankAccounts(today),
+    getRecentTransactions(today, 5),
+    getCategories(),
   ]);
   // To-dos are the journal's priorities for today
   const todos = journal.entry.priorities
@@ -58,9 +61,9 @@ export default async function OverviewPage() {
   const todayTx = transactions.filter((t) => t.occurred_on === today);
   const spentToday = totalsOf(todayTx).expense;
   const topToday = categoryBreakdown(todayTx, "expense").slice(0, 3);
-  const monthNet = totalsOf(transactions).net;
-  const worth = savingsWorth;
-  const owe = balances.owe;
+  const todayFlow = totalsOf(todayTx);
+  const monthFlow = totalsOf(transactions);
+  const bankTotal = banks.reduce((sum, a) => sum + a.balance, 0);
 
   // Gym: only what's still to tick off today
   const gymDay = planDay ?? { weekday: 0, title: "", rest: false, exercises: [] };
@@ -347,37 +350,77 @@ export default async function OverviewPage() {
           )
         )}
 
-        {/* Money in one row */}
+        {/* Money: what's in the bank, then today / month */}
         <Link
           href="/financial/daily"
-          className="mt-1 grid grid-cols-4 divide-x divide-paper/[0.06] rounded-[18px] border border-paper/10 bg-surface py-2.5"
+          className="mt-1 flex flex-col rounded-[18px] border border-paper/10 bg-surface"
         >
-          {[
-            { label: "Today", value: formatMoney(spentToday) },
-            {
-              label: "Month",
-              value: `${monthNet < 0 ? "−" : ""}${formatMoney(Math.abs(monthNet))}`,
-              tone: monthNet < 0 ? "text-[#b3372e] dark:text-red-300" : "text-moss",
-            },
-            { label: "Savings", value: formatMoney(worth) },
-            {
-              label: "Owe",
-              value: formatMoney(owe),
-              tone: owe > 0 ? "text-[#b3372e] dark:text-red-300" : "",
-            },
-          ].map((f) => (
-            <div key={f.label} className="min-w-0 px-2 text-center">
-              <p className="truncate text-[11px] text-paper/50">{f.label}</p>
-              <p className={`truncate text-sm font-bold tabular-nums ${f.tone ?? ""}`}>
-                {f.value}
+          {banks.length > 0 && (
+            <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-paper/50">Net balance</p>
+                <p className="truncate text-xs text-paper/55">
+                  {banks
+                    .map((a) => `${a.name} ${a.balance < 0 ? "−" : ""}${formatMoney(Math.abs(a.balance))}`)
+                    .join(" · ")}
+                </p>
+              </div>
+              <p
+                className={`shrink-0 text-xl font-bold tabular-nums ${
+                  bankTotal < 0 ? "text-[#b3372e] dark:text-red-300" : "text-moss"
+                }`}
+              >
+                {bankTotal < 0 ? "−" : ""}
+                {formatMoney(Math.abs(bankTotal))}
               </p>
             </div>
-          ))}
+          )}
+          {/* Money in (up) and out (down), for today and this month */}
+          <div className="grid grid-cols-2 divide-x divide-paper/[0.06] py-2.5">
+            {[
+              { label: "Today", flow: todayFlow },
+              { label: "Month", flow: monthFlow },
+            ].map(({ label, flow }) => (
+              <div key={label} className="min-w-0 px-2 text-center">
+                <p className="truncate text-[11px] text-paper/50">{label}</p>
+                <p className="flex flex-wrap items-center justify-center gap-x-3 text-sm font-bold tabular-nums">
+                  <span className="text-moss" title={`${formatMoney(flow.income)} came in`}>
+                    <span aria-hidden>↑ </span>
+                    <span className="sr-only">In: </span>
+                    {formatMoney(flow.income)}
+                  </span>
+                  <span
+                    className="text-[#b3372e] dark:text-red-300"
+                    title={`${formatMoney(flow.expense)} went out`}
+                  >
+                    <span aria-hidden>↓ </span>
+                    <span className="sr-only">Out: </span>
+                    {formatMoney(flow.expense)}
+                  </span>
+                </p>
+              </div>
+            ))}
+          </div>
         </Link>
         {topToday.length > 0 && (
           <p className="-mt-1 truncate px-1 text-xs text-paper/45">
             Top today: {topToday.map((c) => `${c.name} ${formatMoney(c.amount)}`).join(" · ")}
           </p>
+        )}
+
+        {recent.length > 0 && (
+          <TransactionList
+            title="Recent entries"
+            transactions={recent}
+            showDate
+            categories={categories}
+            bankAccounts={banks}
+            aside={
+              <Link href="/financial/daily" className="text-sm font-medium text-ember">
+                See all →
+              </Link>
+            }
+          />
         )}
       </div>
     </PageShell>

@@ -18,7 +18,7 @@ export async function saveBankAccount(
   prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const values = formFields(formData, ["id", "name", "balance"]);
+  const values = formFields(formData, ["id", "name", "balance", "as_income"]);
   const fail = (error: string): FormState => ({
     error,
     ok: false,
@@ -52,15 +52,32 @@ export async function saveBankAccount(
       .eq("id", values.id);
     if (error) return fail(duplicate(error, name) ?? error.message);
   } else {
+    // New money this month goes in as an income entry, so monthly totals see it
+    const asIncome = values.as_income === "on" && target > 0;
     const { count } = await supabase
       .from("bank_accounts")
       .select("id", { count: "exact", head: true });
-    const { error } = await supabase.from("bank_accounts").insert({
-      name,
-      opening_balance: target,
-      color: ((count ?? 0) % 8) + 1,
-    });
+    const { data: created, error } = await supabase
+      .from("bank_accounts")
+      .insert({
+        name,
+        opening_balance: asIncome ? 0 : target,
+        color: ((count ?? 0) % 8) + 1,
+      })
+      .select("id")
+      .single();
     if (error) return fail(duplicate(error, name) ?? error.message);
+    if (asIncome) {
+      const { error: incomeError } = await supabase.from("finance_transactions").insert({
+        type: "income",
+        amount: target,
+        description: `Money in ${name} when added`,
+        period: "daily",
+        occurred_on: todayISO(),
+        bank_account_id: created.id,
+      });
+      if (incomeError) return fail(incomeError.message);
+    }
   }
 
   refresh();

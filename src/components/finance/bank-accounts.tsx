@@ -207,6 +207,22 @@ function AccountForm({
             : "From now on, entries you log against it add to or take from this."}
         </span>
       </label>
+      {!account && (
+        <label className="flex items-start gap-3 rounded-xl border border-paper/10 p-3">
+          <input
+            type="checkbox"
+            name="as_income"
+            defaultChecked={values?.as_income === "on"}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-ember"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium">Count it as income this month</span>
+            <span className="text-xs text-paper/50">
+              Tick this if the money came in this month, so your monthly totals include it.
+            </span>
+          </span>
+        </label>
+      )}
       <ErrorBox error={state.error} />
       <div className="flex gap-2">
         {account && (

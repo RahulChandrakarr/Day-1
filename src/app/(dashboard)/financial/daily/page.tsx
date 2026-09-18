@@ -94,6 +94,8 @@ export default async function DailyFinancePage({
         </div>
         <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <TransactionList
+            categories={categories}
+            bankAccounts={banks}
             title="Entries"
             transactions={transactions}
             debts={dayDebts}

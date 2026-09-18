@@ -617,44 +617,7 @@ function TransactionFields({
       </div>
       {categoryPanel}
 
-      {bankAccounts.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <span className={labelClass}>
-            {type === "expense" ? "Paid from" : "Received in"}
-          </span>
-          {/* A switch while it fits; a dropdown once there are many accounts */}
-          {bankAccounts.length <= 3 ? (
-            <>
-              <input type="hidden" name="bank_account_id" value={bankId} />
-              <Segmented
-                label={type === "expense" ? "Paid from" : "Received in"}
-                value={bankId}
-                onChange={chooseBank}
-                options={[
-                  ...bankAccounts.map((a) => ({ value: a.id, label: a.name })),
-                  { value: "", label: "None" },
-                ]}
-              />
-            </>
-          ) : (
-            <select
-              name="bank_account_id"
-              aria-label={type === "expense" ? "Paid from" : "Received in"}
-              value={bankId}
-              onChange={(e) => chooseBank(e.target.value)}
-              className={inputClass}
-            >
-              {bankAccounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} · {a.balance < 0 ? "−" : ""}
-                  {formatMoney(Math.abs(a.balance))}
-                </option>
-              ))}
-              <option value="">No bank account</option>
-            </select>
-          )}
-        </div>
-      )}
+      <BankPicker accounts={bankAccounts} type={type} value={bankId} onChange={chooseBank} />
 
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>Description</span>
@@ -1210,7 +1173,7 @@ function Chip({
   );
 }
 
-function Segmented<T extends string>({
+export function Segmented<T extends string>({
   label,
   value,
   onChange,
@@ -1262,6 +1225,58 @@ function Segmented<T extends string>({
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Which bank account money came out of / went into: a switch while it fits,
+// a dropdown once there are many accounts
+export function BankPicker({
+  accounts,
+  type,
+  value,
+  onChange,
+}: {
+  accounts: BankOption[];
+  type: TxType;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  if (accounts.length === 0) return null;
+  const label = type === "expense" ? "Paid from" : "Received in";
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className={labelClass}>{label}</span>
+      {accounts.length <= 3 ? (
+        <>
+          <input type="hidden" name="bank_account_id" value={value} />
+          <Segmented
+            label={label}
+            value={value}
+            onChange={onChange}
+            options={[
+              ...accounts.map((a) => ({ value: a.id, label: a.name })),
+              { value: "", label: "None" },
+            ]}
+          />
+        </>
+      ) : (
+        <select
+          name="bank_account_id"
+          aria-label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputClass}
+        >
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name} · {a.balance < 0 ? "−" : ""}
+              {formatMoney(Math.abs(a.balance))}
+            </option>
+          ))}
+          <option value="">No bank account</option>
+        </select>
+      )}
     </div>
   );
 }

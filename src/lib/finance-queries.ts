@@ -94,6 +94,21 @@ export async function getTransactions(options: {
   return normalize(data);
 }
 
+// The latest entries up to today, newest first
+export async function getRecentTransactions(today: string, limit: number) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_transactions")
+    .select(TX_COLUMNS)
+    .lte("occurred_on", today)
+    .order("occurred_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .returns<TxRow[]>();
+  if (error) throw new Error(error.message);
+  return normalize(data);
+}
+
 export async function getCategories() {
   const supabase = await createClient();
   const { data, error } = await supabase

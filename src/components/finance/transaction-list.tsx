@@ -1,16 +1,20 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { deleteTransaction } from "@/app/(dashboard)/financial/actions";
 import { deleteDebt } from "@/app/(dashboard)/financial/borrow/actions";
 import { deleteInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
 import { deleteTransfer } from "@/app/(dashboard)/financial/bank/actions";
+import EditEntry from "@/components/finance/edit-entry";
+import type { BankOption } from "@/components/finance/entry-dialog";
+import Sheet from "@/components/ui/sheet";
 import { DEBT_KINDS, type DebtEntry } from "@/lib/debts";
 import {
   formatMoney,
   formatShortDate,
   type BankTransfer,
+  type Category,
   type Transaction,
 } from "@/lib/finance";
 import type { InvestmentEntry } from "@/lib/investments";
@@ -38,7 +42,15 @@ const trashIcon = (
 const deleteButtonClass =
   "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300";
 
-function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
+function Row({
+  tx,
+  showDate,
+  onEdit,
+}: {
+  tx: Transaction;
+  showDate: boolean;
+  onEdit?: () => void;
+}) {
   const [pending, startTransition] = useTransition();
   const title = tx.description || tx.category?.name || "Untitled";
 
@@ -51,6 +63,7 @@ function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
       transition={{ duration: 0.25 }}
       className="group flex items-center gap-3 overflow-hidden border-b border-paper/5 py-3 last:border-b-0"
     >
+      <Tappable onClick={onEdit} label={`Edit ${title}`}>
       <span
         className="h-9 w-1.5 shrink-0 rounded-full"
         style={{ background: `var(--cat-${tx.category?.color ?? 8})` }}
@@ -77,6 +90,7 @@ function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
         {tx.type === "income" ? "+" : "−"}
         {formatMoney(tx.amount)}
       </p>
+      </Tappable>
       <button
         type="button"
         disabled={pending}
@@ -90,6 +104,29 @@ function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
         {trashIcon}
       </button>
     </motion.li>
+  );
+}
+
+// The row's body opens the editor when it can be edited
+function Tappable({
+  onClick,
+  label,
+  children,
+}: {
+  onClick?: () => void;
+  label: string;
+  children: ReactNode;
+}) {
+  if (!onClick) return <>{children}</>;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="flex min-w-0 flex-1 items-center gap-3 text-left transition active:opacity-70"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -178,6 +215,9 @@ export default function TransactionList({
   debts = [],
   savings = [],
   transfers = [],
+  categories,
+  bankAccounts = [],
+  aside,
 }: {
   title: string;
   transactions: Transaction[];
@@ -186,7 +226,12 @@ export default function TransactionList({
   debts?: DebtEntry[];
   savings?: SavingsActivity[];
   transfers?: BankTransfer[];
+  // Given categories, income and expense rows open an editor when tapped
+  categories?: Category[];
+  bankAccounts?: BankOption[];
+  aside?: ReactNode; // replaces the entry count in the header
 }) {
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const items: Item[] = [
     ...transactions.map((tx) => ({
       type: "tx" as const,
@@ -225,9 +270,11 @@ export default function TransactionList({
     <section className="min-w-0 rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">{title}</h3>
-        <span className="text-sm text-paper/45">
-          {items.length} {items.length === 1 ? "entry" : "entries"}
-        </span>
+        {aside ?? (
+          <span className="text-sm text-paper/45">
+            {items.length} {items.length === 1 ? "entry" : "entries"}
+          </span>
+        )}
       </div>
       {items.length === 0 ? (
         <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 py-10 text-center text-sm text-paper/40">
@@ -238,7 +285,12 @@ export default function TransactionList({
           <AnimatePresence initial={false}>
             {items.map((item) =>
               item.type === "tx" ? (
-                <Row key={item.key} tx={item.tx} showDate={showDate} />
+                <Row
+                  key={item.key}
+                  tx={item.tx}
+                  showDate={showDate}
+                  onEdit={categories ? () => setEditing(item.tx) : undefined}
+                />
               ) : item.type === "debt" ? (
                 <ActivityRow
                   key={item.key}
@@ -292,6 +344,20 @@ export default function TransactionList({
             )}
           </AnimatePresence>
         </ul>
+      )}
+
+      {categories && (
+        <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit entry">
+          {editing && (
+            <EditEntry
+              key={editing.id}
+              tx={editing}
+              categories={categories}
+              bankAccounts={bankAccounts}
+              onDone={() => setEditing(null)}
+            />
+          )}
+        </Sheet>
       )}
     </section>
   );

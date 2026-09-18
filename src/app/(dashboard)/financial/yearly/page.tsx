@@ -151,6 +151,10 @@ export default async function YearlyFinancePage({
       />
 
       <TransactionList
+
+        categories={categories}
+
+        bankAccounts={banks}
         title="Yearly entries"
         transactions={yearlyEntries}
         showDate

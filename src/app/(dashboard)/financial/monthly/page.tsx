@@ -133,6 +133,10 @@ export default async function MonthlyFinancePage({
       />
 
       <TransactionList
+
+        categories={categories}
+
+        bankAccounts={banks}
         title="Monthly entries"
         transactions={monthlyEntries}
         showDate

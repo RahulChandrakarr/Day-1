@@ -1,9 +1,21 @@
-import { Card, Figure, toneClass } from "@/components/ui/kit";
+import { toneClass } from "@/components/ui/kit";
 import { formatMoney, type Totals } from "@/lib/finance";
 
-type Tile = { label: string; value: string; hint?: string };
+type Tile = { label: string; value: string; hint?: string; tone?: "good" | "bad" };
 
-// Income / expenses / net, plus anything a page adds.
+// Phones use a 6-column grid: three tiles sit three across, four make a
+// 2x2, and five go three then two wider. Wider screens: one row.
+const phoneSpan = (count: number, i: number) =>
+  count === 3 || count === 6 || (count === 5 && i < 3) ? "col-span-2" : "col-span-3";
+const wideCols: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+  5: "sm:grid-cols-5",
+  6: "sm:grid-cols-6",
+};
+
+// Income / expenses / net, plus anything a page adds, each in its own card.
 export default function StatTiles({
   totals,
   extra = [],
@@ -22,42 +34,41 @@ export default function StatTiles({
   balance?: { total: number; hint: string } | null;
 }) {
   const net = balance?.total ?? totals.net;
-  const tiles = [
-    {
-      label: "Income",
-      value: formatMoney(totals.income),
-      hint: incomeHint,
-      tone: "good" as const,
-    },
+  const tiles: Tile[] = [
+    { label: "Income", value: formatMoney(totals.income), hint: incomeHint, tone: "good" },
     { label: "Expenses", value: formatMoney(totals.expense), hint: expenseHint },
     {
       label: "Net balance",
       value: `${net < 0 ? "−" : ""}${formatMoney(Math.abs(net))}`,
       hint: balance?.hint ?? netHint ?? (totals.net >= 0 ? "Saved" : "Overspent"),
-      tone: net < 0 ? ("bad" as const) : ("good" as const),
+      tone: net < 0 ? "bad" : "good",
     },
     ...extra,
   ];
 
   return (
-    <Card padded={false} className="px-4 py-1">
-      <div
-        className={`grid grid-cols-2 ${
-          tiles.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4"
-        }`}
-      >
-        {tiles.map((tile, i) => (
-          <Figure
-            key={tile.label}
-            label={tile.label}
-            value={tile.value}
-            hint={tile.hint}
-            tone={"tone" in tile ? tile.tone : undefined}
-            divide={i < tiles.length - (tiles.length % 2 === 1 ? 1 : 2) && "mobile"}
-          />
-        ))}
-      </div>
-    </Card>
+    <div className={`grid grid-cols-6 gap-2 sm:gap-3 ${wideCols[tiles.length] ?? "sm:grid-cols-4"}`}>
+      {tiles.map((tile, i) => (
+        <div
+          key={tile.label}
+          title={tile.hint ? `${tile.label}: ${tile.value} · ${tile.hint}` : `${tile.label}: ${tile.value}`}
+          className={`min-w-0 rounded-2xl border border-paper/10 bg-surface px-3 py-3 sm:col-span-1 sm:px-4 ${phoneSpan(tiles.length, i)}`}
+        >
+          <p className="truncate text-[11px] text-paper/55 sm:text-xs">{tile.label}</p>
+          <p
+            // Lakh-sized amounts step down a size to fit three across on phones
+            className={`mt-0.5 truncate font-bold tabular-nums sm:text-[19px] ${
+              tile.value.length > 8 ? "text-[13px]" : "text-base"
+            } ${toneClass(tile.tone)}`}
+          >
+            {tile.value}
+          </p>
+          {tile.hint && (
+            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-paper/40 sm:text-xs">{tile.hint}</p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -67,6 +67,57 @@ export async function addTransaction(
   return { error: null, ok: true, version: prev.version + 1 };
 }
 
+// Changes an income or expense entry; its repeat period stays as it was
+export async function updateTransaction(
+  prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = Object.fromEntries(
+    ["id", "type", "amount", "description", "category_id", "occurred_on", "bank_account_id"].map(
+      (key) => [key, String(formData.get(key) ?? "").trim()],
+    ),
+  );
+  const fail = (error: string): FormState => ({
+    error,
+    ok: false,
+    version: prev.version + 1,
+    values,
+  });
+
+  if (!uuid.test(values.id)) return fail("That entry no longer exists.");
+  if (values.type !== "income" && values.type !== "expense")
+    return fail("Choose income or expense.");
+  const amount = parseAmount(values.amount);
+  if (amount === null || amount >= 1e10) return fail("Enter an amount greater than 0.");
+  if (!isValidDate(values.occurred_on)) return fail("Pick a valid date.");
+  if (values.description.length > 200)
+    return fail("Keep the description under 200 characters.");
+  if (values.category_id && !uuid.test(values.category_id))
+    return fail("Invalid category.");
+  if (values.bank_account_id && !uuid.test(values.bank_account_id))
+    return fail("Invalid account.");
+
+  const supabase = await authedClient();
+  const { data, error } = await supabase
+    .from("finance_transactions")
+    .update({
+      type: values.type,
+      amount,
+      description: values.description || null,
+      category_id: values.category_id || null,
+      bank_account_id: values.bank_account_id || null,
+      occurred_on: values.occurred_on,
+    })
+    .eq("id", values.id)
+    .select("id");
+  if (error) return fail(error.message);
+  if (!data?.length) return fail("That entry no longer exists.");
+
+  refresh();
+  await refreshSpendPin();
+  return { error: null, ok: true, version: prev.version + 1 };
+}
+
 export async function deleteTransaction(id: string) {
   if (!uuid.test(id)) return;
   const supabase = await authedClient();
