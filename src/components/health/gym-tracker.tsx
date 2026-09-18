@@ -20,10 +20,11 @@ const SECTIONS: { phase: Phase; label: string; hint: string }[] = [
   { phase: "cooldown", label: "Cool-down", hint: "Stretch so your muscles can relax" },
 ];
 
-const ACCENT: Record<Phase, { heading: string; icon: string; art: string }> = {
-  warmup: { heading: "text-ember", icon: "bg-ember/15 text-ember", art: "text-ember" },
-  main: { heading: "text-paper/60", icon: "bg-paper/10 text-paper/80", art: "text-paper/80" },
-  cooldown: { heading: "text-moss", icon: "bg-moss/15 text-moss", art: "text-moss" },
+// tone: colour of the working muscles in the drawing
+const ACCENT: Record<Phase, { heading: string; icon: string; tone: string }> = {
+  warmup: { heading: "text-ember", icon: "bg-ember/15 text-ember", tone: "text-ember" },
+  main: { heading: "text-paper/60", icon: "bg-paper/10 text-paper/80", tone: "text-ember" },
+  cooldown: { heading: "text-moss", icon: "bg-moss/15 text-moss", tone: "text-moss" },
 };
 
 const label = "text-[11px] font-semibold uppercase tracking-wider text-paper/45";
@@ -293,7 +294,7 @@ function ExerciseRow({
             <ExerciseDetail
               exercise={e}
               info={info}
-              art={ACCENT[phase].art}
+              tone={ACCENT[phase].tone}
               tips={[
                 e.note,
                 e.rest_seconds ? `Rest ${e.rest_seconds}s between sets` : null,
@@ -310,18 +311,23 @@ function ExerciseRow({
 function ExerciseDetail({
   exercise,
   info,
-  art,
+  tone,
   tips,
 }: {
   exercise: Exercise;
   info: ExerciseInfo;
-  art: string;
+  tone: string;
   tips: string[];
 }) {
   return (
     <div className="grid gap-4 border-t border-paper/10 px-3 pb-4 pt-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:px-4">
-      <div className={`flex items-center justify-center rounded-xl bg-paper/5 p-2 ${art}`}>
-        <MotionIllustration category={info.category} className="h-32 w-full max-w-[240px] sm:h-auto" />
+      <div className="flex items-center justify-center rounded-xl bg-paper/5 p-2 text-paper/75">
+        <MotionIllustration
+          name={exercise.name}
+          category={info.category}
+          tone={tone}
+          className="h-36 w-full max-w-[260px] sm:h-auto"
+        />
       </div>
       <div className="flex min-w-0 flex-col gap-3 text-sm">
         <div>
