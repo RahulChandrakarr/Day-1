@@ -51,7 +51,7 @@ function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
         aria-hidden
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{title}</p>
+        <p className="break-words font-medium leading-snug line-clamp-2">{title}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/45">
           <span>{tx.category?.name ?? "Uncategorized"}</span>
           {showDate && <span>· {formatShortDate(tx.occurred_on)}</span>}
@@ -125,12 +125,12 @@ function ActivityRow({
         aria-hidden
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{title}</p>
+        <p className="break-words font-medium leading-snug line-clamp-2">{title}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/45">
-          <span className="rounded-full border border-paper/15 px-1.5">
+          <span className="shrink-0 rounded-full border border-paper/15 px-1.5">
             {badge}
           </span>
-          {subtitle && <span className="truncate">{subtitle}</span>}
+          {subtitle && <span className="min-w-0 truncate">{subtitle}</span>}
           {showDate && <span>· {formatShortDate(occurredOn)}</span>}
         </p>
       </div>
@@ -205,7 +205,7 @@ export default function TransactionList({
     items.sort((a, b) => b.on.localeCompare(a.on) || b.at.localeCompare(a.at));
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="min-w-0 rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">{title}</h3>
         <span className="text-sm text-paper/45">

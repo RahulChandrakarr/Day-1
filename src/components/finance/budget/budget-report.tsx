@@ -50,6 +50,8 @@ export default function BudgetReportView({
         />
       </div>
 
+      <PlanTotals report={report} />
+
       {report.rows.length > 0 && (
         <div>
           <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-paper/50">
@@ -99,7 +101,7 @@ export default function BudgetReportView({
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ background: `var(--cat-${row.color})` }}
                   />
-                  <span className="truncate">{row.name}</span>
+                  <span className="min-w-0 truncate">{row.name}</span>
                 </span>
                 <span className="font-medium tabular-nums">
                   {formatMoney(row.actual)}
@@ -110,6 +112,70 @@ export default function BudgetReportView({
         </div>
       )}
     </div>
+  );
+}
+
+// What the plan adds up to: everything going out, and what is left of the
+// expected income once it is all covered.
+function PlanTotals({ report }: { report: BudgetReport }) {
+  const repay = report.repay.reduce((sum, r) => sum + r.planned, 0);
+  const collect = report.collect.reduce((sum, r) => sum + r.planned, 0);
+  const savings = report.savings.target ?? 0;
+  const expected = report.income.expected;
+  const out = report.planned + repay + savings;
+  const left = expected === null ? null : expected + collect - out;
+  // Nothing worth adding up beyond the tiles above
+  if (!out || (left === null && !repay && !savings)) return null;
+
+  return (
+    <div>
+      <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/50">
+        Plan totals
+      </h4>
+      <ul className="flex flex-col divide-y divide-paper/5 text-sm">
+        <TotalRow label="Planned spending" amount={report.planned} />
+        {repay > 0 && <TotalRow label="Money to return" amount={repay} />}
+        {savings > 0 && <TotalRow label="Into savings" amount={savings} />}
+        <TotalRow label="Total going out" amount={out} strong />
+        {left !== null && (
+          <>
+            <TotalRow label="Expected income" amount={expected ?? 0} />
+            {collect > 0 && <TotalRow label="Money to collect" amount={collect} />}
+            <TotalRow
+              label={left < 0 ? "Short by" : savings > 0 ? "Left over" : "Left to save"}
+              amount={Math.abs(left)}
+              strong
+              tone={left < 0 ? badText : "text-moss"}
+            />
+          </>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function TotalRow({
+  label,
+  amount,
+  strong = false,
+  tone,
+}: {
+  label: string;
+  amount: number;
+  strong?: boolean;
+  tone?: string;
+}) {
+  return (
+    <li
+      className={`flex items-center justify-between gap-3 py-2 ${
+        strong ? "font-semibold" : "text-paper/70"
+      }`}
+    >
+      <span className="min-w-0">{label}</span>
+      <span className={`shrink-0 tabular-nums ${tone ?? ""}`}>
+        {formatMoney(amount)}
+      </span>
+    </li>
   );
 }
 
@@ -315,7 +381,7 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
         <ul className="mt-2 flex flex-col gap-1 border-l border-paper/10 pl-3 text-xs text-paper/55">
           {row.items.map((item, i) => (
             <li key={i} className="flex justify-between gap-3">
-              <span className="truncate">{item.label ?? row.name}</span>
+              <span className="min-w-0 truncate">{item.label ?? row.name}</span>
               <span className="shrink-0 tabular-nums">
                 {formatMoney(item.amount)}
               </span>
@@ -387,7 +453,7 @@ function PersonSection({
                 <ul className="mt-2 flex flex-col gap-0.5 text-xs text-paper/50">
                   {row.items.map((item, i) => (
                     <li key={i} className="flex justify-between gap-3">
-                      <span className="truncate">{item.label ?? "—"}</span>
+                      <span className="min-w-0 truncate">{item.label ?? "—"}</span>
                       <span className="tabular-nums">
                         {formatMoney(item.amount)}
                       </span>

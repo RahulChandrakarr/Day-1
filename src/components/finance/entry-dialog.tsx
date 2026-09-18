@@ -262,39 +262,18 @@ function EntryForm({
   const [variant, setVariant] = useState<Variant>(startVariant);
   const [debtKind, setDebtKind] = useState<DebtKind>("borrowed");
   const [savingsKind, setSavingsKind] = useState<InvestmentKind>("deposit");
-  const [savedCount, setSavedCount] = useState(0);
-  const [dismissed, setDismissed] = useState(0);
-  const showSaved = savedCount > 0 && dismissed !== savedCount;
-
-  useEffect(() => {
-    if (!savedCount) return;
-    const t = window.setTimeout(() => setDismissed(savedCount), 1800);
-    return () => window.clearTimeout(t);
-  }, [savedCount]);
-
   const borrowKind = choice.startsWith("borrow:")
     ? (choice.slice(7) as DebtKind)
     : null;
-  // Set when Done is pressed with an amount typed: save first, then close
-  const closeAfterSave = useRef(false);
-  const onSaved = () => {
-    setSavedCount((n) => n + 1);
-    if (!borrowKind) setChoice("");
-    if (closeAfterSave.current) {
-      closeAfterSave.current = false;
-      onClose();
-    }
-  };
+  // Saving an entry closes the sheet
+  const onSaved = onClose;
 
+  // Done saves whatever is typed, then closes
   function done() {
     const form = document.getElementById(FORM_ID) as HTMLFormElement | null;
     const amount = form?.elements.namedItem("amount") as HTMLInputElement | null;
-    if (form && amount?.value.trim()) {
-      closeAfterSave.current = true;
-      form.requestSubmit();
-    } else {
-      onClose();
-    }
+    if (form && amount?.value.trim()) form.requestSubmit();
+    else onClose();
   }
 
   // Most-used categories first
@@ -419,19 +398,6 @@ function EntryForm({
         <h2 className="flex-1 font-serif text-xl sm:text-2xl">
           {titleOf(variant)}
         </h2>
-        <AnimatePresence>
-          {showSaved && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="rounded-full bg-moss/15 px-3 py-1 text-xs font-medium text-moss"
-              role="status"
-            >
-              Saved ✓
-            </motion.span>
-          )}
-        </AnimatePresence>
         <button
           type="button"
           onClick={onClose}
@@ -460,14 +426,7 @@ function EntryForm({
         ))}
       </nav>
 
-      <div
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5"
-        onClickCapture={(e) => {
-          // Pressing Save (or Enter) keeps the dialog open as usual
-          if ((e.target as HTMLElement).closest('button[type="submit"]'))
-            closeAfterSave.current = false;
-        }}
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
         {variant === "habit" ? (
           <ul className="flex flex-col gap-2">
             {habits.map((habit) => (

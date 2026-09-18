@@ -406,7 +406,7 @@ export function CategoryBars({ slices }: { slices: CategorySlice[] }) {
               className="h-2.5 w-2.5 shrink-0 rounded-sm"
               style={{ background: `var(--cat-${s.color})` }}
             />
-            <span className="truncate">{s.name}</span>
+            <span className="min-w-0 truncate">{s.name}</span>
           </span>
           <span className="h-2.5">
             <motion.span
