@@ -129,10 +129,16 @@ export function Figure({
   value: string;
   hint?: string;
   tone?: "good" | "bad";
-  divide?: boolean;
+  // "mobile" keeps the row line only while the tiles wrap onto several rows
+  divide?: boolean | "mobile";
 }) {
+  const line = !divide
+    ? ""
+    : divide === "mobile"
+      ? "border-b border-paper/[0.06] sm:border-b-0"
+      : "border-b border-paper/[0.06]";
   return (
-    <div className={`min-w-0 py-3 ${divide ? "border-b border-paper/[0.06]" : ""}`}>
+    <div className={`min-w-0 py-3 ${line}`}>
       <p className="truncate text-xs text-paper/55">{label}</p>
       <p
         className={`mt-0.5 truncate text-[19px] font-bold tabular-nums ${toneClass(tone)}`}

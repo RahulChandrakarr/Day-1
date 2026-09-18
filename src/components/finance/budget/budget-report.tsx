@@ -28,28 +28,6 @@ export default function BudgetReportView({
         />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <CompareTile
-          label="Spent"
-          actual={actual}
-          target={planned}
-          targetLabel="planned"
-          goodWhenLower
-        />
-        <CompareTile
-          label="Income"
-          actual={report.income.actual}
-          target={report.income.expected}
-          targetLabel="expected"
-        />
-        <CompareTile
-          label="Put into savings"
-          actual={report.savings.actual}
-          target={report.savings.target}
-          targetLabel="target"
-        />
-      </div>
-
       <PlanTotals report={report} />
 
       {report.rows.length > 0 && (
@@ -284,49 +262,6 @@ function OverallBar({
           <span>{Math.round(elapsed * 100)}% of the time gone</span>
         )}
       </div>
-    </div>
-  );
-}
-
-function CompareTile({
-  label,
-  actual,
-  target,
-  targetLabel,
-  goodWhenLower,
-}: {
-  label: string;
-  actual: number;
-  target: number | null;
-  targetLabel: string;
-  goodWhenLower?: boolean;
-}) {
-  const hasTarget = target !== null && target > 0;
-  const good = hasTarget
-    ? goodWhenLower
-      ? actual <= target
-      : actual >= target
-    : null;
-  const sign = actual < 0 ? "−" : "";
-
-  return (
-    <div className="rounded-2xl border border-paper/10 bg-ink p-4">
-      <p className="text-xs font-medium uppercase tracking-wider text-paper/50">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-semibold tracking-tight tabular-nums">
-        {sign}
-        {formatMoney(Math.abs(actual))}
-      </p>
-      <p
-        className={`mt-0.5 text-xs ${
-          good === null ? "text-paper/40" : good ? "text-moss" : badText
-        }`}
-      >
-        {hasTarget
-          ? `of ${formatMoney(target)} ${targetLabel}`
-          : `No ${targetLabel} set`}
-      </p>
     </div>
   );
 }

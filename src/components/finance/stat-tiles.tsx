@@ -8,14 +8,24 @@ export default function StatTiles({
   totals,
   extra = [],
   netHint,
+  incomeHint,
+  expenseHint,
 }: {
   totals: Totals;
   extra?: Tile[];
   netHint?: string;
+  // What the plan expected, when the period has one
+  incomeHint?: string;
+  expenseHint?: string;
 }) {
   const tiles = [
-    { label: "Income", value: formatMoney(totals.income), tone: "good" as const },
-    { label: "Expenses", value: formatMoney(totals.expense) },
+    {
+      label: "Income",
+      value: formatMoney(totals.income),
+      hint: incomeHint,
+      tone: "good" as const,
+    },
+    { label: "Expenses", value: formatMoney(totals.expense), hint: expenseHint },
     {
       label: "Net balance",
       value: `${totals.net < 0 ? "−" : ""}${formatMoney(Math.abs(totals.net))}`,
@@ -27,7 +37,11 @@ export default function StatTiles({
 
   return (
     <Card padded={false} className="px-4 py-1">
-      <div className="grid grid-cols-2 sm:grid-cols-4">
+      <div
+        className={`grid grid-cols-2 ${
+          tiles.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4"
+        }`}
+      >
         {tiles.map((tile, i) => (
           <Figure
             key={tile.label}
@@ -35,7 +49,7 @@ export default function StatTiles({
             value={tile.value}
             hint={tile.hint}
             tone={"tone" in tile ? tile.tone : undefined}
-            divide={i < tiles.length - (tiles.length > 2 ? 2 : 1)}
+            divide={i < tiles.length - (tiles.length % 2 === 1 ? 1 : 2) && "mobile"}
           />
         ))}
       </div>

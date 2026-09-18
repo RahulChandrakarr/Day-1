@@ -60,6 +60,32 @@ export default async function YearlyFinancePage({
   ]);
   const yearlyEntries = transactions.filter((t) => t.period === "yearly");
   const buckets = monthBuckets(year, transactions);
+  const report = budget
+    ? budgetReport(
+        budget,
+        "year",
+        key,
+        {
+          transactions,
+          debts: debts.filter((d) => d.occurred_on >= from && d.occurred_on <= to),
+          investments,
+        },
+        today,
+      )
+    : null;
+  // The plan's targets sit with the actuals up top, so the numbers appear once
+  const savingsTile = report
+    ? [
+        {
+          label: "Put into savings",
+          value: `${report.savings.actual < 0 ? "−" : ""}${formatMoney(Math.abs(report.savings.actual))}`,
+          hint:
+            report.savings.target !== null
+              ? `of ${formatMoney(report.savings.target)} target`
+              : "No target set",
+        },
+      ]
+    : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,7 +101,16 @@ export default async function YearlyFinancePage({
         <PdfLink href={`/api/reports/finance?year=${year}`} label="Year PDF" />
       </div>
 
-      <StatTiles totals={totalsOf(transactions)} />
+      <StatTiles
+        totals={totalsOf(transactions)}
+        incomeHint={
+          report?.income.expected !== null && report?.income.expected !== undefined
+            ? `of ${formatMoney(report.income.expected)} expected`
+            : undefined
+        }
+        expenseHint={report ? `of ${formatMoney(report.planned)} planned` : undefined}
+        extra={savingsTile}
+      />
 
       <BudgetCard
         key={key}
@@ -83,23 +118,7 @@ export default async function YearlyFinancePage({
         periodKey={key}
         periodLabel={key}
         budget={budget}
-        report={
-          budget
-            ? budgetReport(
-                budget,
-                "year",
-                key,
-                {
-                  transactions,
-                  debts: debts.filter(
-                    (d) => d.occurred_on >= from && d.occurred_on <= to,
-                  ),
-                  investments,
-                },
-                today,
-              )
-            : null
-        }
+        report={report}
         previous={previous}
         previousLabel={previous?.period_key ?? null}
         categories={categories}

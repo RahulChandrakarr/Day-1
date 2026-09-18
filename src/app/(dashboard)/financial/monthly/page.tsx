@@ -9,6 +9,7 @@ import {
   addMonths,
   budgetReport,
   dayBuckets,
+  formatMoney,
   formatMonth,
   monthRange,
   parseMonthParam,
@@ -49,6 +50,33 @@ export default async function MonthlyFinancePage({
   );
   const monthlyEntries = transactions.filter((t) => t.period === "monthly");
   const totals = totalsOf(transactions);
+  const report = budget
+    ? budgetReport(
+        budget,
+        "month",
+        month,
+        { transactions, debts: periodDebts, investments },
+        today,
+      )
+    : null;
+  // The plan's targets sit with the actuals up top, so the numbers appear once
+  const savingsTile = report
+    ? [
+        {
+          label: "Put into savings",
+          value: `${report.savings.actual < 0 ? "−" : ""}${formatMoney(Math.abs(report.savings.actual))}`,
+          hint:
+            report.savings.target !== null
+              ? `of ${formatMoney(report.savings.target)} target`
+              : "No target set",
+        },
+      ]
+    : [];
+  const incomeHint =
+    report?.income.expected !== null && report?.income.expected !== undefined
+      ? `of ${formatMoney(report.income.expected)} expected`
+      : undefined;
+  const expenseHint = report ? `of ${formatMoney(report.planned)} planned` : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,7 +94,10 @@ export default async function MonthlyFinancePage({
 
       <StatTiles
         totals={totals}
+        incomeHint={incomeHint}
+        expenseHint={expenseHint}
         extra={[
+          ...savingsTile,
           {
             label: "Monthly bills",
             value: `${monthlyEntries.filter((t) => t.type === "expense").length}`,
@@ -81,17 +112,7 @@ export default async function MonthlyFinancePage({
         periodKey={month}
         periodLabel={formatMonth(month)}
         budget={budget}
-        report={
-          budget
-            ? budgetReport(
-                budget,
-                "month",
-                month,
-                { transactions, debts: periodDebts, investments },
-                today,
-              )
-            : null
-        }
+        report={report}
         previous={previous}
         previousLabel={previous ? formatMonth(previous.period_key) : null}
         categories={categories}
