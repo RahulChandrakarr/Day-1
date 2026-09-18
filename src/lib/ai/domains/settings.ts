@@ -1,4 +1,5 @@
 import "server-only";
+import { renameAssistant } from "@/lib/assistant-memory";
 import { tool } from "ai";
 import { z } from "zod";
 import { saveReminder, updateProfile } from "@/app/(dashboard)/settings/actions";
@@ -23,6 +24,7 @@ export const settings: Domain = {
     get_settings: "Checking your settings…",
     set_reminder: "Updating your reminders…",
     update_profile_name: "Updating your profile…",
+    rename_assistant: "Changing my name…",
     set_theme: "Switching the theme…",
   },
   prompt: `SETTINGS
@@ -63,6 +65,16 @@ export const settings: Domain = {
         if (!result.ok) return failed(result.error);
         const title = REMINDERS.find((r) => r.kind === kind)?.title ?? kind;
         return changed(ctx, `${title}: ${next.enabled ? `on at ${time(hour, minute)}` : "off"}.`);
+      },
+    }),
+
+    rename_assistant: tool({
+      description: "Change the assistant's own name (what the user calls you; also the hands-free wake word).",
+      inputSchema: z.object({ name: z.string().min(1).max(20) }),
+      execute: async ({ name }) => {
+        const result = await renameAssistant(ctx.supabase, name);
+        if (!result.ok) return failed(result.error);
+        return changed(ctx, `Your assistant is now called ${name}.`);
       },
     }),
 

@@ -21,7 +21,7 @@ Sections:
 - finance: money, spending, income, categories, budgets/plans vs actual, borrowing and lending, savings and investments
 - documents: uploaded files (Aadhaar, PAN, bills, insurance, receipts) and anything written inside them
 - reports: daily / weekly / monthly reports or summaries, PDF downloads
-- settings: notifications/reminders, profile name, body details, light/dark mode
+- settings: notifications/reminders, profile name, body details, light/dark mode, the assistant's own name, and facts the user shares about themselves ("my birthday is…", "my wife is…", "I'm allergic to…") — those are remembered, not Plan notes
 
 Only these sections are available now: ${allowed.join(", ")}. Pick from them only.
 Pick 1–3 sections (more only for broad questions like "how am I doing overall"). For greetings or small talk pick the first available section.
@@ -51,6 +51,8 @@ export type PromptPersona = {
   instructions: string;
   hasTools: boolean;
   isDefault: boolean;
+  // What the user calls the default assistant (e.g. "Romi")
+  assistantName?: string;
 };
 
 export function agentInstructions(
@@ -62,7 +64,7 @@ export function agentInstructions(
   detail: "brief" | "full" = "full",
 ) {
   const intro = persona.isDefault
-    ? `You are ${name}'s personal assistant inside "Day One", a private app where ${name} tracks their day, plans, health, habits, money and documents. You speak directly to ${name} and can both look things up and make changes for them.`
+    ? `You are ${persona.assistantName ?? "the assistant"}, ${name}'s personal assistant inside "Day One", a private app where ${name} tracks their day, plans, health, habits, money and documents. You speak directly to ${name} and can both look things up and make changes for them. If they call you by your name, that's just them getting your attention.`
     : `You are "${persona.name}", a persona ${name} chose inside "Day One", their private life-tracking app. You speak directly to ${name}.
 
 Your role, as ${name} described or chose it:
@@ -77,6 +79,7 @@ How to work:
 - Changes: when ${name} asks you to add, log, tick, set or change something, do it straight away with the right tool, then say exactly what changed. If a detail is genuinely missing and can't be sensibly assumed (e.g. which goal), ask one short question.
 - Deletes: never delete without an explicit "yes" from ${name} in this conversation. First say what would be deleted and ask; only after they confirm call the tool with confirmed: true.
 - If a tool returns an error, fix the input and retry once, or explain plainly.
+- Memory: when ${name} tells you a lasting fact about themselves (birthday, family, work, likes and dislikes, allergies, health conditions, important dates, long-term goals), save it with remember_fact straight away and confirm in a few words ("Got it, I'll remember your birthday."). Don't save passing moods or one-off tasks. The <memory> block lists what you already know about ${name}; use it naturally (e.g. work out their age from the date of birth). To forget something, ask first, then call forget_fact with confirmed: true.
 - You can only see the app areas listed below. If asked about anything else in the app, say this persona can't see it and suggest switching to the Day One assistant.`
     : `
 - You have no access to ${name}'s app data in this persona. If they ask about their money, plans, health or files, say so kindly and suggest switching to the Day One assistant.`;

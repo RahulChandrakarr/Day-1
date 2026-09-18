@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ReminderKind } from "@/lib/reminders";
 import { clearSpendPin, refreshSpendPin } from "@/lib/push/today";
 import { createClient } from "@/lib/supabase/server";
+import { forgetMemory, renameAssistant, saveMemory } from "@/lib/assistant-memory";
 
 const KINDS = ["briefing", "journal", "habits", "gym", "money", "spend_pin", "plan"];
 
@@ -182,4 +183,32 @@ export async function documentLink(
     .createSignedUrl(data.path, 60, download ? { download: filename } : undefined);
   if (error || !signed) return { ok: false, error: error?.message ?? "Couldn't open the file." };
   return { ok: true, url: signed.signedUrl };
+}
+
+// ---------------------------------------------------------------------------
+// Assistant: her name and what she remembers
+// ---------------------------------------------------------------------------
+export async function renameAssistantAction(name: string): Promise<Result> {
+  const result = await renameAssistant(await createClient(), name);
+  // The layout passes the name to the floating button (its wake word)
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+export async function saveMemoryAction(input: {
+  id?: string | null;
+  label: string;
+  value: string;
+}): Promise<Result> {
+  if (input.id && !/^[0-9a-f-]{36}$/i.test(input.id)) return { ok: false, error: "Invalid fact." };
+  const result = await saveMemory(await createClient(), input);
+  if (result.ok) revalidatePath("/settings/assistant");
+  return result.ok ? { ok: true } : result;
+}
+
+export async function deleteMemoryAction(id: string): Promise<Result> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, error: "Invalid fact." };
+  const result = await forgetMemory(await createClient(), { id });
+  if (result.ok) revalidatePath("/settings/assistant");
+  return result.ok ? { ok: true } : result;
 }

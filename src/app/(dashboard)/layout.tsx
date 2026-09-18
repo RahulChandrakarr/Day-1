@@ -6,13 +6,15 @@ import MobileNav from "@/components/dashboard/mobile-nav";
 import RegisterServiceWorker from "@/components/notifications/register-sw";
 import Sidebar from "@/components/dashboard/sidebar";
 import { getAvatarUrl } from "@/lib/profile-queries";
+import { getAssistantName } from "@/lib/assistant-memory";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const today = todayISO();
   // Nudge towards the journal until today's page exists
-  const [{ profile }, journalToday] = await Promise.all([
+  const [{ profile }, journalToday, assistantName] = await Promise.all([
     requireProfile(),
     getJournalDays(today, today),
+    getAssistantName().catch(() => "Romi"),
   ]);
   const alerts = journalToday.length === 0 ? ["/daily"] : [];
   const avatarUrl = await getAvatarUrl(profile.avatar_path);
@@ -27,7 +29,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
       </div>
-      <QuickAssistant />
+      <QuickAssistant name={assistantName} />
     </div>
   );
 }

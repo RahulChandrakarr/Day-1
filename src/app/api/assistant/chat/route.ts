@@ -13,6 +13,7 @@ import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
 import { routeMessage, type RouteDecision } from "@/lib/ai/router";
+import { getAssistantName, getMemories, MEMORY_LIMIT } from "@/lib/assistant-memory";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
 import { todayCard } from "@/lib/ai/snapshot";
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
       .gte("created_at", since(ms));
 
   // Everything independent runs in parallel.
-  const [minute, day, conversation, history, persona] =
+  const [minute, day, conversation, history, persona, assistantName, memories] =
     await Promise.all([
       countSince(60_000),
       countSince(86_400_000),
@@ -101,6 +102,8 @@ export async function POST(req: Request) {
         .order("created_at", { ascending: false })
         .limit(12),
       resolvePersona(supabase, personaId),
+      getAssistantName(supabase).catch(() => undefined),
+      getMemories(supabase, MEMORY_LIMIT).catch(() => []),
     ]);
 
   if ((minute.count ?? 0) >= LIMIT_PER_MINUTE)
@@ -166,8 +169,13 @@ export async function POST(req: Request) {
       const agent = buildAgent({ supabase, profile, today, emit }, route.sections, { sql });
       const announced = new Set<string>();
 
+      // What the user has told the assistant about themselves
+      const known = route.sections.length
+        ? memories.map(({ label, value }) => ({ label, value }))
+        : [];
       const context = [
         today_ ? `<today>${JSON.stringify(today_)}</today>` : "",
+        known.length ? `<memory>${JSON.stringify(known)}</memory>` : "",
         finance ? `<finance>${JSON.stringify(finance)}</finance>` : "",
       ]
         .filter(Boolean)
@@ -180,6 +188,7 @@ export async function POST(req: Request) {
           instructions: persona.instructions,
           hasTools: route.sections.length > 0,
           isDefault: persona.id === "assistant",
+          assistantName,
         }, route.detail),
         messages: [...historyMessages, { role: "user", content: `${context}\n\n${text}` }],
         tools: route.sections.length ? agent.tools : undefined,

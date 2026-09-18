@@ -1,20 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PointerEvent,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 import { assistantTransport, readError, textOf } from "@/components/assistant/chat-provider";
+import { handsFree, useHandsFree } from "@/components/assistant/hands-free";
 import { SendIcon, SparkleIcon } from "@/components/assistant/icons";
 import {
   canListen,
   createListener,
   speak,
+  SPEECH_ERRORS,
   stopSpeaking,
   type Listener,
   type SpeechLang,
 } from "@/components/assistant/speech";
+import { afterName, isStopPhrase, wakePattern } from "@/components/assistant/wake-word";
 import { setTheme } from "@/components/theme";
 import type { AssistantUIMessage } from "@/lib/ai/types";
 
@@ -24,6 +34,9 @@ const LANG_KEY = "day-one:quick-assistant-lang";
 const SIZE = 56;
 const EDGE = 8;
 const DRAG_PX = 6;
+const GREETING = "Yes? What's going on?";
+// Microphone problems that retrying won't fix
+const FATAL = [SPEECH_ERRORS["not-allowed"], SPEECH_ERRORS["audio-capture"]];
 
 type Phase = "idle" | "listening" | "thinking" | "answer" | "typing";
 type Pos = { x: number; y: number };
@@ -68,13 +81,23 @@ function quickChatId() {
 }
 
 const noop = () => () => {};
+const onVisibility = (callback: () => void) => {
+  document.addEventListener("visibilitychange", callback);
+  return () => document.removeEventListener("visibilitychange", callback);
+};
 
-// A small round button on every page: tap, speak, and it does it or answers
-// in a line or two, out loud. Drag it anywhere; it remembers the spot.
-export default function QuickAssistant() {
+// A small round button on every page: tap (or say her name, hands-free) and
+// speak; she does it or answers in a line or two, out loud. Drag it anywhere.
+export default function QuickAssistant({ name }: { name: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const onClient = useSyncExternalStore(noop, () => true, () => false);
+  const visible = useSyncExternalStore(
+    onVisibility,
+    () => document.visibilityState === "visible",
+    () => false,
+  );
+  const handsFreeOn = useHandsFree();
   const [pos, setPos] = useState<Pos | null>(savedPos);
   const [phase, setPhase] = useState<Phase>("idle");
   const [heard, setHeard] = useState("");
@@ -85,13 +108,18 @@ export default function QuickAssistant() {
   );
   const [chatId] = useState(quickChatId);
   const [transport] = useState(assistantTransport);
+  // Bumped to restart the wait for her name, and on resize to re-place the bubble
+  const [wakeTick, setWakeTick] = useState(0);
+  const [, setViewport] = useState(0);
   const listener = useRef<Listener | null>(null);
   const hideTimer = useRef<number | null>(null);
   const dataChanged = useRef(false);
+  // A back-and-forth started by her name: listen again after each reply
+  const convo = useRef(false);
   const drag = useRef<{ x: number; y: number; from: Pos; moved: boolean } | null>(null);
-  // Bumped on resize so the bubble is re-placed even at the default spot
-  const [, setViewport] = useState(0);
   const suppressClick = useRef(false);
+  const wakeRe = useMemo(() => wakePattern(name), [name]);
+  const hidden = pathname.startsWith("/assistant");
 
   const clearHide = () => {
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
@@ -108,9 +136,39 @@ export default function QuickAssistant() {
   function answer(text: string, isError: boolean) {
     setReply({ text: text || "Done.", isError });
     setPhase("answer");
-    if (isError || !text) return hideSoon();
-    void speak(text, lang).then(hideSoon);
+    if (isError || !text) {
+      convo.current = false;
+      return hideSoon();
+    }
+    void speak(text, lang).then(() => {
+      if (convo.current) listen();
+      else hideSoon();
+    });
   }
+
+  function endConvo(say?: string) {
+    convo.current = false;
+    listener.current?.abort();
+    listener.current = null;
+    clearHide();
+    if (!say) {
+      setReply(null);
+      return setPhase("idle");
+    }
+    setReply({ text: say, isError: false });
+    setPhase("answer");
+    void speak(say, lang).then(() => {
+      setReply(null);
+      setPhase("idle");
+    });
+  }
+
+  // useChat keeps the callbacks it was created with; route them through a
+  // ref so they always see the current language and conversation state
+  const latest = useRef({ answer });
+  useEffect(() => {
+    latest.current = { answer };
+  });
 
   const chat = useChat<AssistantUIMessage>({
     id: chatId,
@@ -121,13 +179,13 @@ export default function QuickAssistant() {
       else dataChanged.current = true;
     },
     onFinish: ({ message, isError }) => {
-      if (!isError) answer(textOf(message), false);
+      if (!isError) latest.current.answer(textOf(message), false);
       if (dataChanged.current) {
         dataChanged.current = false;
         router.refresh();
       }
     },
-    onError: (error) => answer(readError(error) ?? "Something went wrong.", true),
+    onError: (error) => latest.current.answer(readError(error) ?? "Something went wrong.", true),
   });
 
   function send(text: string) {
@@ -151,6 +209,7 @@ export default function QuickAssistant() {
         onText: setHeard,
         onPause: (text) => {
           listener.current = null;
+          if (convo.current && isStopPhrase(text)) return endConvo("Okay!");
           send(text);
         },
         onError: (message) => {
@@ -158,22 +217,33 @@ export default function QuickAssistant() {
           answer(message, true);
         },
         onIdle: () => {
+          if (convo.current) return endConvo();
           listener.current?.abort();
           listener.current = null;
           setPhase("idle");
         },
       },
-      { pauseMs: 1500, idleMs: 10_000 },
+      // In a conversation, a few quiet seconds means they're done
+      { pauseMs: 1500, idleMs: convo.current ? 8000 : 10_000 },
     );
   }
 
-  function close() {
-    listener.current?.abort();
-    listener.current = null;
-    stopSpeaking();
+  // She heard her name: do what followed it, or ask what's going on
+  function wake(rest: string) {
+    convo.current = true;
+    if (rest.split(/\s+/).filter(Boolean).length >= 2) return send(rest);
     clearHide();
-    setReply(null);
-    setPhase("idle");
+    setHeard("");
+    setReply({ text: GREETING, isError: false });
+    setPhase("answer");
+    void speak(GREETING, lang).then(() => {
+      if (convo.current) listen();
+    });
+  }
+
+  function close() {
+    endConvo();
+    stopSpeaking();
   }
 
   function tap() {
@@ -185,6 +255,47 @@ export default function QuickAssistant() {
     if (phase === "thinking") return;
     listen();
   }
+
+  // Hands-free: wait for her name while nothing else is going on. Only
+  // what's said after the name ever reaches the AI.
+  const waiting =
+    onClient && handsFreeOn && visible && !hidden && phase === "idle" && !!wakeRe && canListen();
+  const wakeRef = useRef(wake);
+  useEffect(() => {
+    wakeRef.current = wake;
+  });
+  useEffect(() => {
+    if (!waiting || !wakeRe) return;
+    let alive = true;
+    let retry = 0;
+    const l = createListener(
+      lang,
+      {
+        onPause: (text) => {
+          if (!alive) return;
+          const rest = afterName(text, wakeRe);
+          if (rest === null) setWakeTick((n) => n + 1);
+          else wakeRef.current(rest);
+        },
+        onError: (message) => {
+          if (!alive) return;
+          if (FATAL.includes(message)) {
+            handsFree.set(false);
+            latest.current.answer(message, true);
+          } else retry = window.setTimeout(() => setWakeTick((n) => n + 1), 1500);
+        },
+        onIdle: () => {
+          if (alive) setWakeTick((n) => n + 1);
+        },
+      },
+      { pauseMs: 900, idleMs: 60_000 },
+    );
+    return () => {
+      alive = false;
+      window.clearTimeout(retry);
+      l.abort();
+    };
+  }, [waiting, wakeRe, lang, wakeTick]);
 
   // Keep it on screen when the window changes size
   useEffect(() => {
@@ -225,7 +336,7 @@ export default function QuickAssistant() {
     });
   }
 
-  if (!onClient || pathname.startsWith("/assistant")) return null;
+  if (!onClient || hidden) return null;
 
   // The bubble opens toward the middle of the screen and never leaves it
   const vw = window.innerWidth;
@@ -244,7 +355,9 @@ export default function QuickAssistant() {
         ? "Working on it"
         : phase === "answer"
           ? "Tap to speak again"
-          : "Quick assistant: tap and speak";
+          : waiting
+            ? `Listening for “${name}”. Tap to talk`
+            : `${name}: tap and speak`;
 
   return (
     <div
@@ -275,7 +388,7 @@ export default function QuickAssistant() {
                     ? "Working on it…"
                     : phase === "typing"
                       ? "Type a request"
-                      : "Assistant"}
+                      : name}
               </span>
               <div className="flex items-center gap-1">
                 {(phase === "listening" || phase === "typing") && (
@@ -288,6 +401,7 @@ export default function QuickAssistant() {
                       if (phase === "listening") {
                         listener.current?.abort();
                         listener.current = null;
+                        convo.current = false;
                         setPhase("idle");
                       }
                     }}
@@ -340,7 +454,11 @@ export default function QuickAssistant() {
                   <p className="break-words text-paper/70">&ldquo;{heard}&rdquo;</p>
                 )}
                 {phase === "listening" && !heard && (
-                  <p className="text-paper/50">Say something like &ldquo;add ₹120 for groceries&rdquo;.</p>
+                  <p className="text-paper/50">
+                    {convo.current
+                      ? "Go ahead, I'm listening."
+                      : "Say something like “add ₹120 for groceries”."}
+                  </p>
                 )}
                 {phase === "answer" && reply && (
                   <p
@@ -373,6 +491,18 @@ export default function QuickAssistant() {
                     </Link>
                   )}
                 </div>
+                {canListen() && (
+                  <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 border-t border-paper/10 pt-2 text-xs text-paper/60">
+                    <span>Hands-free: say “{name}”</span>
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={handsFreeOn}
+                      onChange={(e) => handsFree.set(e.target.checked)}
+                      className="h-4 w-4 accent-ember"
+                    />
+                  </label>
+                )}
               </>
             )}
           </motion.div>
@@ -399,6 +529,22 @@ export default function QuickAssistant() {
             animate={{ opacity: 0, scale: 1.6 }}
             transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
           />
+        )}
+        {waiting && (
+          <>
+            {/* Quietly waiting for her name */}
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border-2 border-ember"
+              initial={{ opacity: 0.35, scale: 1 }}
+              animate={{ opacity: 0, scale: 1.35 }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+            />
+            <span
+              aria-hidden
+              className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full border-2 border-ink bg-moss"
+            />
+          </>
         )}
         {phase === "thinking" ? (
           <span
