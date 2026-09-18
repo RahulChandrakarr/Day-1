@@ -259,15 +259,10 @@ export default async function OverviewPage() {
               </p>
             )}
           </div>
+          {reminders.length > 0 && <div className="flex shrink-0 gap-1.5">{reminders}</div>}
         </section>
 
         <BriefingToggle />
-
-        {reminders.length > 0 && (
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            {reminders}
-          </div>
-        )}
 
         {pendingTodos.length > 0 && (
           <>

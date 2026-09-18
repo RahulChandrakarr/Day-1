@@ -25,10 +25,9 @@ export default async function ReportPage({
         currentHref="/health/report"
         isCurrent={month === today.slice(0, 7)}
         currentLabel="This month"
-      />
-      <div className="-mt-2 flex justify-end">
-        <PdfLink href={`/api/reports/health?month=${month}`} label="Download PDF" />
-      </div>
+      >
+        <PdfLink variant="icon" href={`/api/reports/health?month=${month}`} label="Download PDF" />
+      </PeriodNav>
 
       {nothingYet ? (
         <p className="rounded-[18px] border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-paper/50">

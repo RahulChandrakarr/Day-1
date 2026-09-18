@@ -7,10 +7,13 @@ export default function PdfLink({
   href,
   variant = "link",
   label = "Download PDF",
+  className = "h-11 w-11 rounded-full",
 }: {
   href: string;
-  variant?: "link" | "button";
+  variant?: "link" | "button" | "icon";
   label?: string;
+  // Size and shape for the icon variant, to match the buttons beside it
+  className?: string;
 }) {
   const [state, setState] = useState<"idle" | "busy" | "error">("idle");
 
@@ -41,6 +44,26 @@ export default function PdfLink({
   const text =
     state === "busy" ? "Preparing…" : state === "error" ? "Couldn't make it. Retry" : label;
 
+  if (variant === "icon")
+    return (
+      <button
+        type="button"
+        onClick={download}
+        disabled={state === "busy"}
+        aria-label={text}
+        title={text}
+        className={`flex shrink-0 items-center justify-center border border-paper/10 bg-surface transition hover:text-paper active:bg-ink disabled:opacity-60 ${className} ${
+          state === "error" ? "text-red-700 dark:text-red-300" : "text-ember"
+        }`}
+      >
+        {state === "busy" ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+        ) : (
+          <DownloadIcon size={18} />
+        )}
+      </button>
+    );
+
   if (variant === "button")
     return (
       <button
@@ -69,9 +92,9 @@ export default function PdfLink({
   );
 }
 
-function DownloadIcon() {
+function DownloadIcon({ size = 15 }: { size?: number }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
     </svg>
   );

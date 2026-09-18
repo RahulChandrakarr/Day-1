@@ -1,5 +1,4 @@
 import Link from "next/link";
-import PdfLink from "@/components/settings/pdf-link";
 import BudgetCard from "@/components/finance/budget/budget-card";
 import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
@@ -97,9 +96,6 @@ export default async function YearlyFinancePage({
         isCurrent={year === thisYear}
         currentLabel="This year"
       />
-      <div className="-mt-2 flex justify-end">
-        <PdfLink href={`/api/reports/finance?year=${year}`} label="Year PDF" />
-      </div>
 
       <StatTiles
         totals={totalsOf(transactions)}

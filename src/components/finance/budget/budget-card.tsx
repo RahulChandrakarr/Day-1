@@ -9,6 +9,7 @@ import type {
   BudgetScope,
   Category,
 } from "@/lib/finance";
+import { PencilIcon, TrashIcon } from "@/components/ui/kit";
 import BudgetEditor, { type PlanPerson } from "./budget-editor";
 import BudgetReportView from "./budget-report";
 
@@ -46,8 +47,8 @@ export default function BudgetCard({
 
   return (
     <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="font-serif text-2xl">
             {editing
               ? budget
@@ -66,13 +67,15 @@ export default function BudgetCard({
           </p>
         </div>
         {!editing && budget && (
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-1.5">
             <button
               type="button"
               onClick={() => setMode("edit")}
-              className="h-9 rounded-full border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
+              aria-label="Edit plan"
+              title="Edit plan"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/70 transition hover:bg-paper/5 hover:text-paper"
             >
-              Edit plan
+              <PencilIcon />
             </button>
             <button
               type="button"
@@ -81,9 +84,11 @@ export default function BudgetCard({
                 if (confirm(`Delete the plan for ${periodLabel}?`))
                   startDelete(() => deleteBudget(budget.id));
               }}
-              className="h-9 rounded-full px-3 text-sm text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
+              aria-label={deleting ? "Deleting plan" : "Delete plan"}
+              title="Delete plan"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
             >
-              {deleting ? "Deleting…" : "Delete"}
+              <TrashIcon />
             </button>
           </div>
         )}

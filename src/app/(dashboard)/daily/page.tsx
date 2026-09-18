@@ -62,10 +62,9 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
           currentHref="/daily"
           isCurrent={date === today}
           currentLabel="Today"
-        />
-        <div className="-mt-2 flex justify-end">
-          <PdfLink href={`/api/reports/journal?month=${date.slice(0, 7)}`} label="Month PDF" />
-        </div>
+        >
+          <PdfLink variant="icon" href={`/api/reports/journal?month=${date.slice(0, 7)}`} label="Month PDF" />
+        </PeriodNav>
 
         <nav aria-label="This week" className="grid grid-cols-7 gap-1.5">
           {week.map((d) => {

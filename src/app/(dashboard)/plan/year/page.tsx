@@ -41,10 +41,9 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
         currentHref="/plan/year"
         isCurrent={year === Number(today.slice(0, 4))}
         currentLabel="This year"
-      />
-      <div className="-mt-2 flex justify-end">
-        <PdfLink href={`/api/reports/plan?year=${year}`} label="Year PDF" />
-      </div>
+      >
+        <PdfLink variant="icon" href={`/api/reports/plan?year=${year}`} label="Year PDF" />
+      </PeriodNav>
 
       {goals.length > 0 && (
         <DarkCard className="flex items-center gap-3">

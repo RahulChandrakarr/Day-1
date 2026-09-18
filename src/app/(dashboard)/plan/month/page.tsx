@@ -48,10 +48,9 @@ export default async function PlanMonthPage({
         currentHref="/plan/month"
         isCurrent={isCurrent}
         currentLabel="This month"
-      />
-      <div className="-mt-2 flex justify-end">
-        <PdfLink href={`/api/reports/plan?month=${month}`} label="Month PDF" />
-      </div>
+      >
+        <PdfLink variant="icon" href={`/api/reports/plan?month=${month}`} label="Month PDF" />
+      </PeriodNav>
 
       {goals.length === 0 ? (
         <Empty href="/plan/year">

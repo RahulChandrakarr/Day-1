@@ -304,7 +304,7 @@ export function Reminder({
   );
 }
 
-// Small nudge chip for a single row of reminders
+// Small nudge chip, shown inside the Today card on Overview
 export function ReminderChip({
   href,
   emoji,
@@ -317,10 +317,35 @@ export function ReminderChip({
   return (
     <Link
       href={href}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-paper/10 bg-surface px-3 text-[13px] font-medium transition active:bg-ink"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink/10 px-3 text-[13px] font-medium transition active:bg-ink/20"
     >
       <span>{emoji}</span>
       {title}
     </Link>
   );
 }
+
+const iconProps = {
+  width: 17,
+  height: 17,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+export const PencilIcon = () => (
+  <svg {...iconProps}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+
+export const TrashIcon = () => (
+  <svg {...iconProps}>
+    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+  </svg>
+);

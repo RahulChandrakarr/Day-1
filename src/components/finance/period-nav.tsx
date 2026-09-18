@@ -43,7 +43,7 @@ export default function PeriodNav({
       <Link href={prevHref} className={stepClass} aria-label="Previous">
         {arrow("left")}
       </Link>
-      <h2 className="min-w-0 flex-1 truncate px-1 font-serif text-[22px] leading-tight">
+      <h2 className="min-w-0 flex-1 px-1 font-serif text-[20px] leading-tight line-clamp-2 sm:text-[22px]">
         {label}
       </h2>
       <Link href={nextHref} className={stepClass} aria-label="Next">

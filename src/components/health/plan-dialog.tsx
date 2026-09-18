@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { saveGymPlan } from "@/app/(dashboard)/health/actions";
+import { PencilIcon } from "@/components/ui/kit";
 import { WEEKDAYS, type Exercise, type Phase, type PlanDay } from "@/lib/health";
 
 type DraftExercise = {
@@ -80,7 +81,7 @@ export default function PlanDialog({
   startDay: number;
   label: string;
   blockId?: string | null;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "icon";
 }) {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -105,13 +106,17 @@ export default function PlanDialog({
           setSession((n) => n + 1);
           setOpen(true);
         }}
+        aria-label={variant === "icon" ? label : undefined}
+        title={variant === "icon" ? label : undefined}
         className={
           variant === "primary"
             ? "h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
-            : "h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
+            : variant === "icon"
+              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-paper/10 bg-surface text-paper/60 transition hover:text-paper active:bg-ink"
+              : "h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
         }
       >
-        {label}
+        {variant === "icon" ? <PencilIcon /> : label}
       </button>
 
       <AnimatePresence>

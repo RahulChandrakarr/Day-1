@@ -52,24 +52,24 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <PeriodNav
-          label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
-          prevHref={`/health/gym?date=${addDays(date, -1)}`}
-          nextHref={`/health/gym?date=${addDays(date, 1)}`}
-          currentHref="/health/gym"
-          isCurrent={date === today}
-          currentLabel="Today"
-        />
+      <PeriodNav
+        label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
+        prevHref={`/health/gym?date=${addDays(date, -1)}`}
+        nextHref={`/health/gym?date=${addDays(date, 1)}`}
+        currentHref="/health/gym"
+        isCurrent={date === today}
+        currentLabel="Today"
+      >
         {hasPlan && (
           <PlanDialog
             week={week}
             startDay={weekday}
             blockId={block?.id ?? null}
-            label="✏️ Edit plan"
+            label="Edit plan"
+            variant="icon"
           />
         )}
-      </div>
+      </PeriodNav>
 
       {missingPrep && <AddPrep blockId={block?.id ?? null} />}
 
