@@ -13,6 +13,7 @@ import {
   type Variants,
 } from "framer-motion";
 import { ThemeToggle } from "@/components/theme";
+import Logo from "@/components/ui/logo";
 import { login, type LoginState } from "./actions";
 
 const container: Variants = {
@@ -93,12 +94,12 @@ export default function LoginForm() {
       >
         {/* Left: the journal cover */}
         <section className="flex flex-col gap-6">
-          <motion.p
-            variants={item}
-            className="font-mono text-xs uppercase tracking-[0.3em] text-paper/50"
-          >
-            Day One · Life tracker
-          </motion.p>
+          <motion.div variants={item} className="flex items-center gap-3">
+            <Logo className="h-11 w-auto" priority />
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/50">
+              Life tracker
+            </span>
+          </motion.div>
 
           <motion.h1
             variants={item}

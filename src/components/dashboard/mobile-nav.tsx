@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme";
+import Logo from "@/components/ui/logo";
 import type { Profile } from "@/lib/auth";
 import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 
@@ -26,7 +27,11 @@ export default function MobileNav({
   const name = profile.full_name || profile.email.split("@")[0];
   const current =
     navItems.find((item) => isActive(pathname, item.href))?.label ??
-    (pathname.startsWith("/admin") ? "Users" : "Day One");
+    (pathname.startsWith("/settings")
+      ? "Settings"
+      : pathname.startsWith("/admin")
+        ? "Users"
+        : null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -41,20 +46,20 @@ export default function MobileNav({
     <>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-paper/10 bg-ink/80 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-xl md:hidden">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember font-serif text-xl text-on-ember">
-            D
-          </span>
+          <Logo className="h-8 w-auto" priority />
           <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={current}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2 }}
-              className="font-serif text-2xl"
-            >
-              {current}
-            </motion.span>
+            {current && (
+              <motion.span
+                key={current}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="font-serif text-2xl"
+              >
+                {current}
+              </motion.span>
+            )}
           </AnimatePresence>
         </div>
 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 import { ThemeToggle } from "@/components/theme";
+import Logo from "@/components/ui/logo";
 import type { Profile } from "@/lib/auth";
 import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 
@@ -37,10 +38,7 @@ export default function Sidebar({
         className="flex items-center gap-3 px-2 lg:px-3"
         aria-label="Day One home"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember font-serif text-2xl text-on-ember">
-          D
-        </span>
-        <span className="hidden font-serif text-2xl lg:block">Day One</span>
+        <Logo className="h-10 w-auto" priority />
       </Link>
 
       <nav className="mt-10 flex flex-1 flex-col gap-1">

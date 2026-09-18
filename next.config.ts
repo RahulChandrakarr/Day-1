@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Fonts read from disk by the PDF report route
+  // Fonts and the logo, read from disk by the PDF report route
   outputFileTracingIncludes: {
-    "/api/reports/*": ["./src/lib/pdf/fonts/**/*"],
+    "/api/reports/*": ["./src/lib/pdf/fonts/**/*", "./src/lib/pdf/logo.png"],
   },
 };
 

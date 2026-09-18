@@ -4,7 +4,7 @@ import path from "node:path";
 // fontkit expects this global when laying out text
 import "regenerator-runtime/runtime.js";
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, rgb, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import { PDFDocument, rgb, type PDFFont, type PDFImage, type PDFPage, type RGB } from "pdf-lib";
 
 // A4 page, simple flowing layout: headings, text, stat boxes, tables, bars.
 const PAGE = { width: 595.28, height: 841.89 };
@@ -20,7 +20,6 @@ export const COLORS = {
   ember: rgb(0.69, 0.337, 0.122),
   moss: rgb(0.298, 0.478, 0.31),
   red: rgb(0.702, 0.216, 0.18),
-  white: rgb(1, 1, 1),
 };
 
 export type Tone = "good" | "bad" | undefined;
@@ -37,6 +36,10 @@ const loadFontBytes = () =>
     readFile(path.join(fontDir, "NotoSans-Bold.ttf")),
     readFile(path.join(fontDir, "NotoSansDevanagari-Regular.ttf")),
   ]));
+
+let logoBytes: Promise<Buffer> | null = null;
+const loadLogo = () =>
+  (logoBytes ??= readFile(path.join(process.cwd(), "src/lib/pdf/logo.png")));
 
 const DEVANAGARI = /[\u{0900}-\u{097F}\u{A8E0}-\u{A8FF}]/u;
 // Drawn as shapes, since the fonts have no glyph for them
@@ -75,10 +78,12 @@ export class ReportDoc {
 
   private doc: PDFDocument;
   private fonts: Fonts;
+  private logo: PDFImage;
 
-  private constructor(doc: PDFDocument, fonts: Fonts) {
+  private constructor(doc: PDFDocument, fonts: Fonts, logo: PDFImage) {
     this.doc = doc;
     this.fonts = fonts;
+    this.logo = logo;
   }
 
   static async create(title: string, subtitle: string) {
@@ -93,7 +98,7 @@ export class ReportDoc {
     doc.setTitle(`${title} · ${subtitle}`);
     doc.setAuthor("Day One");
     doc.setCreator("Day One");
-    const report = new ReportDoc(doc, fonts);
+    const report = new ReportDoc(doc, fonts, await doc.embedPng(await loadLogo()));
     report.addPage();
     report.header(title, subtitle);
     return report;
@@ -196,9 +201,7 @@ export class ReportDoc {
 
   // ---- blocks -----------------------------------------------------------
   private header(title: string, subtitle: string) {
-    this.page.drawRectangle({ x: MARGIN, y: this.y - 4, width: 26, height: 26, color: COLORS.ember });
-    this.draw("D", MARGIN + 8, this.y + 3, 15, COLORS.white, true);
-    this.draw("Day One", MARGIN + 34, this.y + 5, 11, COLORS.muted, true);
+    this.page.drawImage(this.logo, { x: MARGIN, y: this.y - 6, ...this.logo.scaleToFit(32, 32) });
     this.y -= 40;
     this.draw(title, MARGIN, this.y, 24, COLORS.ink, true);
     this.y -= 20;
@@ -385,9 +388,11 @@ export class ReportDoc {
     }).format(new Date());
     pages.forEach((page, i) => {
       this.page = page;
-      const left = `Day One · Generated ${stamp}`;
+      const left = `Generated ${stamp}`;
       const right = `Page ${i + 1} of ${pages.length}`;
-      this.draw(left, MARGIN, 22, 8, COLORS.muted);
+      const mark = this.logo.scaleToFit(10, 10);
+      page.drawImage(this.logo, { x: MARGIN, y: 20, ...mark });
+      this.draw(left, MARGIN + mark.width + 5, 22, 8, COLORS.muted);
       this.draw(right, PAGE.width - MARGIN - this.width(right, 8), 22, 8, COLORS.muted);
     });
     return this.doc.save();
