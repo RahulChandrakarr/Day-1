@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { DebtEntry, Person } from "@/lib/debts";
 import type { Account, InvestmentEntry } from "@/lib/investments";
 import type {
+  BankAccount,
+  BankTransfer,
   Budget,
   BudgetLine,
   BudgetScope,
@@ -12,21 +14,63 @@ import type {
 } from "@/lib/finance";
 
 const TX_COLUMNS =
-  "id, type, amount, description, period, occurred_on, created_at, category:finance_categories(id, name, color)";
+  "id, type, amount, description, period, occurred_on, created_at, category:finance_categories(id, name, color), bank_account:bank_accounts(id, name, color)";
 
-type TxRow = Omit<Transaction, "amount" | "category"> & {
+type TxRow = Omit<Transaction, "amount" | "category" | "bank_account"> & {
   amount: number | string;
   category: Transaction["category"] | Transaction["category"][];
+  bank_account: Transaction["bank_account"] | NonNullable<Transaction["bank_account"]>[];
 };
 
 function normalize(rows: TxRow[] | null): Transaction[] {
   return (rows ?? []).map((row) => ({
     ...row,
     amount: Number(row.amount),
-    category: Array.isArray(row.category)
-      ? (row.category[0] ?? null)
-      : row.category,
+    category: one(row.category),
+    bank_account: one(row.bank_account),
   }));
+}
+
+// Every bank account with its balance at the end of asOf (YYYY-MM-DD)
+export async function getBankAccounts(asOf: string): Promise<BankAccount[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("bank_balances", { p_as_of: asOf });
+  if (error) throw new Error(error.message);
+  const rows = (data ?? []) as (Omit<BankAccount, "balance" | "opening_balance"> & {
+    balance: number | string;
+    opening_balance: number | string;
+  })[];
+  return rows.map((a) => ({
+    ...a,
+    balance: Number(a.balance),
+    opening_balance: Number(a.opening_balance),
+  }));
+}
+
+export async function getTransfers(options: { from?: string; to?: string }) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("bank_transfers")
+    .select(
+      "id, amount, note, occurred_on, created_at, from:bank_accounts!bank_transfers_from_account_id_fkey(id, name, color), to:bank_accounts!bank_transfers_to_account_id_fkey(id, name, color)",
+    )
+    .order("occurred_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (options.from) query = query.gte("occurred_on", options.from);
+  if (options.to) query = query.lte("occurred_on", options.to);
+  const { data, error } = await query.returns<
+    (Omit<BankTransfer, "amount" | "from" | "to"> & {
+      amount: number | string;
+      from: BankTransfer["from"] | BankTransfer["from"][];
+      to: BankTransfer["to"] | BankTransfer["to"][];
+    })[]
+  >();
+  if (error) throw new Error(error.message);
+  return (data ?? []).flatMap((t) => {
+    const from = one(t.from);
+    const to = one(t.to);
+    return from && to ? [{ ...t, amount: Number(t.amount), from, to }] : [];
+  });
 }
 
 export async function getTransactions(options: {

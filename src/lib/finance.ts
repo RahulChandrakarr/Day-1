@@ -26,6 +26,30 @@ export type Transaction = {
   occurred_on: string; // YYYY-MM-DD
   created_at: string;
   category: Pick<Category, "id" | "name" | "color"> | null;
+  // Which bank account it came out of / went into, when tracked
+  bank_account?: Pick<BankAccount, "id" | "name" | "color"> | null;
+};
+
+// "+₹15 today": money in minus money out over a period, for a tile's hint
+export const flowHint = (net: number, when: string) =>
+  `${net < 0 ? "−" : "+"}${formatMoney(Math.abs(net))} ${when}`;
+
+export type BankAccount = {
+  id: string;
+  name: string;
+  color: number;
+  opening_balance: number;
+  balance: number; // at the end of the day asked for
+};
+
+export type BankTransfer = {
+  id: string;
+  amount: number;
+  note: string | null;
+  occurred_on: string;
+  created_at: string;
+  from: Pick<BankAccount, "id" | "name" | "color">;
+  to: Pick<BankAccount, "id" | "name" | "color">;
 };
 
 export type Totals = { income: number; expense: number; net: number };

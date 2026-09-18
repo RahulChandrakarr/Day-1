@@ -7,6 +7,7 @@ import StatTiles from "@/components/finance/stat-tiles";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   budgetReport,
+  flowHint,
   formatMoney,
   monthBuckets,
   parseYearParam,
@@ -22,6 +23,7 @@ import {
   getBudget,
   getCategories,
   getDebts,
+  getBankAccounts,
   getInvestmentEntries,
   getMonthBudgets,
   getPeople,
@@ -47,6 +49,7 @@ export default async function YearlyFinancePage({
     people,
     debts,
     investments,
+    banks,
   ] = await Promise.all([
     getTransactions({ from, to }),
     getCategories(),
@@ -56,6 +59,8 @@ export default async function YearlyFinancePage({
     getPeople(),
     getDebts(),
     getInvestmentEntries({ from, to }),
+    // What's in the accounts at year end, or now for this year
+    getBankAccounts(to < today ? to : today),
   ]);
   const yearlyEntries = transactions.filter((t) => t.period === "yearly");
   const buckets = monthBuckets(year, transactions);
@@ -99,6 +104,17 @@ export default async function YearlyFinancePage({
 
       <StatTiles
         totals={totalsOf(transactions)}
+        balance={
+          banks.length
+            ? {
+                total: banks.reduce((sum, a) => sum + a.balance, 0),
+                hint: flowHint(
+                  totalsOf(transactions).net,
+                  year === thisYear ? "this year" : "that year",
+                ),
+              }
+            : null
+        }
         incomeHint={
           report?.income.expected !== null && report?.income.expected !== undefined
             ? `of ${formatMoney(report.income.expected)} expected`

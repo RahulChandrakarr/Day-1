@@ -24,6 +24,7 @@ export async function addTransaction(
       "category_id",
       "period",
       "occurred_on",
+      "bank_account_id",
     ].map((key) => [key, String(formData.get(key) ?? "").trim()]),
   );
   const fail = (error: string): FormState => ({
@@ -46,6 +47,8 @@ export async function addTransaction(
     return fail("Keep the description under 200 characters.");
   if (values.category_id && !uuid.test(values.category_id))
     return fail("Invalid category.");
+  if (values.bank_account_id && !uuid.test(values.bank_account_id))
+    return fail("Invalid account.");
 
   const supabase = await authedClient();
   const { error } = await supabase.from("finance_transactions").insert({
@@ -53,6 +56,7 @@ export async function addTransaction(
     amount: Math.round(amount * 100) / 100,
     description: values.description || null,
     category_id: values.category_id || null,
+    bank_account_id: values.bank_account_id || null,
     period: values.period,
     occurred_on: values.occurred_on,
   });

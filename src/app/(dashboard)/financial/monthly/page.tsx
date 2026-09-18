@@ -8,6 +8,7 @@ import {
   addMonths,
   budgetReport,
   dayBuckets,
+  flowHint,
   formatMoney,
   formatMonth,
   monthRange,
@@ -20,6 +21,7 @@ import {
   getBudget,
   getCategories,
   getDebts,
+  getBankAccounts,
   getInvestmentEntries,
   getPeople,
   getPreviousBudget,
@@ -34,7 +36,7 @@ export default async function MonthlyFinancePage({
   const thisMonth = today.slice(0, 7);
   const { from, to } = monthRange(month);
 
-  const [transactions, categories, budget, previous, people, debts, investments] =
+  const [transactions, categories, budget, previous, people, debts, investments, banks] =
     await Promise.all([
       getTransactions({ from, to }),
       getCategories(),
@@ -43,6 +45,8 @@ export default async function MonthlyFinancePage({
       getPeople(),
       getDebts(),
       getInvestmentEntries({ from, to }),
+      // What's in the accounts at month end, or now for this month
+      getBankAccounts(to < today ? to : today),
     ]);
   const periodDebts = debts.filter(
     (d) => d.occurred_on >= from && d.occurred_on <= to,
@@ -90,6 +94,14 @@ export default async function MonthlyFinancePage({
 
       <StatTiles
         totals={totals}
+        balance={
+          banks.length
+            ? {
+                total: banks.reduce((sum, a) => sum + a.balance, 0),
+                hint: flowHint(totals.net, month === thisMonth ? "this month" : "that month"),
+              }
+            : null
+        }
         incomeHint={incomeHint}
         expenseHint={expenseHint}
         extra={[

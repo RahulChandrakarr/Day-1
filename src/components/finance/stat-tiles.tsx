@@ -10,6 +10,7 @@ export default function StatTiles({
   netHint,
   incomeHint,
   expenseHint,
+  balance = null,
 }: {
   totals: Totals;
   extra?: Tile[];
@@ -17,7 +18,10 @@ export default function StatTiles({
   // What the plan expected, when the period has one
   incomeHint?: string;
   expenseHint?: string;
+  // What is in the bank accounts, when the user has added any
+  balance?: { total: number; hint: string } | null;
 }) {
+  const net = balance?.total ?? totals.net;
   const tiles = [
     {
       label: "Income",
@@ -28,9 +32,9 @@ export default function StatTiles({
     { label: "Expenses", value: formatMoney(totals.expense), hint: expenseHint },
     {
       label: "Net balance",
-      value: `${totals.net < 0 ? "−" : ""}${formatMoney(Math.abs(totals.net))}`,
-      hint: netHint ?? (totals.net >= 0 ? "Saved" : "Overspent"),
-      tone: totals.net < 0 ? ("bad" as const) : ("good" as const),
+      value: `${net < 0 ? "−" : ""}${formatMoney(Math.abs(net))}`,
+      hint: balance?.hint ?? netHint ?? (totals.net >= 0 ? "Saved" : "Overspent"),
+      tone: net < 0 ? ("bad" as const) : ("good" as const),
     },
     ...extra,
   ];

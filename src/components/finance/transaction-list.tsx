@@ -5,8 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { deleteTransaction } from "@/app/(dashboard)/financial/actions";
 import { deleteDebt } from "@/app/(dashboard)/financial/borrow/actions";
 import { deleteInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
+import { deleteTransfer } from "@/app/(dashboard)/financial/bank/actions";
 import { DEBT_KINDS, type DebtEntry } from "@/lib/debts";
-import { formatMoney, formatShortDate, type Transaction } from "@/lib/finance";
+import {
+  formatMoney,
+  formatShortDate,
+  type BankTransfer,
+  type Transaction,
+} from "@/lib/finance";
 import type { InvestmentEntry } from "@/lib/investments";
 
 export type SavingsActivity = InvestmentEntry & {
@@ -54,6 +60,7 @@ function Row({ tx, showDate }: { tx: Transaction; showDate: boolean }) {
         <p className="break-words font-medium leading-snug line-clamp-2">{title}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/45">
           <span>{tx.category?.name ?? "Uncategorized"}</span>
+          {tx.bank_account && <span>· {tx.bank_account.name}</span>}
           {showDate && <span>· {formatShortDate(tx.occurred_on)}</span>}
           {tx.period !== "daily" && (
             <span className="rounded-full border border-paper/15 px-1.5 capitalize">
@@ -103,7 +110,7 @@ function ActivityRow({
   badge: string;
   color: string;
   amount: number;
-  incoming: boolean;
+  incoming: boolean | null; // null: moved between your own accounts
   showDate: boolean;
   occurredOn: string;
   onDelete: () => Promise<void>;
@@ -136,10 +143,10 @@ function ActivityRow({
       </div>
       <p
         className={`shrink-0 text-right font-semibold tabular-nums ${
-          incoming ? "text-moss" : ""
+          incoming ? "text-moss" : incoming === null ? "text-paper/70" : ""
         }`}
       >
-        {incoming ? "+" : "−"}
+        {incoming === null ? "" : incoming ? "+" : "−"}
         {formatMoney(amount)}
       </p>
       <button
@@ -160,7 +167,8 @@ function ActivityRow({
 type Item =
   | { type: "tx"; key: string; on: string; at: string; tx: Transaction }
   | { type: "debt"; key: string; on: string; at: string; debt: DebtEntry }
-  | { type: "saving"; key: string; on: string; at: string; entry: SavingsActivity };
+  | { type: "saving"; key: string; on: string; at: string; entry: SavingsActivity }
+  | { type: "transfer"; key: string; on: string; at: string; transfer: BankTransfer };
 
 export default function TransactionList({
   title,
@@ -169,6 +177,7 @@ export default function TransactionList({
   empty = "No entries yet.",
   debts = [],
   savings = [],
+  transfers = [],
 }: {
   title: string;
   transactions: Transaction[];
@@ -176,6 +185,7 @@ export default function TransactionList({
   empty?: string;
   debts?: DebtEntry[];
   savings?: SavingsActivity[];
+  transfers?: BankTransfer[];
 }) {
   const items: Item[] = [
     ...transactions.map((tx) => ({
@@ -199,9 +209,16 @@ export default function TransactionList({
       at: entry.created_at,
       entry,
     })),
+    ...transfers.map((transfer) => ({
+      type: "transfer" as const,
+      key: `transfer-${transfer.id}`,
+      on: transfer.occurred_on,
+      at: transfer.created_at,
+      transfer,
+    })),
   ];
   // Newest first, same order as the transactions query
-  if (debts.length || savings.length)
+  if (debts.length || savings.length || transfers.length)
     items.sort((a, b) => b.on.localeCompare(a.on) || b.at.localeCompare(a.at));
 
   return (
@@ -242,6 +259,21 @@ export default function TransactionList({
                   showDate={showDate}
                   occurredOn={item.on}
                   onDelete={() => deleteDebt(item.debt.id)}
+                />
+              ) : item.type === "transfer" ? (
+                <ActivityRow
+                  key={item.key}
+                  title={`Moved to ${item.transfer.to.name}`}
+                  subtitle={[`from ${item.transfer.from.name}`, item.transfer.note]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  badge="Transfer"
+                  color={`var(--cat-${item.transfer.to.color})`}
+                  amount={item.transfer.amount}
+                  incoming={null}
+                  showDate={showDate}
+                  occurredOn={item.on}
+                  onDelete={() => deleteTransfer(item.transfer.id)}
                 />
               ) : (
                 <ActivityRow

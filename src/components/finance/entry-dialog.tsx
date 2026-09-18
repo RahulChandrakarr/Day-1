@@ -40,9 +40,23 @@ import {
   formatMoney,
   isValidDate,
   todayISO,
+  type BankAccount,
   type Category,
   type TxType,
 } from "@/lib/finance";
+
+export type BankOption = Pick<BankAccount, "id" | "name" | "color" | "balance">;
+
+// The account an entry came out of last time, so the next one starts there
+const BANK_KEY = "day-one:bank-account";
+function lastBankAccount(accounts: BankOption[]) {
+  try {
+    const saved = localStorage.getItem(BANK_KEY);
+    if (saved !== null && (saved === "" || accounts.some((a) => a.id === saved)))
+      return saved;
+  } catch {}
+  return accounts[0]?.id ?? "";
+}
 
 export type EntryPerson = {
   id: string;
@@ -128,6 +142,7 @@ export default function EntryDialog({
   usage,
   people,
   accounts,
+  bankAccounts = [],
   habits,
   habitCheckins,
   workout,
@@ -138,6 +153,7 @@ export default function EntryDialog({
   usage: Record<string, number>;
   people: EntryPerson[];
   accounts: Account[];
+  bankAccounts?: BankOption[];
   habits: Habit[];
   habitCheckins: HabitCheckin[];
   workout: { exercises: Exercise[]; doneIds: string[]; title: string } | null;
@@ -214,6 +230,7 @@ export default function EntryDialog({
                   key={session}
                   startVariant={startVariant}
                   accounts={accounts}
+                  bankAccounts={bankAccounts}
                   categories={categories}
                   usage={usage}
                   people={people}
@@ -235,6 +252,7 @@ export default function EntryDialog({
 function EntryForm({
   startVariant,
   accounts,
+  bankAccounts,
   categories,
   usage,
   people,
@@ -246,6 +264,7 @@ function EntryForm({
 }: {
   startVariant: Variant;
   accounts: Account[];
+  bankAccounts: BankOption[];
   habits: Habit[];
   habitCheckins: HabitCheckin[];
   workout: { exercises: Exercise[]; doneIds: string[]; title: string } | null;
@@ -523,6 +542,7 @@ function EntryForm({
                 key={type}
                 type={type}
                 categoryId={choice}
+                bankAccounts={bankAccounts}
                 {...shared}
               />
             )}
@@ -560,10 +580,19 @@ function TransactionFields({
   categoryPanel,
   onSaved,
   defaultDate,
-}: SharedProps & { type: TxType; categoryId: string }) {
+  bankAccounts,
+}: SharedProps & { type: TxType; categoryId: string; bankAccounts: BankOption[] }) {
   const [state, action, pending] = useActionState(addTransaction, initialState);
   const amountRef = useSavedEffect(state, onSaved);
   const values = state.ok ? undefined : state.values;
+  const [bankId, setBankId] = useState(() => lastBankAccount(bankAccounts));
+
+  function chooseBank(id: string) {
+    setBankId(id);
+    try {
+      localStorage.setItem(BANK_KEY, id);
+    } catch {}
+  }
 
   return (
     <form
@@ -587,6 +616,45 @@ function TransactionFields({
         <DateField defaultValue={values?.occurred_on || defaultDate} />
       </div>
       {categoryPanel}
+
+      {bankAccounts.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>
+            {type === "expense" ? "Paid from" : "Received in"}
+          </span>
+          {/* A switch while it fits; a dropdown once there are many accounts */}
+          {bankAccounts.length <= 3 ? (
+            <>
+              <input type="hidden" name="bank_account_id" value={bankId} />
+              <Segmented
+                label={type === "expense" ? "Paid from" : "Received in"}
+                value={bankId}
+                onChange={chooseBank}
+                options={[
+                  ...bankAccounts.map((a) => ({ value: a.id, label: a.name })),
+                  { value: "", label: "None" },
+                ]}
+              />
+            </>
+          ) : (
+            <select
+              name="bank_account_id"
+              aria-label={type === "expense" ? "Paid from" : "Received in"}
+              value={bankId}
+              onChange={(e) => chooseBank(e.target.value)}
+              className={inputClass}
+            >
+              {bankAccounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} · {a.balance < 0 ? "−" : ""}
+                  {formatMoney(Math.abs(a.balance))}
+                </option>
+              ))}
+              <option value="">No bank account</option>
+            </select>
+          )}
+        </div>
+      )}
 
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>Description</span>
@@ -1187,9 +1255,9 @@ function Segmented<T extends string>({
               value === o.value ? "text-paper" : "text-paper/50 hover:text-paper"
             }`}
           >
-            <span className="flex items-center justify-center gap-2">
-              {o.dot && <span className={`h-2 w-2 rounded-full ${o.dot}`} />}
-              {o.label}
+            <span className="flex min-w-0 items-center justify-center gap-2 px-1">
+              {o.dot && <span className={`h-2 w-2 shrink-0 rounded-full ${o.dot}`} />}
+              <span className="truncate">{o.label}</span>
             </span>
           </button>
         ))}

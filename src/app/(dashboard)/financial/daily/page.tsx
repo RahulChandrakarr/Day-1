@@ -1,3 +1,4 @@
+import BankAccounts from "@/components/finance/bank-accounts";
 import CategoryManager from "@/components/finance/category-manager";
 import { CategoryBars } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
@@ -7,16 +8,19 @@ import {
   addDays,
   cashFlow,
   categoryBreakdown,
+  flowHint,
   formatFullDate,
   parseDateParam,
   todayISO,
 } from "@/lib/finance";
 import {
   getAccounts,
+  getBankAccounts,
   getCategories,
   getDebts,
   getInvestmentEntries,
   getTransactions,
+  getTransfers,
 } from "@/lib/finance-queries";
 
 export default async function DailyFinancePage({
@@ -25,13 +29,17 @@ export default async function DailyFinancePage({
   const date = parseDateParam((await searchParams).date);
   const today = todayISO();
 
-  const [transactions, categories, debts, accounts, investments] =
+  // Balances at the end of the day shown, or now for today and later
+  const asOf = date < today ? date : today;
+  const [transactions, categories, debts, accounts, investments, banks, transfers] =
     await Promise.all([
       getTransactions({ from: date, to: date }),
       getCategories(),
       getDebts({ from: date, to: date }),
       getAccounts(),
       getInvestmentEntries({ from: date, to: date }),
+      getBankAccounts(asOf),
+      getTransfers({ from: date, to: date }),
     ]);
   const spending = categoryBreakdown(transactions, "expense");
   const dayDebts = debts;
@@ -43,6 +51,8 @@ export default async function DailyFinancePage({
       accountName: accountById.get(e.account_id)?.name ?? "Account",
       color: accountById.get(e.account_id)?.color ?? 8,
     }));
+
+  const flow = cashFlow(transactions, dayDebts, daySavings);
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +70,15 @@ export default async function DailyFinancePage({
       />
 
       <StatTiles
-        totals={cashFlow(transactions, dayDebts, daySavings)}
+        totals={flow}
+        balance={
+          banks.length
+            ? {
+                total: banks.reduce((sum, a) => sum + a.balance, 0),
+                hint: flowHint(flow.net, date === today ? "today" : "that day"),
+              }
+            : null
+        }
         netHint={
           dayDebts.some((d) => d.in_balance) || daySavings.length
             ? "Cash left after spending, saving and borrow entries you added"
@@ -68,12 +86,15 @@ export default async function DailyFinancePage({
         }
       />
 
+      <BankAccounts accounts={banks} asOf={asOf} today={today} />
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
         <TransactionList
           title="Entries"
           transactions={transactions}
           debts={dayDebts}
           savings={daySavings}
+          transfers={transfers}
           empty="Nothing logged for this day yet. Tap Add entry above."
         />
         {spending.length > 0 && (

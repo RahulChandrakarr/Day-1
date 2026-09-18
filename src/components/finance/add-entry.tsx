@@ -2,6 +2,7 @@ import { personBalances } from "@/lib/debts";
 import { todayISO } from "@/lib/finance";
 import {
   getAccounts,
+  getBankAccounts,
   getCategories,
   getCategoryUsage,
   getDebts,
@@ -20,7 +21,7 @@ import EntryDialog from "./entry-dialog";
 // "+ Add entry" button with everything the add sheet can log.
 export default async function AddEntry({ compact = false }: { compact?: boolean }) {
   const today = todayISO();
-  const [categories, usage, people, debts, accounts, habits, habitCheckins, gym] =
+  const [categories, usage, people, debts, accounts, habits, habitCheckins, gym, banks] =
     await Promise.all([
       getCategories(),
       getCategoryUsage(),
@@ -33,6 +34,7 @@ export default async function AddEntry({ compact = false }: { compact?: boolean 
         plan: await getGymPlan(block?.id ?? null),
         checkins: await getGymCheckins(today, today),
       })),
+      getBankAccounts(today),
     ]);
 
   const day = gym.plan.find((d) => d.weekday === isoWeekday(today));
@@ -53,6 +55,7 @@ export default async function AddEntry({ compact = false }: { compact?: boolean 
         owed,
       }))}
       accounts={accounts}
+      bankAccounts={banks.map(({ id, name, color, balance }) => ({ id, name, color, balance }))}
       habits={habits}
       habitCheckins={habitCheckins}
       workout={
