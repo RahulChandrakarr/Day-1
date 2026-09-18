@@ -16,6 +16,7 @@ import {
 import { personBalances } from "@/lib/debts";
 import {
   getAccounts,
+  getBankAccounts,
   getBudget,
   getCategories,
   getDebts,
@@ -260,8 +261,13 @@ function financeWriteTools(ctx: ToolContext) {
         date: date,
         description: z.string().max(200).optional(),
         period: z.enum(["daily", "monthly", "yearly"]).default("daily").describe("monthly/yearly for recurring bills"),
+        account: z
+          .string()
+          .max(40)
+          .optional()
+          .describe("Bank account it came out of or went into, by name; omit to use the one from their last entry"),
       }),
-      execute: async ({ type, amount, category, date: on, description, period }) => {
+      execute: async ({ type, amount, category, date: on, description, period, account }) => {
         let categoryId: string | null = null;
         let categoryName: string | null = null;
         if (category) {
@@ -271,14 +277,41 @@ function financeWriteTools(ctx: ToolContext) {
           categoryId = found.item.id;
           categoryName = found.item.name;
         }
+        // Which bank account: the one named, else the one used last time
+        const banks = await getBankAccounts(on);
+        let bank: { id: string; name: string } | null = null;
+        if (account && banks.length) {
+          const found = pick(banks, account, (b) => b.name);
+          if ("error" in found) return failed(`${found.error} Ask which account, or log it without one.`);
+          bank = found.item;
+        } else if (banks.length) {
+          const { data: last } = await ctx.supabase
+            .from("finance_transactions")
+            .select("bank_account_id")
+            .not("bank_account_id", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          bank = banks.find((b) => b.id === last?.bank_account_id) ?? (banks.length === 1 ? banks[0] : null);
+        }
         const result = await addTransaction(
           INITIAL_FORM,
-          formData({ type, amount, category_id: categoryId, occurred_on: on, description, period }),
+          formData({
+            type,
+            amount,
+            category_id: categoryId,
+            occurred_on: on,
+            description,
+            period,
+            bank_account_id: bank?.id ?? null,
+          }),
         );
         if (!result.ok) return failed(result.error ?? "Couldn't save.");
         return changed(
           ctx,
-          `Logged ${type} of ₹${amount}${categoryName ? ` in ${categoryName}` : ""} on ${on}${description ? ` (${description})` : ""}.`,
+          `Logged ${type} of ₹${amount}${categoryName ? ` in ${categoryName}` : ""} on ${on}${description ? ` (${description})` : ""}${
+            bank ? ` ${type === "expense" ? "from" : "into"} ${bank.name}` : banks.length ? " (no bank account)" : ""
+          }.`,
         );
       },
     }),
@@ -351,7 +384,8 @@ export const finance: Domain = {
     delete_transaction: "Removing the entry…",
   },
   prompt: `FINANCE
-- Money is Indian Rupees; show it like ₹1,23,456. The <finance> block holds this month so far, last month, this month's plan, borrow balances and savings; use tools for other periods or details.
+- Money is Indian Rupees; show it like ₹1,23,456. The <today> block has today's and this month's money, net balance and each bank account. A <finance> block, when present, adds last month, the plan, borrow balances and savings. Otherwise call a tool only for what the question needs.
+- When logging, pass the bank account they name; if they don't say, the tool uses the account from their last entry. Mention the account in your one-line confirmation.
 - For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
 - Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates.
 - When logging an expense, pick an existing category (list_categories) that clearly fits; if none fits, log it without a category and say so.`,

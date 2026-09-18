@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { todayISO } from "@/lib/finance";
 import { getJournalDays } from "@/lib/journal-queries";
+import QuickAssistant from "@/components/assistant/quick-assistant";
 import MobileNav from "@/components/dashboard/mobile-nav";
 import RegisterServiceWorker from "@/components/notifications/register-sw";
 import Sidebar from "@/components/dashboard/sidebar";
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
       </div>
+      <QuickAssistant />
     </div>
   );
 }

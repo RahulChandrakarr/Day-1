@@ -40,7 +40,7 @@ export function useAssistant() {
   return ctx;
 }
 
-function textOf(message: AssistantUIMessage | undefined) {
+export function textOf(message: AssistantUIMessage | undefined) {
   return (
     message?.parts
       .map((p) => (p.type === "text" ? p.text : ""))
@@ -50,7 +50,7 @@ function textOf(message: AssistantUIMessage | undefined) {
 }
 
 // Server errors arrive as JSON bodies ({ error }) inside Error.message.
-function readError(error: Error | undefined) {
+export function readError(error: Error | undefined) {
   if (!error) return null;
   try {
     const parsed = JSON.parse(error.message) as { error?: string };
@@ -59,6 +59,21 @@ function readError(error: Error | undefined) {
     // not JSON
   }
   return error.message || "Something went wrong. Please try again.";
+}
+
+// The chat id doubles as the conversation id; only the new text is sent.
+// mode, personaId and source come with each send / regenerate call.
+export function assistantTransport() {
+  return new DefaultChatTransport<AssistantUIMessage>({
+    api: "/api/assistant/chat",
+    prepareSendMessagesRequest: ({ id, messages, body }) => ({
+      body: {
+        ...body,
+        conversationId: id,
+        text: textOf(messages.findLast((m) => m.role === "user")),
+      },
+    }),
+  });
 }
 
 // One chat for the whole dashboard, so a conversation survives tab changes.
@@ -96,21 +111,7 @@ export default function ChatProvider({
   // Set when the assistant changed data, so pages refresh after the answer
   const dataChanged = useRef(false);
 
-  // The chat id doubles as the conversation id; only the new text is sent.
-  const [transport] = useState(
-    () =>
-      new DefaultChatTransport<AssistantUIMessage>({
-        api: "/api/assistant/chat",
-        // mode and personaId come with each send / regenerate call
-        prepareSendMessagesRequest: ({ id, messages, body }) => ({
-          body: {
-            ...body,
-            conversationId: id,
-            text: textOf(messages.findLast((m) => m.role === "user")),
-          },
-        }),
-      }),
-  );
+  const [transport] = useState(assistantTransport);
 
   const chat = useChat<AssistantUIMessage>({
     id: session.id,

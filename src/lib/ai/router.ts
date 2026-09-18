@@ -5,7 +5,12 @@ import { SECTION_NAMES, type Section } from "./domains";
 import { dataModel } from "./models";
 import { routerInstructions } from "./prompts";
 
-export type RouteDecision = { sections: Section[]; customQuery: boolean };
+// detail: "brief" for a fact or an action, "full" for analysis and reports
+export type RouteDecision = {
+  sections: Section[];
+  customQuery: boolean;
+  detail: "brief" | "full";
+};
 
 const BROAD: Section[] = ["daily", "plan", "health", "finance"];
 
@@ -19,6 +24,7 @@ export async function routeMessage(
   const fallback: RouteDecision = {
     sections: allowed.length <= 4 ? allowed : BROAD.filter((s) => allowed.includes(s)),
     customQuery: false,
+    detail: "brief",
   };
   const Route = z.object({
     sections: z
@@ -26,6 +32,7 @@ export async function routeMessage(
       .min(1)
       .max(4),
     customQuery: z.boolean(),
+    detail: z.enum(["brief", "full"]),
   });
   const recent = history
     .slice(-4)
@@ -41,7 +48,11 @@ export async function routeMessage(
       maxOutputTokens: 200,
       abortSignal: AbortSignal.timeout(6000),
     });
-    return { sections: [...new Set(output.sections)], customQuery: output.customQuery };
+    return {
+      sections: [...new Set(output.sections)],
+      customQuery: output.customQuery,
+      detail: output.detail,
+    };
   } catch (error) {
     console.error("[assistant] router failed:", error);
     return fallback;

@@ -12,7 +12,7 @@ import { resolvePersona } from "@/lib/ai/persona-queries";
 import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
-import { routeMessage } from "@/lib/ai/router";
+import { routeMessage, type RouteDecision } from "@/lib/ai/router";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
 import { todayCard } from "@/lib/ai/snapshot";
@@ -36,7 +36,13 @@ const Body = z.object({
   text: z.string().trim().min(1).max(2000),
   mode: z.enum(["ask", "talk"]).default("ask"),
   personaId: z.string().max(40).optional(),
+  // The floating quick button keeps one ongoing chat under this title
+  source: z.enum(["quick"]).optional(),
 });
+
+// Old turns are context, not the question; a long report from earlier
+// shouldn't be paid for again on every message.
+const HISTORY_CHARS = 1500;
 
 const LIMIT_PER_MINUTE = 8;
 
@@ -56,7 +62,7 @@ export async function POST(req: Request) {
 
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return jsonError("Invalid request", 400);
-  const { conversationId, text, mode, personaId } = parsed.data;
+  const { conversationId, text, mode, personaId, source } = parsed.data;
 
   const since = (ms: number) => new Date(Date.now() - ms).toISOString();
   const countSince = (ms: number) =>
@@ -74,7 +80,11 @@ export async function POST(req: Request) {
       supabase
         .from("ai_conversations")
         .upsert(
-          { id: conversationId, title: text.slice(0, 60), persona: personaId ?? "assistant" },
+          {
+            id: conversationId,
+            title: source === "quick" ? "Quick assistant" : text.slice(0, 60),
+            persona: personaId ?? "assistant",
+          },
           { onConflict: "id", ignoreDuplicates: true },
         )
         .then(() =>
@@ -102,7 +112,8 @@ export async function POST(req: Request) {
   const past = (history.data ?? []).reverse();
   const historyMessages: ModelMessage[] = past.map((m) => ({
     role: m.role as "user" | "assistant",
-    content: m.content,
+    content:
+      m.content.length > HISTORY_CHARS ? `${m.content.slice(0, HISTORY_CHARS)}…` : m.content,
   }));
 
   // A retry resends the last question; don't store it twice.
@@ -132,14 +143,20 @@ export async function POST(req: Request) {
       const [route, today_] = await Promise.all([
         allowed.length > 1
           ? routeMessage(historyMessages, text, allowed)
-          : Promise.resolve({ sections: allowed, customQuery: false }),
+          : // Single-area personas (like a teacher) keep their usual depth
+            Promise.resolve<RouteDecision>({ sections: allowed, customQuery: false, detail: "full" }),
         // Personas without data access don't get the day's details
         allowed.length ? todayCard(today).catch(() => null) : null,
       ]);
-      const sql = route.customQuery || route.sections.includes("finance");
+      const brief = route.detail === "brief";
+      // The month-wide finance picture and the table list are big; only load
+      // them when the question needs them (tools cover everything else)
+      const sql = route.customQuery;
       const [schema, finance] = await Promise.all([
         sql ? getSchemaText(supabase) : null,
-        route.sections.includes("finance") ? financeSnapshot(supabase).catch(() => null) : null,
+        route.sections.includes("finance") && !brief
+          ? financeSnapshot(supabase).catch(() => null)
+          : null,
       ]);
       if (route.sections.length) status(SECTION_STATUS[route.sections[0]] ?? "Thinking…");
 
@@ -163,12 +180,12 @@ export async function POST(req: Request) {
           instructions: persona.instructions,
           hasTools: route.sections.length > 0,
           isDefault: persona.id === "assistant",
-        }),
+        }, route.detail),
         messages: [...historyMessages, { role: "user", content: `${context}\n\n${text}` }],
         tools: route.sections.length ? agent.tools : undefined,
         stopWhen: isStepCount(8),
         temperature: 0.3,
-        maxOutputTokens: mode === "talk" ? 600 : 1500,
+        maxOutputTokens: mode === "talk" ? (brief ? 300 : 600) : brief ? 350 : 1500,
         providerOptions: answerProviderOptions,
         onToolExecutionStart: ({ toolCall }) => {
           const label = agent.labels[toolCall.toolName];

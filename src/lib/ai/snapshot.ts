@@ -3,16 +3,18 @@ import { APP_TIMEZONE, totalsOf } from "@/lib/finance";
 import { blockWeek } from "@/lib/fitness";
 import { exerciseTarget, streak } from "@/lib/health";
 import { MOODS } from "@/lib/journal";
+import { getBankAccounts } from "@/lib/finance-queries";
 import { getJournalEntry } from "@/lib/journal-queries";
 import { getOverview } from "@/lib/overview-query";
 import { getPlanDay } from "@/lib/plan-queries";
 
 // A compact picture of today that every answer starts with.
 export async function todayCard(today: string) {
-  const [overview, { entry, exists }, plan] = await Promise.all([
+  const [overview, { entry, exists }, plan, banks] = await Promise.all([
     getOverview(),
     getJournalEntry(today),
     getPlanDay(today),
+    getBankAccounts(today),
   ]);
   const weekday = new Intl.DateTimeFormat("en-IN", {
     weekday: "long",
@@ -69,6 +71,9 @@ export async function todayCard(today: string) {
     money: {
       today: totalsOf(todayTx),
       thisMonth: totalsOf(overview.transactions),
+      // What is in their bank accounts right now (null when none are set up)
+      netBalance: banks.length ? banks.reduce((sum, a) => sum + a.balance, 0) : null,
+      bankAccounts: banks.map((a) => ({ name: a.name, balance: a.balance })),
       savingsWorth: overview.savingsWorth,
       youOwe: overview.balances.owe,
       owedToYou: overview.balances.owed,
