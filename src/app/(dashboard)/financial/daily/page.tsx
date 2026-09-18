@@ -86,19 +86,24 @@ export default async function DailyFinancePage({
         }
       />
 
-      <BankAccounts accounts={banks} asOf={asOf} today={today} />
-
+      {/* Phones: accounts, entries, spending. Wide screens: entries on the
+          left, accounts and spending beside them. */}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-        <TransactionList
-          title="Entries"
-          transactions={transactions}
-          debts={dayDebts}
-          savings={daySavings}
-          transfers={transfers}
-          empty="Nothing logged for this day yet. Tap Add entry above."
-        />
+        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+          <BankAccounts accounts={banks} asOf={asOf} today={today} />
+        </div>
+        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          <TransactionList
+            title="Entries"
+            transactions={transactions}
+            debts={dayDebts}
+            savings={daySavings}
+            transfers={transfers}
+            empty="Nothing logged for this day yet. Tap Add entry above."
+          />
+        </div>
         {spending.length > 0 && (
-          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5 lg:col-start-2">
             <h3 className="mb-4 font-serif text-2xl">Spending by category</h3>
             <CategoryBars slices={spending} />
           </section>
