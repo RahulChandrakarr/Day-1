@@ -2,12 +2,17 @@
 
 // Browser speech: listen until the speaker pauses, and read text aloud.
 
-type SpeechResult = { isFinal: boolean; 0: { transcript: string } };
+type SpeechResult = {
+  isFinal: boolean;
+  length: number;
+  [alt: number]: { transcript: string };
+};
 type SpeechEvent = { resultIndex: number; results: { length: number; [i: number]: SpeechResult } };
 type Recognition = {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
+  maxAlternatives: number;
   onresult: ((event: SpeechEvent) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -142,6 +147,106 @@ export function createListener(
 
   start();
   return { finish, abort: close };
+}
+
+// Waits for the assistant's name without ever switching the microphone off
+// in between: speech that isn't a call is simply dropped. Every guess the
+// engine makes is checked, since an unusual name is rarely its first guess.
+// `match` returns what followed the name, or null.
+export function createWakeListener(
+  lang: SpeechLang,
+  match: (text: string) => string | null,
+  handlers: { onWake: (rest: string) => void; onError: (message: string) => void },
+  { pauseMs = 900 }: { pauseMs?: number } = {},
+): { abort: () => void } {
+  const Ctor = recognitionCtor();
+  if (!Ctor) {
+    handlers.onError("Voice isn't supported in this browser. Try Chrome, Edge or Safari.");
+    return { abort: () => {} };
+  }
+
+  let rec: Recognition;
+  let stopped = false;
+  // Once the name is heard: what followed it so far, updated until a pause
+  let rest: string | null = null;
+  let pauseTimer: ReturnType<typeof setTimeout> | undefined;
+  let restartTimer: ReturnType<typeof setTimeout> | undefined;
+  const android = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+
+  function close() {
+    stopped = true;
+    clearTimeout(pauseTimer);
+    clearTimeout(restartTimer);
+    try {
+      rec.abort();
+    } catch {
+      // already stopped
+    }
+  }
+
+  function fire() {
+    if (stopped || rest === null) return;
+    const said = rest;
+    close();
+    handlers.onWake(said);
+  }
+
+  function start() {
+    rec = new Ctor!();
+    rec.lang = lang;
+    rec.continuous = !android;
+    rec.interimResults = true;
+    rec.maxAlternatives = 5;
+    let from = 0; // results before this index were already dealt with
+
+    rec.onresult = (event) => {
+      if (rest === null) {
+        // Look for the name in each new phrase, in every guess
+        for (let i = from; i < event.results.length && rest === null; i++) {
+          const r = event.results[i];
+          for (let a = 0; a < r.length && rest === null; a++) {
+            const found = match(r[a]?.transcript ?? "");
+            if (found !== null) {
+              from = i;
+              rest = found;
+            }
+          }
+          // A finished phrase without the name is forgotten
+          if (rest === null && r.isFinal) from = i + 1;
+        }
+        if (rest === null) return;
+      }
+      // Keep following what's said after the name until they pause
+      const named = event.results[from];
+      let head: string | null = null;
+      for (let a = 0; a < named.length && head === null; a++) head = match(named[a]?.transcript ?? "");
+      const after: string[] = [];
+      for (let i = from + 1; i < event.results.length; i++) after.push(event.results[i][0].transcript);
+      if (head !== null) rest = join(head, ...after);
+      clearTimeout(pauseTimer);
+      pauseTimer = setTimeout(fire, pauseMs);
+    };
+    rec.onerror = (event) => {
+      if (event.error === "no-speech" || event.error === "aborted") return;
+      close();
+      handlers.onError(SPEECH_ERRORS[event.error] ?? "Voice stopped. Try again.");
+    };
+    rec.onend = () => {
+      if (stopped) return;
+      if (rest !== null) return fire();
+      // Sessions end on their own every so often; carry straight on
+      restartTimer = setTimeout(start, 50);
+    };
+    try {
+      rec.start();
+    } catch {
+      close();
+      handlers.onError("Couldn't start the microphone. Try again.");
+    }
+  }
+
+  start();
+  return { abort: close };
 }
 
 // Hindi text is read with a Hindi voice even when the chosen language is English

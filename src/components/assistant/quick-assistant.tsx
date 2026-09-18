@@ -18,13 +18,14 @@ import { SendIcon, SparkleIcon } from "@/components/assistant/icons";
 import {
   canListen,
   createListener,
+  createWakeListener,
   speak,
   SPEECH_ERRORS,
   stopSpeaking,
   type Listener,
   type SpeechLang,
 } from "@/components/assistant/speech";
-import { afterName, isStopPhrase, wakePattern } from "@/components/assistant/wake-word";
+import { isStopPhrase, wakeMatcher } from "@/components/assistant/wake-word";
 import { setTheme } from "@/components/theme";
 import type { AssistantUIMessage } from "@/lib/ai/types";
 
@@ -108,7 +109,7 @@ export default function QuickAssistant({ name }: { name: string }) {
   );
   const [chatId] = useState(quickChatId);
   const [transport] = useState(assistantTransport);
-  // Bumped to restart the wait for her name, and on resize to re-place the bubble
+  // Bumped to retry the wait for her name after an error, and on resize to re-place the bubble
   const [wakeTick, setWakeTick] = useState(0);
   const [, setViewport] = useState(0);
   const listener = useRef<Listener | null>(null);
@@ -118,7 +119,7 @@ export default function QuickAssistant({ name }: { name: string }) {
   const convo = useRef(false);
   const drag = useRef<{ x: number; y: number; from: Pos; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
-  const wakeRe = useMemo(() => wakePattern(name), [name]);
+  const matchName = useMemo(() => wakeMatcher(name), [name]);
   const hidden = pathname.startsWith("/assistant");
 
   const clearHide = () => {
@@ -259,43 +260,34 @@ export default function QuickAssistant({ name }: { name: string }) {
   // Hands-free: wait for her name while nothing else is going on. Only
   // what's said after the name ever reaches the AI.
   const waiting =
-    onClient && handsFreeOn && visible && !hidden && phase === "idle" && !!wakeRe && canListen();
+    onClient && handsFreeOn && visible && !hidden && phase === "idle" && !!matchName && canListen();
   const wakeRef = useRef(wake);
   useEffect(() => {
     wakeRef.current = wake;
   });
   useEffect(() => {
-    if (!waiting || !wakeRe) return;
+    if (!waiting || !matchName) return;
     let alive = true;
     let retry = 0;
-    const l = createListener(
-      lang,
-      {
-        onPause: (text) => {
-          if (!alive) return;
-          const rest = afterName(text, wakeRe);
-          if (rest === null) setWakeTick((n) => n + 1);
-          else wakeRef.current(rest);
-        },
-        onError: (message) => {
-          if (!alive) return;
-          if (FATAL.includes(message)) {
-            handsFree.set(false);
-            latest.current.answer(message, true);
-          } else retry = window.setTimeout(() => setWakeTick((n) => n + 1), 1500);
-        },
-        onIdle: () => {
-          if (alive) setWakeTick((n) => n + 1);
-        },
+    // Stays on between phrases; only a wake or an error ends it
+    const l = createWakeListener(lang, matchName, {
+      onWake: (rest) => {
+        if (alive) wakeRef.current(rest);
       },
-      { pauseMs: 900, idleMs: 60_000 },
-    );
+      onError: (message) => {
+        if (!alive) return;
+        if (FATAL.includes(message)) {
+          handsFree.set(false);
+          latest.current.answer(message, true);
+        } else retry = window.setTimeout(() => setWakeTick((n) => n + 1), 1500);
+      },
+    });
     return () => {
       alive = false;
       window.clearTimeout(retry);
       l.abort();
     };
-  }, [waiting, wakeRe, lang, wakeTick]);
+  }, [waiting, matchName, lang, wakeTick]);
 
   // Keep it on screen when the window changes size
   useEffect(() => {
