@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { DebtEntry, Person } from "@/lib/debts";
+import type { Emi, EmiPayment } from "@/lib/emis";
 import type { Account, InvestmentEntry } from "@/lib/investments";
 import type {
   BankAccount,
@@ -324,6 +325,49 @@ export async function getInvestmentEntries(
   if (options.to) query = query.lte("occurred_on", options.to);
   const { data, error } = await query.returns<
     (Omit<InvestmentEntry, "amount"> & { amount: number | string })[]
+  >();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => ({ ...row, amount: Number(row.amount) }));
+}
+
+// ---------------------------------------------------------------------------
+// EMIs
+// ---------------------------------------------------------------------------
+export async function getEmis() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_emis")
+    .select(
+      "id, name, lender, total_amount, monthly_amount, start_on, due_day, tenure_months, note, color",
+    )
+    .order("created_at", { ascending: true })
+    .returns<
+      (Omit<Emi, "total_amount" | "monthly_amount"> & {
+        total_amount: number | string;
+        monthly_amount: number | string;
+      })[]
+    >();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((e) => ({
+    ...e,
+    total_amount: Number(e.total_amount),
+    monthly_amount: Number(e.monthly_amount),
+  }));
+}
+
+export async function getEmiPayments(
+  options: { from?: string; to?: string } = {},
+) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("finance_emi_payments")
+    .select("id, emi_id, amount, note, occurred_on, created_at")
+    .order("occurred_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (options.from) query = query.gte("occurred_on", options.from);
+  if (options.to) query = query.lte("occurred_on", options.to);
+  const { data, error } = await query.returns<
+    (Omit<EmiPayment, "amount"> & { amount: number | string })[]
   >();
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => ({ ...row, amount: Number(row.amount) }));

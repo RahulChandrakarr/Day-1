@@ -17,6 +17,7 @@ import {
   type FormState,
 } from "@/app/(dashboard)/financial/actions";
 import { addDebt } from "@/app/(dashboard)/financial/borrow/actions";
+import { addEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
 import {
   addAccount,
   addInvestmentEntry,
@@ -25,6 +26,7 @@ import GymChecklist from "@/components/health/gym-checklist";
 import HabitRow from "@/components/health/habit-row";
 import { appendJournalNote } from "@/app/(dashboard)/daily/actions";
 import type { DebtKind } from "@/lib/debts";
+import type { EmiSummary } from "@/lib/emis";
 import { streak, type Exercise, type HabitCheckin } from "@/lib/health";
 import { MOODS, type Habit } from "@/lib/journal";
 import {
@@ -90,6 +92,7 @@ type Variant =
   | "entry"
   | "borrow"
   | "savings"
+  | "emi"
   | "habit"
   | "journal"
   | "workout";
@@ -98,6 +101,7 @@ const VARIANTS: { value: Variant; label: string; title: string }[] = [
   { value: "entry", label: "Money", title: "Add entry" },
   { value: "borrow", label: "Borrow", title: "Borrow entry" },
   { value: "savings", label: "Savings", title: "Savings entry" },
+  { value: "emi", label: "EMI", title: "EMI payment" },
   { value: "workout", label: "Workout", title: "Today's workout" },
   { value: "habit", label: "Habits", title: "Habit check-in" },
   { value: "journal", label: "Journal", title: "Quick note" },
@@ -110,6 +114,7 @@ const titleOf = (variant: Variant) =>
 function variantForPath(pathname: string): Variant {
   if (pathname.startsWith("/financial/borrow")) return "borrow";
   if (pathname.startsWith("/financial/savings")) return "savings";
+  if (pathname.startsWith("/financial/emi")) return "emi";
   if (pathname.startsWith("/health/gym")) return "workout";
   if (pathname.startsWith("/health/habits")) return "habit";
   if (pathname.startsWith("/daily")) return "journal";
@@ -142,6 +147,7 @@ export default function EntryDialog({
   usage,
   people,
   accounts,
+  emis = [],
   bankAccounts = [],
   habits,
   habitCheckins,
@@ -153,6 +159,7 @@ export default function EntryDialog({
   usage: Record<string, number>;
   people: EntryPerson[];
   accounts: Account[];
+  emis?: Pick<EmiSummary, "id" | "name" | "color" | "monthly_amount" | "remaining">[];
   bankAccounts?: BankOption[];
   habits: Habit[];
   habitCheckins: HabitCheckin[];
@@ -230,6 +237,7 @@ export default function EntryDialog({
                   key={session}
                   startVariant={startVariant}
                   accounts={accounts}
+                  emis={emis}
                   bankAccounts={bankAccounts}
                   categories={categories}
                   usage={usage}
@@ -252,6 +260,7 @@ export default function EntryDialog({
 function EntryForm({
   startVariant,
   accounts,
+  emis,
   bankAccounts,
   categories,
   usage,
@@ -264,6 +273,7 @@ function EntryForm({
 }: {
   startVariant: Variant;
   accounts: Account[];
+  emis: Pick<EmiSummary, "id" | "name" | "color" | "monthly_amount" | "remaining">[];
   bankAccounts: BankOption[];
   habits: Habit[];
   habitCheckins: HabitCheckin[];
@@ -408,7 +418,8 @@ function EntryForm({
   const tabs = VARIANTS.filter(
     (v) =>
       (v.value !== "workout" || (workout && workout.exercises.length > 0)) &&
-      (v.value !== "habit" || habits.length > 0),
+      (v.value !== "habit" || habits.length > 0) &&
+      (v.value !== "emi" || emis.length > 0 || startVariant === "emi"),
   );
 
   return (
@@ -515,6 +526,8 @@ function EntryForm({
               defaultDate={defaultDate}
             />
           </>
+        ) : variant === "emi" ? (
+          <EmiFields emis={emis} onSaved={onSaved} defaultDate={defaultDate} />
         ) : (
           <>
             <Segmented
@@ -850,6 +863,78 @@ function SavingsFields({
         <NoteField defaultValue={values?.note} />
         <DateField
           defaultValue={values?.occurred_on || sip?.date || defaultDate}
+        />
+      </div>
+    </form>
+  );
+}
+
+function EmiFields({
+  emis,
+  onSaved,
+  defaultDate,
+}: {
+  emis: Pick<EmiSummary, "id" | "name" | "color" | "monthly_amount" | "remaining">[];
+  onSaved: () => void;
+  defaultDate: string;
+}) {
+  const open = emis.filter((e) => e.remaining > 0);
+  const options = open.length ? open : emis;
+  const [emiId, setEmiId] = useState(options[0]?.id ?? "");
+  const [state, action, pending] = useActionState(addEmiPayment, initialState);
+  const amountRef = useSavedEffect(state, onSaved);
+  const selected = options.find((e) => e.id === emiId) ?? options[0];
+  const suggested = selected
+    ? String(Math.min(selected.monthly_amount, selected.remaining))
+    : undefined;
+
+  if (options.length === 0) {
+    return (
+      <p className="mt-3 text-sm text-paper/55">
+        Add an EMI on the EMI page first, then log installments here.
+      </p>
+    );
+  }
+
+  return (
+    <form
+      id={FORM_ID}
+      key={`${state.version}-${selected?.id}`}
+      action={action}
+      className="mt-3 flex flex-col gap-3"
+    >
+      <input type="hidden" name="emi_id" value={selected?.id ?? emiId} />
+      <AmountRow
+        inputRef={amountRef}
+        defaultValue={state.ok ? suggested : (state.values?.amount ?? suggested)}
+        pending={pending}
+      />
+      {selected && (
+        <p className="-mt-1 text-xs text-paper/50">
+          {formatMoney(selected.monthly_amount)} a month ·{" "}
+          {formatMoney(selected.remaining)} left
+        </p>
+      )}
+      <ErrorBox error={state.error} />
+      <div className="flex flex-col gap-1.5">
+        <span className={labelClass}>EMI</span>
+        <div className="flex flex-wrap gap-2">
+          {options.map((e) => (
+            <Chip
+              key={e.id}
+              selected={(selected?.id ?? emiId) === e.id}
+              color={`var(--cat-${e.color})`}
+              onClick={() => setEmiId(e.id)}
+            >
+              {e.name}
+            </Chip>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <NoteField defaultValue={state.ok ? undefined : state.values?.note} />
+        <DateField
+          defaultValue={state.values?.occurred_on || defaultDate}
         />
       </div>
     </form>

@@ -18,6 +18,8 @@ import {
   getBankAccounts,
   getCategories,
   getDebts,
+  getEmiPayments,
+  getEmis,
   getInvestmentEntries,
   getTransactions,
   getTransfers,
@@ -31,13 +33,15 @@ export default async function DailyFinancePage({
 
   // Balances at the end of the day shown, or now for today and later
   const asOf = date < today ? date : today;
-  const [transactions, categories, debts, accounts, investments, banks, transfers] =
+  const [transactions, categories, debts, accounts, investments, emiRows, emiPayments, banks, transfers] =
     await Promise.all([
       getTransactions({ from: date, to: date }),
       getCategories(),
       getDebts({ from: date, to: date }),
       getAccounts(),
       getInvestmentEntries({ from: date, to: date }),
+      getEmis(),
+      getEmiPayments({ from: date, to: date }),
       getBankAccounts(asOf),
       getTransfers({ from: date, to: date }),
     ]);
@@ -51,6 +55,12 @@ export default async function DailyFinancePage({
       accountName: accountById.get(e.account_id)?.name ?? "Account",
       color: accountById.get(e.account_id)?.color ?? 8,
     }));
+  const emiById = new Map(emiRows.map((e) => [e.id, e]));
+  const dayEmis = emiPayments.map((p) => ({
+    ...p,
+    emiName: emiById.get(p.emi_id)?.name ?? "EMI",
+    color: emiById.get(p.emi_id)?.color ?? 8,
+  }));
 
   const flow = cashFlow(transactions, dayDebts, daySavings);
 
@@ -100,6 +110,7 @@ export default async function DailyFinancePage({
             transactions={transactions}
             debts={dayDebts}
             savings={daySavings}
+            emis={dayEmis}
             transfers={transfers}
             empty="Nothing logged for this day yet. Tap Add entry above."
           />

@@ -19,7 +19,7 @@ const REPORTS: { kind: Kind; emoji: string; title: string; about: string; yearly
     kind: "finance",
     emoji: "💰",
     title: "Finance",
-    about: "Income and spending by category, plan vs actual, borrow balances, savings and all entries.",
+    about: "Income and spending by category, plan vs actual, borrow balances, savings, EMIs and all entries.",
     yearly: true,
   },
   {

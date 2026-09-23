@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { deleteTransaction } from "@/app/(dashboard)/financial/actions";
 import { deleteDebt } from "@/app/(dashboard)/financial/borrow/actions";
+import { deleteEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
 import { deleteInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
 import { deleteTransfer } from "@/app/(dashboard)/financial/bank/actions";
 import EditEntry from "@/components/finance/edit-entry";
@@ -18,9 +19,15 @@ import {
   type Transaction,
 } from "@/lib/finance";
 import type { InvestmentEntry } from "@/lib/investments";
+import type { EmiPayment } from "@/lib/emis";
 
 export type SavingsActivity = InvestmentEntry & {
   accountName: string;
+  color: number;
+};
+
+export type EmiActivity = EmiPayment & {
+  emiName: string;
   color: number;
 };
 
@@ -205,6 +212,7 @@ type Item =
   | { type: "tx"; key: string; on: string; at: string; tx: Transaction }
   | { type: "debt"; key: string; on: string; at: string; debt: DebtEntry }
   | { type: "saving"; key: string; on: string; at: string; entry: SavingsActivity }
+  | { type: "emi"; key: string; on: string; at: string; payment: EmiActivity }
   | { type: "transfer"; key: string; on: string; at: string; transfer: BankTransfer };
 
 export default function TransactionList({
@@ -214,6 +222,7 @@ export default function TransactionList({
   empty = "No entries yet.",
   debts = [],
   savings = [],
+  emis = [],
   transfers = [],
   categories,
   bankAccounts = [],
@@ -225,6 +234,7 @@ export default function TransactionList({
   empty?: string;
   debts?: DebtEntry[];
   savings?: SavingsActivity[];
+  emis?: EmiActivity[];
   transfers?: BankTransfer[];
   // Given categories, income and expense rows open an editor when tapped
   categories?: Category[];
@@ -254,6 +264,13 @@ export default function TransactionList({
       at: entry.created_at,
       entry,
     })),
+    ...emis.map((payment) => ({
+      type: "emi" as const,
+      key: `emi-${payment.id}`,
+      on: payment.occurred_on,
+      at: payment.created_at,
+      payment,
+    })),
     ...transfers.map((transfer) => ({
       type: "transfer" as const,
       key: `transfer-${transfer.id}`,
@@ -263,7 +280,7 @@ export default function TransactionList({
     })),
   ];
   // Newest first, same order as the transactions query
-  if (debts.length || savings.length || transfers.length)
+  if (debts.length || savings.length || emis.length || transfers.length)
     items.sort((a, b) => b.on.localeCompare(a.on) || b.at.localeCompare(a.at));
 
   return (
@@ -326,6 +343,19 @@ export default function TransactionList({
                   showDate={showDate}
                   occurredOn={item.on}
                   onDelete={() => deleteTransfer(item.transfer.id)}
+                />
+              ) : item.type === "emi" ? (
+                <ActivityRow
+                  key={item.key}
+                  title={`EMI · ${item.payment.emiName}`}
+                  subtitle={item.payment.note ?? ""}
+                  badge="EMI"
+                  color={`var(--cat-${item.payment.color})`}
+                  amount={item.payment.amount}
+                  incoming={false}
+                  showDate={showDate}
+                  occurredOn={item.on}
+                  onDelete={() => deleteEmiPayment(item.payment.id)}
                 />
               ) : (
                 <ActivityRow

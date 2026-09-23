@@ -14,12 +14,15 @@ import {
   type Transaction,
 } from "@/lib/finance";
 import { personBalances } from "@/lib/debts";
+import { emiSummaries } from "@/lib/emis";
 import {
   getAccounts,
   getBankAccounts,
   getBudget,
   getCategories,
   getDebts,
+  getEmiPayments,
+  getEmis,
   getInvestmentEntries,
   getPeople,
   getTransactions,
@@ -27,6 +30,7 @@ import {
 import { accountSummaries, netSaved } from "@/lib/investments";
 import { addTransaction, deleteTransaction } from "@/app/(dashboard)/financial/actions";
 import { addDebt } from "@/app/(dashboard)/financial/borrow/actions";
+import { addEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
 import { addInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
 import { DEBT_KINDS } from "@/lib/debts";
 import { accountKindLabel } from "@/lib/investments";
@@ -252,6 +256,33 @@ function financeWriteTools(ctx: ToolContext) {
       },
     }),
 
+    get_emis: tool({
+      description:
+        "Loans and EMIs: monthly payment, how much is paid, how much is left, next due date, and recent installments.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const [emis, payments] = await Promise.all([getEmis(), getEmiPayments()]);
+        return emiSummaries(emis, payments, ctx.today).map((e) => ({
+          name: e.name,
+          lender: e.lender,
+          monthly: e.monthly_amount,
+          total: e.total_amount,
+          paid: e.paid,
+          remaining: e.remaining,
+          monthsLeft: e.monthsLeft,
+          dueDay: e.due_day,
+          nextDueOn: e.nextDueOn,
+          paidThisMonth: e.paidThisMonth,
+          overdue: e.overdue,
+          recent: e.payments.slice(0, 5).map((p) => ({
+            date: p.occurred_on,
+            amount: p.amount,
+            note: p.note,
+          })),
+        }));
+      },
+    }),
+
     add_transaction: tool({
       description: "Log money spent (expense) or received (income).",
       inputSchema: z.object({
@@ -358,6 +389,26 @@ function financeWriteTools(ctx: ToolContext) {
       },
     }),
 
+    add_emi_payment: tool({
+      description: "Log an EMI installment against a named loan.",
+      inputSchema: z.object({
+        emi: z.string().min(1).describe("EMI name, e.g. Home loan"),
+        amount: z.number().positive(),
+        date: date,
+        note: z.string().max(200).optional(),
+      }),
+      execute: async ({ emi, amount, date: on, note }) => {
+        const found = pick(await getEmis(), emi, (e) => e.name);
+        if ("error" in found) return failed(found.error);
+        const result = await addEmiPayment(
+          INITIAL_FORM,
+          formData({ emi_id: found.item.id, amount, occurred_on: on, note }),
+        );
+        if (!result.ok) return failed(result.error ?? "Couldn't save.");
+        return changed(ctx, `${found.item.name}: paid ₹${amount} on ${on}.`);
+      },
+    }),
+
     delete_transaction: tool({
       description: "Delete a money entry by id (from list_transactions). Confirm with the user first.",
       inputSchema: z.object({ id: idInput, describe: z.string().optional(), confirmed: confirmedInput }),
@@ -378,16 +429,18 @@ export const finance: Domain = {
     get_budget: "Comparing with your plan…",
     get_borrow: "Checking who owes what…",
     get_savings: "Checking your savings…",
+    get_emis: "Checking your EMIs…",
     add_transaction: "Logging the entry…",
     add_debt: "Logging the borrow entry…",
     add_investment_entry: "Updating your savings…",
+    add_emi_payment: "Logging the EMI payment…",
     delete_transaction: "Removing the entry…",
   },
   prompt: `FINANCE
 - Money is Indian Rupees; show it like ₹1,23,456. The <today> block has today's and this month's money, net balance and each bank account. A <finance> block, when present, adds last month, the plan, borrow balances and savings. Otherwise call a tool only for what the question needs.
 - When logging, pass the bank account they name; if they don't say, the tool uses the account from their last entry. Mention the account in your one-line confirmation.
 - For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
-- Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates.
+- Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates. EMIs are loans: monthly payment, paid so far, remaining, next due. EMI payments are not daily spend unless also logged as an expense.
 - When logging an expense, pick an existing category (list_categories) that clearly fits; if none fits, log it without a category and say so.`,
   tools: (ctx) => ({ ...financeReadTools(), ...financeWriteTools(ctx) }),
 };
@@ -413,6 +466,8 @@ export async function financeSnapshot(supabase: Supabase) {
     debts,
     accounts,
     investments,
+    emis,
+    emiPayments,
   ] = await Promise.all([
     getTransactions({ from: `${month}-01`, to: today }),
     getTransactions({ from: lastMonthRange.from, to: lastMonthRange.to }),
@@ -429,6 +484,8 @@ export async function financeSnapshot(supabase: Supabase) {
     getDebts(),
     getAccounts(),
     getInvestmentEntries(),
+    getEmis(),
+    getEmiPayments(),
   ]);
   const monthDebts = debts.filter((d) => d.occurred_on.startsWith(month));
   const monthInvestments = investments.filter((e) =>
@@ -438,6 +495,7 @@ export async function financeSnapshot(supabase: Supabase) {
     (p) => p.owe > 0 || p.owed > 0,
   );
   const holdings = accountSummaries(accounts, investments);
+  const emiList = emiSummaries(emis, emiPayments, today);
 
   return {
     thisMonthToDate: {
@@ -470,6 +528,17 @@ export async function financeSnapshot(supabase: Supabase) {
         valueUpdatedOn: a.valuedOn,
       })),
     },
+    emis: emiList.map((e) => ({
+      name: e.name,
+      lender: e.lender,
+      monthly: e.monthly_amount,
+      paid: e.paid,
+      remaining: e.remaining,
+      monthsLeft: e.monthsLeft,
+      nextDueOn: e.nextDueOn,
+      paidThisMonth: e.paidThisMonth,
+      overdue: e.overdue,
+    })),
     lastMonthFull: { range: lastMonthRange, ...totalsOf(lastMonthRows) },
     lastMonthToSameDay: {
       range: { from: lastMonthRange.from, to: lastMonthSameDay },

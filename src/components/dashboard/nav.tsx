@@ -51,7 +51,7 @@ export const navItems: NavItem[] = [
     href: "/financial/daily",
     label: "Financial",
     short: "Money",
-    description: "Income, spending and savings.",
+    description: "Income, spending, savings and EMIs.",
     icon: (
       <svg {...iconProps}>
         <rect x="2" y="6" width="20" height="13" rx="2" />

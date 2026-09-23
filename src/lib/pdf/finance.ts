@@ -1,5 +1,6 @@
 import "server-only";
 import { personBalances } from "@/lib/debts";
+import { emiSummaries } from "@/lib/emis";
 import {
   budgetReport,
   categoryBreakdown,
@@ -16,6 +17,8 @@ import {
   getAccounts,
   getBudget,
   getDebts,
+  getEmiPayments,
+  getEmis,
   getInvestmentEntries,
   getPeople,
   getTransactions,
@@ -34,13 +37,15 @@ export async function financeReport(period: { month: string } | { year: number }
   const { from, to } = isMonth ? monthRange(period.month) : yearRange(period.year);
   const label = isMonth ? formatMonth(period.month) : key;
 
-  const [transactions, budget, people, debts, accounts, allInvestments] = await Promise.all([
+  const [transactions, budget, people, debts, accounts, allInvestments, emis, emiPayments] = await Promise.all([
     getTransactions({ from, to }),
     getBudget(scope, key),
     getPeople(),
     getDebts(),
     getAccounts(),
     getInvestmentEntries(),
+    getEmis(),
+    getEmiPayments(),
   ]);
   const periodDebts = debts.filter((d) => d.occurred_on >= from && d.occurred_on <= to);
   const periodInvestments = allInvestments.filter(
@@ -202,6 +207,32 @@ export async function financeReport(period: { month: string } | { year: number }
         formatMoney(a.invested),
         formatMoney(a.current),
         { text: signed(a.gain), tone: a.gain < 0 ? "bad" : a.gain > 0 ? "good" : undefined },
+      ]),
+    );
+  }
+
+  // EMIs, as of today
+  const emiList = emiSummaries(emis, emiPayments, today);
+  if (emiList.length > 0) {
+    const monthly = emiList
+      .filter((e) => e.remaining > 0)
+      .reduce((sum, e) => sum + e.monthly_amount, 0);
+    pdf.heading("EMIs", `${formatMoney(monthly)} a month`);
+    pdf.table(
+      [
+        { label: "EMI", width: 2.2 },
+        { label: "Monthly", width: 1.3, align: "right" },
+        { label: "Paid", width: 1.3, align: "right" },
+        { label: "Left", width: 1.3, align: "right" },
+      ],
+      emiList.map((e) => [
+        e.lender ? `${e.name} (${e.lender})` : e.name,
+        formatMoney(e.monthly_amount),
+        formatMoney(e.paid),
+        {
+          text: e.remaining ? formatMoney(e.remaining) : "Paid off",
+          tone: e.remaining ? "bad" : "good",
+        },
       ]),
     );
   }

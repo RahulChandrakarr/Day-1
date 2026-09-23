@@ -66,6 +66,18 @@ const sections: NavSection[] = [
     ),
   },
   {
+    href: "/financial/emi",
+    label: "EMI",
+    hint: "Loans & installments",
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 10h18" />
+        <path d="M7 15h2M12 15h5" />
+      </svg>
+    ),
+  },
+  {
     href: "/financial/tracking",
     label: "Tracking",
     hint: "Trends & charts",

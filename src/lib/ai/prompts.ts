@@ -18,7 +18,7 @@ Sections:
 - daily: today's or any day's journal, mood, to-do list / priorities, "how's my day", notes about a day
 - plan: yearly/monthly/weekly/daily plans and goals, plan tasks, goal progress, notes (Plan → Notes)
 - health: gym workouts and exercises, training plan, habits (smoking, reading…), weight, BMI, calories
-- finance: money, spending, income, categories, budgets/plans vs actual, borrowing and lending, savings and investments
+- finance: money, spending, income, categories, budgets/plans vs actual, borrowing and lending, savings and investments, EMIs
 - documents: uploaded files (Aadhaar, PAN, bills, insurance, receipts) and anything written inside them
 - reports: daily / weekly / monthly reports or summaries, PDF downloads
 - settings: notifications/reminders, profile name, body details, light/dark mode, the assistant's own name, and facts the user shares about themselves ("my birthday is…", "my wife is…", "I'm allergic to…") — those are remembered, not Plan notes
