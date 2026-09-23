@@ -1,19 +1,19 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  addEmiPayment,
-  deleteEmi,
-  deleteEmiPayment,
-  type FormState,
-} from "@/app/(dashboard)/financial/emi/actions";
+import { deleteEmi, deleteEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
+import { AddEmiButton, EditEmiForm, PayForm } from "@/components/finance/emi/emi-forms";
+import Sheet from "@/components/ui/sheet";
 import { dueDayLabel, type EmiPayment, type EmiSummary } from "@/lib/emis";
-import { formatMoney, formatShortDate, todayISO } from "@/lib/finance";
+import { formatMoney, formatShortDate } from "@/lib/finance";
 
-const initial: FormState = { error: null, ok: false, version: 0 };
-const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+function monthsLabel(emi: EmiSummary) {
+  if (emi.tenure)
+    return `${emi.monthsDone} of ${emi.tenure} month${emi.tenure === 1 ? "" : "s"}`;
+  if (emi.monthsDone === 0) return "Not started";
+  return `${emi.monthsDone} month${emi.monthsDone === 1 ? "" : "s"} done`;
+}
 
 export default function EmiList({ emis }: { emis: EmiSummary[] }) {
   const running = emis.filter((e) => e.remaining > 0);
@@ -21,7 +21,10 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
 
   return (
     <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
-      <h3 className="font-serif text-2xl">Your EMIs</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-serif text-2xl">Your EMIs</h3>
+        <AddEmiButton />
+      </div>
       {emis.length === 0 ? (
         <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
           No EMIs yet. Add a loan or installment to track what’s left.
@@ -47,7 +50,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
               </p>
             </div>
           )}
-          <ul className="mt-4 flex flex-col gap-3">
+          <ul className="mt-4 grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
             <AnimatePresence initial={false}>
               {emis.map((emi) => (
                 <EmiCard key={emi.id} emi={emi} />
@@ -62,6 +65,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
 
 function EmiCard({ emi }: { emi: EmiSummary }) {
   const [expanded, setExpanded] = useState(emi.remaining > 0);
+  const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const progress = emi.total_amount > 0 ? emi.paid / emi.total_amount : 0;
   const done = emi.remaining <= 0;
@@ -89,6 +93,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
           <span className="block truncate text-xs text-paper/45">
             {emi.lender ? `${emi.lender} · ` : ""}
             {formatMoney(emi.monthly_amount)} / month
+            {` · ${monthsLabel(emi)}`}
             {done
               ? " · paid off"
               : emi.overdue
@@ -128,16 +133,20 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
               <p className="mt-1.5 text-xs text-paper/45">
                 {formatMoney(emi.paid)} of {formatMoney(emi.total_amount)}
                 {emi.monthsLeft > 0
-                  ? ` · about ${emi.monthsLeft} ${emi.monthsLeft === 1 ? "month" : "months"} left`
+                  ? ` · ${emi.monthsLeft} ${emi.monthsLeft === 1 ? "month" : "months"} left`
                   : ""}
               </p>
             </div>
-            <dl className="grid grid-cols-3 gap-3 px-4 pt-3 text-xs">
+            <dl className="grid grid-cols-2 gap-3 px-4 pt-3 text-xs">
               <div>
                 <dt className="text-paper/45">Monthly</dt>
                 <dd className="font-medium tabular-nums">
                   {formatMoney(emi.monthly_amount)}
                 </dd>
+              </div>
+              <div>
+                <dt className="text-paper/45">Months done</dt>
+                <dd className="font-medium tabular-nums">{monthsLabel(emi)}</dd>
               </div>
               <div>
                 <dt className="text-paper/45">Due</dt>
@@ -157,7 +166,14 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                 <li className="py-3 text-sm text-paper/40">No payments yet.</li>
               )}
             </ul>
-            <div className="flex justify-end px-4 pb-3">
+            <div className="flex justify-end gap-1 px-4 pb-3">
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="rounded-lg px-2 py-1 text-xs text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+              >
+                Edit
+              </button>
               <button
                 type="button"
                 disabled={pending}
@@ -173,57 +189,11 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Sheet open={editing} onClose={() => setEditing(false)} title={`Edit ${emi.name}`}>
+        <EditEmiForm emi={emi} onSaved={() => setEditing(false)} />
+      </Sheet>
     </motion.li>
-  );
-}
-
-function PayForm({ emi }: { emi: EmiSummary }) {
-  const [state, action, pending] = useActionState(addEmiPayment, initial);
-  const suggested = Math.min(emi.monthly_amount, emi.remaining);
-
-  return (
-    <form
-      key={state.version}
-      action={action}
-      className="mt-3 flex flex-col gap-2 px-4"
-    >
-      <input type="hidden" name="emi_id" value={emi.id} />
-      <div className="flex gap-2">
-        <div className="relative min-w-0 flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/40">
-            ₹
-          </span>
-          <input
-            name="amount"
-            required
-            inputMode="decimal"
-            autoComplete="off"
-            defaultValue={state.ok ? String(suggested) : (state.values?.amount ?? String(suggested))}
-            className={`${inputClass} pl-7`}
-            aria-label="Payment amount"
-          />
-        </div>
-        <input
-          name="occurred_on"
-          type="date"
-          required
-          defaultValue={state.values?.occurred_on || todayISO()}
-          className={`${inputClass} w-[9.5rem] shrink-0`}
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="h-10 shrink-0 rounded-xl bg-ember px-3 text-sm font-medium text-on-ember disabled:opacity-60"
-        >
-          {pending ? "…" : "Pay"}
-        </button>
-      </div>
-      {state.error && (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
-          {state.error}
-        </p>
-      )}
-    </form>
   );
 }
 

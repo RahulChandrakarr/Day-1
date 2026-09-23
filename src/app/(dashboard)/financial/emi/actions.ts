@@ -114,6 +114,84 @@ export async function addEmi(
   };
 }
 
+export async function updateEmi(
+  prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const values = formFields(formData, [
+    "id",
+    "name",
+    "lender",
+    "monthly_amount",
+    "tenure_months",
+    "total_amount",
+    "start_on",
+    "due_day",
+    "note",
+  ]);
+  const fail = (error: string): FormState => ({
+    error,
+    ok: false,
+    version: prev.version + 1,
+    values,
+  });
+
+  if (!uuid.test(values.id)) return fail("That EMI is missing.");
+  const name = values.name.replace(/\s+/g, " ");
+  if (!name || name.length > 60) return fail("Name must be 1–60 characters.");
+  const lender = values.lender.replace(/\s+/g, " ");
+  if (lender.length > 60) return fail("Keep the lender under 60 characters.");
+
+  const monthly = parseAmount(values.monthly_amount);
+  if (monthly === null) return fail("Enter the monthly EMI.");
+
+  const tenureRaw = values.tenure_months;
+  const tenure = tenureRaw ? Number(tenureRaw) : null;
+  if (
+    tenureRaw &&
+    (!Number.isInteger(tenure) || tenure === null || tenure < 1 || tenure > 720)
+  )
+    return fail("Tenure must be 1–720 months.");
+
+  let total = values.total_amount ? parseAmount(values.total_amount) : null;
+  if (values.total_amount && total === null)
+    return fail("Enter a valid total to repay.");
+  if (total === null && tenure) total = Math.round(monthly * tenure * 100) / 100;
+  if (total === null) return fail("Enter the total to repay, or the tenure.");
+
+  if (!isValidDate(values.start_on)) return fail("Pick a valid start date.");
+  const dueDay = Number(values.due_day);
+  if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31)
+    return fail("Due day must be between 1 and 31.");
+  if (values.note.length > 200)
+    return fail("Keep the note under 200 characters.");
+
+  const supabase = await authedClient();
+  const { error } = await supabase
+    .from("finance_emis")
+    .update({
+      name,
+      lender: lender || null,
+      total_amount: total,
+      monthly_amount: monthly,
+      start_on: values.start_on,
+      due_day: dueDay,
+      tenure_months: tenure,
+      note: values.note || null,
+    })
+    .eq("id", values.id);
+  if (error) {
+    return fail(
+      error.code === "23505"
+        ? "You already have an EMI with that name."
+        : error.message,
+    );
+  }
+
+  refresh();
+  return { error: null, ok: true, version: prev.version + 1, values };
+}
+
 export async function deleteEmi(id: string) {
   if (!uuid.test(id)) return;
   const supabase = await authedClient();

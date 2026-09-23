@@ -1,5 +1,4 @@
 import EmiList from "@/components/finance/emi/emi-list";
-import { AddEmiForm } from "@/components/finance/emi/emi-forms";
 import { emiSummaries } from "@/lib/emis";
 import { formatMoney, formatShortDate, todayISO } from "@/lib/finance";
 import { getEmiPayments, getEmis } from "@/lib/finance-queries";
@@ -13,7 +12,9 @@ export default async function EmiPage() {
   const monthly = running.reduce((s, e) => s + e.monthly_amount, 0);
   const remaining = running.reduce((s, e) => s + e.remaining, 0);
   const paid = summaries.reduce((s, e) => s + e.paid, 0);
-  const dueThisMonth = running.filter((e) => !e.paidThisMonth);
+  const dueThisMonth = running.filter(
+    (e) => e.nextDueOn !== null && (e.overdue || e.nextDueOn.startsWith(month)),
+  );
   const overdue = dueThisMonth.filter((e) => e.overdue);
 
   const tiles = [
@@ -85,10 +86,7 @@ export default async function EmiPage() {
           : ""}
       </p>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,22rem)]">
-        <EmiList emis={summaries} />
-        <AddEmiForm startOpen={emis.length === 0} />
-      </div>
+      <EmiList emis={summaries} />
     </div>
   );
 }

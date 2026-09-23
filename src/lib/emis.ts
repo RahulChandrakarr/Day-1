@@ -29,7 +29,9 @@ export type EmiPayment = {
 export type EmiSummary = Emi & {
   paid: number;
   remaining: number;
+  monthsDone: number;
   monthsLeft: number;
+  tenure: number | null; // original months, or done + left when unknown
   paidThisMonth: boolean;
   nextDueOn: string | null;
   overdue: boolean;
@@ -45,10 +47,16 @@ export function nextDueOn(
   dueDay: number,
   today: string,
   paidThisMonth: boolean,
+  startOn?: string,
 ) {
   const month = today.slice(0, 7);
-  if (!paidThisMonth) return dueDateInMonth(month, dueDay);
-  return dueDateInMonth(addMonths(month, 1), dueDay);
+  let due = dueDateInMonth(paidThisMonth ? addMonths(month, 1) : month, dueDay);
+  // First installment is the due day on or after the start date.
+  if (startOn && due < startOn) {
+    due = dueDateInMonth(startOn.slice(0, 7), dueDay);
+    if (due < startOn) due = dueDateInMonth(addMonths(startOn.slice(0, 7), 1), dueDay);
+  }
+  return due;
 }
 
 export function dueDayLabel(dueDay: number) {
@@ -68,7 +76,9 @@ export function emiSummaries(
         ...e,
         paid: 0,
         remaining: e.total_amount,
+        monthsDone: 0,
         monthsLeft: 0,
+        tenure: e.tenure_months,
         paidThisMonth: false,
         nextDueOn: null,
         overdue: false,
@@ -87,12 +97,23 @@ export function emiSummaries(
 
   for (const emi of byId.values()) {
     emi.remaining = Math.max(Math.round((emi.total_amount - emi.paid) * 100) / 100, 0);
+    const byAmount =
+      emi.monthly_amount > 0 ? Math.floor(emi.paid / emi.monthly_amount) : 0;
     emi.monthsLeft =
       emi.remaining <= 0
         ? 0
         : Math.max(1, Math.ceil(emi.remaining / emi.monthly_amount));
+    emi.tenure =
+      emi.tenure_months ??
+      (emi.remaining <= 0 ? byAmount : byAmount + emi.monthsLeft);
+    emi.monthsDone =
+      emi.remaining <= 0
+        ? (emi.tenure ?? byAmount)
+        : Math.min(byAmount, emi.tenure ?? byAmount);
     emi.nextDueOn =
-      emi.remaining <= 0 ? null : nextDueOn(emi.due_day, today, emi.paidThisMonth);
+      emi.remaining <= 0
+        ? null
+        : nextDueOn(emi.due_day, today, emi.paidThisMonth, emi.start_on);
     emi.overdue = Boolean(
       emi.nextDueOn && emi.nextDueOn < today && emi.remaining > 0,
     );
