@@ -23,7 +23,9 @@ import {
   getDebts,
   getEmiPayments,
   getEmis,
+  getHoldings,
   getInvestmentEntries,
+  getPortfolioSync,
   getPeople,
   getTransactions,
 } from "@/lib/finance-queries";
@@ -34,6 +36,8 @@ import { addEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
 import { addInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
 import { DEBT_KINDS } from "@/lib/debts";
 import { accountKindLabel } from "@/lib/investments";
+import { holdingSummaries, portfolioTotals, timeAgo } from "@/lib/portfolio";
+import { syncPortfolio } from "@/lib/groww-sync";
 import type { Supabase } from "../types";
 import {
   changed,
@@ -180,6 +184,18 @@ function financeReadTools() {
 
 function financeWriteTools(ctx: ToolContext) {
   return {
+    refresh_portfolio: tool({
+      description:
+        "Fetch the latest stock holdings and live prices from Groww. Use it when the user asks to refresh their portfolio, or when they want today's value and the last sync is old.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const result = await syncPortfolio(ctx.supabase);
+        if (!result.ok) return failed(result.error);
+        const count = result.holdings ?? 0;
+        return changed(ctx, count ? `Portfolio refreshed: ${count} stocks.` : "No stocks in the demat account.");
+      },
+    }),
+
     get_budget: tool({
       description:
         "The user's own spending plan for a month (YYYY-MM) or year (YYYY) compared with what actually happened: planned vs spent per category, income, savings target, money to return/collect.",
@@ -253,6 +269,32 @@ function financeWriteTools(ctx: ToolContext) {
           sip: a.sip_amount ? { amount: a.sip_amount, day: a.sip_day } : null,
           recent: a.entries.slice(0, 5).map((e) => ({ date: e.occurred_on, kind: e.kind, amount: e.amount })),
         }));
+      },
+    }),
+
+    get_portfolio: tool({
+      description:
+        "Stocks held in the Groww demat account: quantity, average buy price, last traded price, what each is worth now and the gain. Prices are from the last sync, so say when that was. Mutual funds are not here — they're in get_savings.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const [holdings, sync] = await Promise.all([getHoldings(), getPortfolioSync()]);
+        const stocks = holdingSummaries(holdings);
+        const totals = portfolioTotals(stocks);
+        return {
+          pricesFrom: sync?.synced_at ? `${sync.synced_at} (${timeAgo(sync.synced_at)})` : "never synced",
+          lastSyncFailed: sync?.status === "failed" ? sync.message : null,
+          totalPutIn: totals.invested,
+          totalWorthNow: totals.worth,
+          gain: totals.gain,
+          stocks: stocks.map((h) => ({
+            symbol: h.symbol,
+            shares: h.quantity,
+            averagePrice: h.average_price,
+            lastPrice: h.last_price,
+            worthNow: h.worth,
+            gain: h.gain,
+          })),
+        };
       },
     }),
 
@@ -431,6 +473,8 @@ export const finance: Domain = {
     get_budget: "Comparing with your plan…",
     get_borrow: "Checking who owes what…",
     get_savings: "Checking your savings…",
+    get_portfolio: "Checking your stocks…",
+    refresh_portfolio: "Fetching prices from Groww…",
     get_emis: "Checking your EMIs…",
     add_transaction: "Logging the entry…",
     add_debt: "Logging the borrow entry…",
@@ -443,6 +487,7 @@ export const finance: Domain = {
 - When logging, pass the bank account they name; if they don't say, the tool uses the account from their last entry. Mention the account in your one-line confirmation.
 - For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
 - Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates. EMIs are loans: monthly payment, paid so far, remaining, next due. EMI payments are not daily spend unless also logged as an expense.
+- Stocks come from Groww and are separate from savings accounts: get_portfolio for shares and their live value, get_savings for mutual funds, FDs and the rest. Stock prices are as of the last sync, so say how old they are ("as of an hour ago"); refresh_portfolio fetches them again.
 - When logging an expense, pick an existing category (list_categories) that clearly fits; if none fits, log it without a category and say so.`,
   tools: (ctx) => ({ ...financeReadTools(), ...financeWriteTools(ctx) }),
 };
@@ -470,6 +515,8 @@ export async function financeSnapshot(supabase: Supabase) {
     investments,
     emis,
     emiPayments,
+    stockRows,
+    stockSync,
   ] = await Promise.all([
     getTransactions({ from: `${month}-01`, to: today }),
     getTransactions({ from: lastMonthRange.from, to: lastMonthRange.to }),
@@ -488,6 +535,8 @@ export async function financeSnapshot(supabase: Supabase) {
     getInvestmentEntries(),
     getEmis(),
     getEmiPayments(),
+    getHoldings(),
+    getPortfolioSync(),
   ]);
   const monthDebts = debts.filter((d) => d.occurred_on.startsWith(month));
   const monthInvestments = investments.filter((e) =>
@@ -497,6 +546,8 @@ export async function financeSnapshot(supabase: Supabase) {
     (p) => p.owe > 0 || p.owed > 0,
   );
   const holdings = accountSummaries(accounts, investments);
+  const stocks = holdingSummaries(stockRows);
+  const stockTotals = portfolioTotals(stocks);
   const emiList = emiSummaries(emis, emiPayments, today);
 
   return {
@@ -518,6 +569,21 @@ export async function financeSnapshot(supabase: Supabase) {
       owesUser: p.owed,
       lastEntry: p.lastOn,
     })),
+    stocks: stockTotals.count
+      ? {
+          pricesFrom: stockSync?.synced_at ?? null,
+          totalPutIn: stockTotals.invested,
+          totalWorthNow: stockTotals.worth,
+          gain: stockTotals.gain,
+          holdings: stocks.map((h) => ({
+            symbol: h.symbol,
+            shares: h.quantity,
+            lastPrice: h.last_price,
+            worthNow: h.worth,
+            gain: h.gain,
+          })),
+        }
+      : null,
     savingsAndInvestments: {
       totalPutIn: holdings.reduce((s, a) => s + a.invested, 0),
       totalWorthNow: holdings.reduce((s, a) => s + a.current, 0),

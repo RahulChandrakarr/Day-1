@@ -56,8 +56,8 @@ const sections: NavSection[] = [
   },
   {
     href: "/financial/savings",
-    label: "Savings",
-    hint: "Accounts & investments",
+    label: "Savings & Investments",
+    hint: "Stocks, funds & FDs",
     icon: (
       <svg {...iconProps}>
         <path d="M19 7h-1.5A6 6 0 0 0 7 5.5 6.5 6.5 0 0 0 5 17v3h3v-2h6v2h3v-3.5a5 5 0 0 0 2-2.5h2v-4h-2a5 5 0 0 0 0-3z" />

@@ -1,6 +1,7 @@
 "use server";
 
 import { isValidDate } from "@/lib/finance";
+import { syncPortfolio } from "@/lib/groww-sync";
 import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 import {
   authedClient,
@@ -144,4 +145,22 @@ export async function deleteInvestmentEntry(id: string) {
   const supabase = await authedClient();
   await supabase.from("finance_investment_entries").delete().eq("id", id);
   refresh();
+}
+
+// Fetches the Groww holdings again. Returns a message either way so the
+// button can say what happened.
+export async function refreshPortfolio(): Promise<{ ok: boolean; message: string }> {
+  await authedClient();
+  const result = await syncPortfolio();
+  if (!result.ok) return { ok: false, message: result.error };
+  refresh();
+  const count = result.holdings ?? 0;
+  if (count === 0) return { ok: true, message: "No stocks in your demat account." };
+  const unpriced = result.unpriced ?? 0;
+  return {
+    ok: true,
+    message: unpriced
+      ? `${count} ${count === 1 ? "stock" : "stocks"} updated, ${unpriced} without a live price.`
+      : `${count} ${count === 1 ? "stock" : "stocks"} updated.`,
+  };
 }

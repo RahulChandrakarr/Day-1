@@ -18,7 +18,7 @@ export default function FinancialLayout({
   return (
     <PageShell
       title="Financial"
-      description="Income, spending, savings and EMIs."
+      description="Income, spending, savings, stocks and EMIs."
       hideMobileDescription
     >
       <div className="flex items-start gap-8">

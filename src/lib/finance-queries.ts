@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { DebtEntry, Person } from "@/lib/debts";
 import type { Emi, EmiPayment } from "@/lib/emis";
 import type { Account, InvestmentEntry } from "@/lib/investments";
+import type { Holding, PortfolioSync } from "@/lib/portfolio";
 import type {
   BankAccount,
   BankTransfer,
@@ -371,4 +372,42 @@ export async function getEmiPayments(
   >();
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => ({ ...row, amount: Number(row.amount) }));
+}
+
+// Stocks mirrored from Groww by syncPortfolio()
+export async function getHoldings(): Promise<Holding[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_holdings")
+    .select(
+      "id, isin, symbol, name, exchange, quantity, average_price, last_price, day_change_perc, priced_at",
+    )
+    .order("symbol")
+    .returns<
+      (Omit<Holding, "quantity" | "average_price" | "last_price" | "day_change_perc"> & {
+        quantity: number | string;
+        average_price: number | string;
+        last_price: number | string | null;
+        day_change_perc: number | string | null;
+      })[]
+    >();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((h) => ({
+    ...h,
+    quantity: Number(h.quantity),
+    average_price: Number(h.average_price),
+    last_price: h.last_price === null ? null : Number(h.last_price),
+    day_change_perc: h.day_change_perc === null ? null : Number(h.day_change_perc),
+  }));
+}
+
+// When the portfolio was last fetched, so pages can show prices as of a time
+export async function getPortfolioSync(): Promise<PortfolioSync | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_portfolio_sync")
+    .select("synced_at, status, message, holdings")
+    .maybeSingle<PortfolioSync>();
+  if (error) throw new Error(error.message);
+  return data ?? null;
 }

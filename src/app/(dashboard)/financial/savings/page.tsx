@@ -1,5 +1,7 @@
 import Link from "next/link";
 import AccountList from "@/components/finance/savings/account-list";
+import AllocationCard from "@/components/finance/savings/allocation-card";
+import HoldingsCard from "@/components/finance/savings/holdings-card";
 import { AddAccountForm } from "@/components/finance/savings/savings-forms";
 import PeriodNav from "@/components/finance/period-nav";
 import {
@@ -11,10 +13,14 @@ import {
 } from "@/lib/finance";
 import {
   getAccounts,
+  getHoldings,
   getInvestmentEntries,
   getMonthBudgets,
+  getPortfolioSync,
 } from "@/lib/finance-queries";
+import { growwConfigured } from "@/lib/groww";
 import { accountSummaries, netSaved } from "@/lib/investments";
+import { holdingSummaries, portfolioTotals, timeAgo } from "@/lib/portfolio";
 
 export default async function SavingsPage({
   searchParams,
@@ -24,14 +30,22 @@ export default async function SavingsPage({
   const thisYear = Number(today.slice(0, 4));
   const month = today.slice(0, 7);
 
-  const [accounts, entries, monthBudgets] = await Promise.all([
+  const [accounts, entries, monthBudgets, holdings, sync] = await Promise.all([
     getAccounts(),
     getInvestmentEntries(),
     getMonthBudgets(year),
+    getHoldings(),
+    getPortfolioSync(),
   ]);
   const summaries = accountSummaries(accounts, entries);
-  const invested = summaries.reduce((s, a) => s + a.invested, 0);
-  const current = summaries.reduce((s, a) => s + a.current, 0);
+  const stocks = holdingSummaries(holdings);
+  const stockTotals = portfolioTotals(stocks);
+
+  // Everything put away: the accounts you keep by hand plus the synced stocks
+  const handInvested = summaries.reduce((s, a) => s + a.invested, 0);
+  const handWorth = summaries.reduce((s, a) => s + a.current, 0);
+  const invested = handInvested + stockTotals.invested;
+  const current = handWorth + stockTotals.worth;
   const gain = current - invested;
   const savedThisMonth = netSaved(
     entries.filter((e) => e.occurred_on.startsWith(month)),
@@ -39,16 +53,31 @@ export default async function SavingsPage({
   const monthTarget =
     monthBudgets.find((b) => b.period_key === month)?.savings_target ?? null;
 
+  // Where the money sits, biggest first
+  const slices = [
+    ...(stockTotals.worth > 0
+      ? [{ label: "Stocks", value: stockTotals.worth, color: "var(--ember)" }]
+      : []),
+    ...summaries
+      .filter((a) => a.current > 0)
+      .map((a) => ({ label: a.name, value: a.current, color: `var(--cat-${a.color})` })),
+  ];
+
   const tiles = [
     {
       label: "Worth now",
       value: formatMoney(current),
-      hint: `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`,
+      hint: [
+        stocks.length ? `${stocks.length} ${stocks.length === 1 ? "stock" : "stocks"}` : "",
+        accounts.length ? `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ") || "Nothing yet",
     },
     {
       label: "Put in",
       value: formatMoney(invested),
-      hint: "Deposits minus withdrawals",
+      hint: "Deposits and buys, minus what came out",
     },
     {
       label: "Returns",
@@ -116,9 +145,21 @@ export default async function SavingsPage({
         ))}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(0,22rem)]">
-        <AccountList accounts={summaries} />
-        <AddAccountForm startOpen={accounts.length === 0} />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="flex flex-col gap-6">
+          <HoldingsCard
+            holdings={stocks}
+            syncedLabel={timeAgo(sync?.synced_at ?? null)}
+            status={sync?.status ?? null}
+            message={sync?.message ?? null}
+            connected={growwConfigured()}
+          />
+          <AccountList accounts={summaries} />
+        </div>
+        <div className="flex flex-col gap-6">
+          <AllocationCard slices={slices} />
+          <AddAccountForm startOpen={accounts.length === 0 && stocks.length === 0} />
+        </div>
       </div>
 
       <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
