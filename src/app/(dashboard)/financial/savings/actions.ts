@@ -2,6 +2,7 @@
 
 import { isValidDate, todayISO } from "@/lib/finance";
 import { syncPortfolio } from "@/lib/groww-sync";
+import { NO_MARKET_DATA } from "@/lib/groww";
 import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 import {
   authedClient,
@@ -156,12 +157,15 @@ export async function refreshPortfolio(): Promise<{ ok: boolean; message: string
   refresh();
   const count = result.holdings ?? 0;
   if (count === 0) return { ok: true, message: "No stocks in your demat account." };
+  const stocks = `${count} ${count === 1 ? "stock" : "stocks"}`;
+  if (result.pricesOk === false)
+    return { ok: true, message: `${stocks} updated. ${NO_MARKET_DATA}` };
   const unpriced = result.unpriced ?? 0;
   return {
     ok: true,
     message: unpriced
-      ? `${count} ${count === 1 ? "stock" : "stocks"} updated, ${unpriced} without a live price.`
-      : `${count} ${count === 1 ? "stock" : "stocks"} updated.`,
+      ? `${stocks} updated, ${unpriced} without a live price.`
+      : `${stocks} updated.`,
   };
 }
 

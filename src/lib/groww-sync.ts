@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { fetchHoldings, fetchPrices, growwConfigured } from "@/lib/groww";
+import { fetchHoldings, fetchPrices, growwConfigured, NO_MARKET_DATA } from "@/lib/groww";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type Result = { ok: true } | { ok: false; error: string };
@@ -10,7 +10,7 @@ type Result = { ok: true } | { ok: false; error: string };
 // finance_portfolio_sync too, so the page can say why the numbers are old.
 export async function syncPortfolio(
   client?: Supabase,
-): Promise<Result & { holdings?: number; unpriced?: number }> {
+): Promise<Result & { holdings?: number; unpriced?: number; pricesOk?: boolean }> {
   const supabase = client ?? (await createClient());
   const { data: auth } = await supabase.auth.getClaims();
   const userId = auth?.claims?.sub;
@@ -109,8 +109,12 @@ export async function syncPortfolio(
   const unpriced = rows.filter((r) => r.last_price === null).length;
   await note(
     "ok",
-    unpriced > 0 && !priced.ok ? "Holdings updated, but live prices didn't come through." : null,
+    priced.ok
+      ? null
+      : priced.error === NO_MARKET_DATA
+        ? NO_MARKET_DATA
+        : "Holdings updated, but live prices didn't come through.",
     rows.length,
   );
-  return { ok: true, holdings: rows.length, unpriced };
+  return { ok: true, holdings: rows.length, unpriced, pricesOk: priced.ok };
 }

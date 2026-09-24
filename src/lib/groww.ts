@@ -133,10 +133,16 @@ async function call(path: string, init: RequestInit & { token?: string } = {}) {
   return { status: response.status, body: body as { status?: string; payload?: unknown; error?: { message?: string }; message?: string } | null };
 }
 
+// Market data (live prices, history) is a paid part of Groww's API; a free
+// key reads the portfolio fine and gets 403 for everything price-related.
+export const NO_MARKET_DATA =
+  "Your Groww API plan doesn't include market data, so there are no live prices. Holdings are shown at what they cost.";
+
 function why(status: number, body: { error?: { message?: string }; message?: string } | null) {
   const message = body?.error?.message ?? body?.message;
-  if (status === 401 || status === 403)
-    return message ?? "Groww refused the key. Check the API key and TOTP secret, and that the API subscription is active.";
+  if (status === 401)
+    return message ?? "Groww refused the key. Check GROWW_API_KEY and GROWW_API_SECRET.";
+  if (status === 403) return NO_MARKET_DATA;
   if (status === 429) return "Groww is rate limiting us. Try again in a minute.";
   if (status >= 500) return "Groww's API is having trouble. Try again shortly.";
   return message ?? `Groww returned ${status}.`;
@@ -231,6 +237,7 @@ export async function fetchPrices(
         exchange_symbols: batch.map((s) => `${exchange}_${s}`).join(","),
       });
       const { status, body } = await call(`/live-data/ltp?${query}`, { token: auth.token });
+      if (status === 403) return { ok: false, error: NO_MARKET_DATA };
       // A whole batch failing on NSE shouldn't lose the BSE attempt
       if (status !== 200) {
         if (exchange === "BSE" && Object.keys(prices).length === 0)
