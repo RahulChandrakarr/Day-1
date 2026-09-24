@@ -150,3 +150,143 @@ body {
   font-weight: 500;
   color: color-mix(in oklab, var(--paper) 60%, transparent);
 }
+
+/* Note editor (Plan → Notes) */
+.note-content {
+  outline: none;
+  min-height: 50vh;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.note-content > * + * {
+  margin-top: 0.5em;
+}
+.note-content h1,
+.note-content h2,
+.note-content h3 {
+  font-weight: 650;
+  line-height: 1.25;
+  margin-top: 1.4em;
+}
+.note-content h1 {
+  font-size: 1.85em;
+}
+.note-content h2 {
+  font-size: 1.45em;
+}
+.note-content h3 {
+  font-size: 1.2em;
+}
+.note-content > :first-child {
+  margin-top: 0;
+}
+.note-content strong {
+  font-weight: 650;
+}
+.note-content a {
+  color: var(--ember);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.note-content mark,
+.note-mark {
+  background: color-mix(in oklab, var(--cat-4) 35%, transparent);
+  color: inherit;
+  border-radius: 0.2em;
+  padding: 0 0.1em;
+}
+.note-content ul:not([data-type="taskList"]),
+.note-content ol {
+  padding-left: 1.5em;
+}
+.note-content ul:not([data-type="taskList"]) {
+  list-style: disc;
+}
+.note-content ol {
+  list-style: decimal;
+}
+.note-content li + li {
+  margin-top: 0.2em;
+}
+.note-content li > p + * {
+  margin-top: 0.2em;
+}
+.note-content li::marker {
+  color: color-mix(in oklab, var(--paper) 45%, transparent);
+}
+.note-content ul[data-type="taskList"] {
+  padding-left: 0.1em;
+}
+.note-content ul[data-type="taskList"] ul[data-type="taskList"] {
+  padding-left: 1.6em;
+}
+.note-content ul[data-type="taskList"] > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+}
+.note-content ul[data-type="taskList"] > li > label {
+  flex-shrink: 0;
+  margin-top: 0.3em;
+  user-select: none;
+}
+.note-content ul[data-type="taskList"] > li > label input {
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: var(--ember);
+  cursor: pointer;
+}
+.note-content ul[data-type="taskList"] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+.note-content ul[data-type="taskList"] > li[data-checked="true"] > div {
+  color: color-mix(in oklab, var(--paper) 45%, transparent);
+  text-decoration: line-through;
+}
+.note-content blockquote {
+  border-left: 3px solid var(--ember);
+  padding-left: 1em;
+  color: color-mix(in oklab, var(--paper) 75%, transparent);
+}
+.note-content code {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.88em;
+  padding: 0.12em 0.35em;
+  border-radius: 0.35em;
+  background: color-mix(in oklab, var(--paper) 8%, transparent);
+  color: var(--ember);
+}
+.note-content pre {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.88em;
+  line-height: 1.55;
+  padding: 0.9em 1em;
+  border-radius: var(--radius-inset);
+  background: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--paper) 10%, transparent);
+  overflow-x: auto;
+}
+.note-content pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.note-content hr {
+  border: none;
+  border-top: 1px solid color-mix(in oklab, var(--paper) 15%, transparent);
+  margin: 1.2em 0;
+}
+.note-content hr.ProseMirror-selectednode {
+  border-top-color: var(--ember);
+}
+.note-content p.is-empty::before,
+.note-content h1.is-empty::before,
+.note-content h2.is-empty::before,
+.note-content h3.is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: color-mix(in oklab, var(--paper) 28%, transparent);
+}

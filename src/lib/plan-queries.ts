@@ -66,6 +66,18 @@ export async function getNotes(): Promise<Note[]> {
   return data ?? [];
 }
 
+export async function getNote(id: string): Promise<Note | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notes")
+    .select("id, title, body, pinned, created_at, updated_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 // Today's tasks with their goal, for Overview and the journal
 export async function getPlanDay(date: string) {
   const supabase = await createClient();

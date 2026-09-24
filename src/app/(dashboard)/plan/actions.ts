@@ -338,12 +338,12 @@ export async function saveNote(input: {
     if (!uuid.test(input.id)) return { ok: false, error: "Unknown note." };
     const { error } = await supabase.from("notes").update(row).eq("id", input.id);
     if (error) return { ok: false, error: error.message };
-    revalidatePath("/plan/notes");
+    revalidatePath("/plan/notes", "layout");
     return { ok: true, id: input.id };
   }
   const { data, error } = await supabase.from("notes").insert(row).select("id").single();
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/plan/notes");
+  revalidatePath("/plan/notes", "layout");
   return { ok: true, id: data.id };
 }
 
@@ -352,7 +352,7 @@ export async function setNotePinned(id: string, pinned: boolean): Promise<Result
   const supabase = await authedClient();
   const { error } = await supabase.from("notes").update({ pinned }).eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/plan/notes");
+  revalidatePath("/plan/notes", "layout");
   return { ok: true };
 }
 
@@ -361,6 +361,6 @@ export async function deleteNote(id: string): Promise<Result> {
   const supabase = await authedClient();
   const { error } = await supabase.from("notes").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/plan/notes");
+  revalidatePath("/plan/notes", "layout");
   return { ok: true };
 }
