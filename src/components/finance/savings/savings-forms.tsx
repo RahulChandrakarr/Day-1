@@ -19,7 +19,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
   const [state, action, pending] = useActionState(addAccount, initial);
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

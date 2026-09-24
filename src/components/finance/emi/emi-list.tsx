@@ -20,13 +20,13 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
   const totalDue = running.reduce((s, e) => s + e.remaining, 0);
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-serif text-2xl">Your EMIs</h3>
         <AddEmiButton />
       </div>
       {emis.length === 0 ? (
-        <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 rounded-inset border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
           No EMIs yet. Add a loan or installment to track what’s left.
         </p>
       ) : (

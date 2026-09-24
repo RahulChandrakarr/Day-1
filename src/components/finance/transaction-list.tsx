@@ -284,7 +284,7 @@ export default function TransactionList({
     items.sort((a, b) => b.on.localeCompare(a.on) || b.at.localeCompare(a.at));
 
   return (
-    <section className="min-w-0 rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="min-w-0 rounded-card border border-paper/10 bg-surface p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">{title}</h3>
         {aside ?? (
@@ -294,7 +294,7 @@ export default function TransactionList({
         )}
       </div>
       {items.length === 0 ? (
-        <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 rounded-inset border border-dashed border-paper/10 py-10 text-center text-sm text-paper/40">
           {empty}
         </p>
       ) : (

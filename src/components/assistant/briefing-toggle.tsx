@@ -6,7 +6,7 @@ import { SparkleIcon } from "./icons";
 
 // The card (and its markdown renderer) only loads once the switch is on.
 const BriefingCard = dynamic(() => import("./briefing-card"), {
-  loading: () => <div className="h-40 animate-pulse rounded-[18px] bg-paper/5" />,
+  loading: () => <div className="h-40 animate-pulse rounded-card bg-paper/5" />,
 });
 
 // Today's AI briefing on Overview: off until you switch it on.
@@ -20,7 +20,7 @@ export default function BriefingToggle() {
         role="switch"
         aria-checked={on}
         onClick={() => setOn((v) => !v)}
-        className="flex min-h-11 items-center gap-3 rounded-[14px] border border-paper/10 bg-surface px-3.5 py-2 text-left transition active:bg-ink"
+        className="flex min-h-11 items-center gap-3 rounded-inset border border-paper/10 bg-surface px-3.5 py-2 text-left transition active:bg-ink"
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ember/15 text-ember">
           <SparkleIcon />

@@ -30,7 +30,7 @@ export default function PeopleList({
   const shown = showSettled ? people : open;
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">People</h3>
         {settled > 0 && (
@@ -45,7 +45,7 @@ export default function PeopleList({
       </div>
 
       {shown.length === 0 ? (
-        <p className="mt-6 rounded-[14px] border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 rounded-inset border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
           {people.length === 0
             ? "No one yet. Add money you took from or gave to someone."
             : "All settled. Nobody owes anything."}

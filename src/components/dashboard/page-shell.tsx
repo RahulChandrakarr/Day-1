@@ -13,9 +13,9 @@ export default function PageShell({
   hideMobileDescription?: boolean;
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-4 md:gap-5">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       <header className="hidden md:block">
-        <h1 className="font-serif text-5xl">{title}</h1>
+        <h1 className="font-serif text-4xl xl:text-5xl">{title}</h1>
         {description && <p className="mt-1 text-paper/50">{description}</p>}
       </header>
       {description && !hideMobileDescription && (
@@ -23,7 +23,7 @@ export default function PageShell({
       )}
 
       {children ?? (
-        <div className="flex min-h-80 flex-1 items-center justify-center rounded-[18px] border border-dashed border-paper/10 text-sm text-paper/35">
+        <div className="flex min-h-80 flex-1 items-center justify-center rounded-card border border-dashed border-paper/10 text-sm text-paper/35">
           Nothing here yet
         </div>
       )}

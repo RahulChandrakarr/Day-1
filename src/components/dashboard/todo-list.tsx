@@ -13,7 +13,7 @@ export default function TodoList({ date, todos }: { date: string; todos: Todo[] 
   );
 
   return (
-    <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface px-4">
+    <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
       {list.map((todo) => (
         <li
           key={todo.index}

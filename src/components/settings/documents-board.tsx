@@ -100,7 +100,7 @@ export default function DocumentsBoard({
             : "No files match."}
         </Empty>
       ) : (
-        <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+        <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface">
           {shown.map((doc) => (
             <DocumentItem key={doc.id} doc={doc} folders={folders} />
           ))}
@@ -321,7 +321,7 @@ function UploadSheet({
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="flex min-h-28 flex-col items-center justify-center gap-1 rounded-[18px] border border-dashed border-paper/20 px-4 py-5 text-center transition hover:border-ember/60"
+          className="flex min-h-28 flex-col items-center justify-center gap-1 rounded-card border border-dashed border-paper/20 px-4 py-5 text-center transition hover:border-ember/60"
         >
           <span className="text-3xl" aria-hidden>
             {file ? iconFor(file.type) : "⬆️"}

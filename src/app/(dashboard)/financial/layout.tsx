@@ -21,9 +21,9 @@ export default function FinancialLayout({
       description="Income, spending, savings, stocks and EMIs."
       hideMobileDescription
     >
-      <div className="flex items-start gap-8">
+      <div className="flex items-start gap-4">
         <FinanceSidebar />
-        <div className="flex min-w-0 flex-1 flex-col gap-4 md:gap-6">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex items-center gap-2">
             <FinanceMenuButton />
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">

@@ -293,7 +293,7 @@ export default async function OverviewPage() {
           {!hasPlan ? (
             <Link
               href="/health/body"
-              className="flex min-h-11 items-center gap-3 rounded-[14px] border border-dashed border-paper/15 px-4 py-2.5 text-sm text-paper/60"
+              className="flex min-h-11 items-center gap-3 rounded-inset border border-dashed border-paper/15 px-4 py-2.5 text-sm text-paper/60"
             >
               <span>🏋️</span>
               <span className="flex-1">No gym plan yet. Build your 4-week plan</span>
@@ -334,7 +334,7 @@ export default async function OverviewPage() {
                   href="/health/habits"
                   link={`${habits.length - pendingHabits.length}/${habits.length}`}
                 />
-                <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+                <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface">
                   {pendingHabits.map((habit, i) => (
                     <HabitRow
                       key={habit.id}
@@ -358,7 +358,7 @@ export default async function OverviewPage() {
             <SectionHead title="Money" href="/financial/daily" link="Open" />
             <Link
               href="/financial/daily"
-              className="flex flex-col rounded-[18px] border border-paper/10 bg-surface"
+              className="flex flex-col rounded-card border border-paper/10 bg-surface"
             >
               {banks.length > 0 && (
                 <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
@@ -433,7 +433,7 @@ export default async function OverviewPage() {
           {insights.length > 1 && (
             <section className="flex flex-col gap-3">
               <SectionHead title="Worth knowing" />
-              <ul className="flex flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-[18px] border border-paper/10 bg-surface px-4">
+              <ul className="flex flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
                 {insights.slice(1, 6).map((line) => (
                   <li key={line} className="py-2.5 text-[13px] text-paper/75">
                     {line}

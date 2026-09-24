@@ -73,7 +73,7 @@ export default async function BorrowPage() {
         {tiles.map((tile, i) => (
           <div
             key={tile.label}
-            className={`rounded-[18px] border border-paper/10 bg-surface p-4 ${
+            className={`rounded-card border border-paper/10 bg-surface p-4 ${
               i === 2 ? "col-span-2 sm:col-span-1" : ""
             }`}
           >

@@ -74,7 +74,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
       {missingPrep && <AddPrep blockId={block?.id ?? null} />}
 
       {!hasPlan ? (
-        <section className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-paper/15 px-6 py-12 text-center">
+        <section className="flex flex-col items-center gap-4 rounded-card border border-dashed border-paper/15 px-6 py-12 text-center">
           <span className="text-4xl">🏋️</span>
           <div>
             <h3 className="font-serif text-2xl">Build your training plan</h3>
@@ -92,7 +92,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
         </section>
       ) : (
         <>
-          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+          <section className="rounded-card border border-paper/10 bg-surface p-4">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wider text-paper/45">
@@ -132,7 +132,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             />
           </section>
 
-          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+          <section className="rounded-card border border-paper/10 bg-surface p-4">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h3 className="font-serif text-xl sm:text-2xl">This week</h3>
               {block && ends && (

@@ -13,7 +13,7 @@ export default function HealthLayout({ children }: LayoutProps<"/health">) {
       description="Gym plan, workouts and habits."
       hideMobileDescription
     >
-      <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-4">
         <HealthTabs />
         {children}
       </div>

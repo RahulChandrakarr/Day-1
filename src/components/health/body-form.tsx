@@ -132,7 +132,7 @@ export default function BodyForm({
   }
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">Your details</h3>
         <AnimatePresence>

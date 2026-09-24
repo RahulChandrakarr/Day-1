@@ -384,7 +384,7 @@ export default function JournalEditor({
             </div>
           </Card>
 
-          <details className="group rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+          <details className="group rounded-card border border-paper/10 bg-surface p-4">
             <summary className="cursor-pointer list-none font-serif text-xl">
               Wins, lessons and tomorrow
               <span className="ml-2 text-sm text-paper/40 group-open:hidden">
@@ -447,7 +447,7 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
         {aside && <span className="text-xs text-paper/50">{aside}</span>}
@@ -493,7 +493,7 @@ function HabitsCard({
   }
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">Habits</h3>
         <div className="flex items-baseline gap-3">

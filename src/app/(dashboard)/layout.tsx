@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
       <Sidebar profile={profile} alerts={alerts} avatarUrl={avatarUrl} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav profile={profile} alerts={alerts} avatarUrl={avatarUrl} />
-        <main className="flex w-full min-w-0 flex-1 flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] pt-5 sm:px-6 md:px-10 md:py-10 xl:px-14">
+        <main className="flex w-full min-w-0 flex-1 flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] pt-4 sm:px-5 md:px-6 md:py-6 md:pb-8 xl:px-8">
           {children}
         </main>
       </div>

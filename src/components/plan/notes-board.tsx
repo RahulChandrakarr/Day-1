@@ -108,7 +108,7 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
         <ul className="grid gap-3 sm:grid-cols-2">
           {shown.map((note) => (
             <li key={note.id}>
-              <article className="flex h-full flex-col rounded-[18px] border border-paper/10 bg-surface p-4">
+              <article className="flex h-full flex-col rounded-card border border-paper/10 bg-surface p-4">
                 <div className="flex items-start gap-2">
                   <button
                     type="button"

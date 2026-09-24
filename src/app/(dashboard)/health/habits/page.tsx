@@ -44,7 +44,7 @@ export default async function HabitsPage({
       )}
 
       {habits.length === 0 ? (
-        <section className="rounded-[18px] border border-dashed border-paper/15 px-6 py-10 text-center">
+        <section className="rounded-card border border-dashed border-paper/15 px-6 py-10 text-center">
           <span className="text-4xl">✅</span>
           <h3 className="mt-2 font-serif text-2xl">Track your habits</h3>
           <p className="mx-auto mt-1 max-w-sm text-sm text-paper/55">

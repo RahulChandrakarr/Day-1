@@ -45,7 +45,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <h3 className="font-serif text-2xl">{title}</h3>
       {subtitle && <p className="text-sm text-paper/50">{subtitle}</p>}
       <div className="mt-4">{children}</div>

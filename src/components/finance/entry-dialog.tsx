@@ -462,7 +462,7 @@ function EntryForm({
             {habits.map((habit) => (
               <li
                 key={habit.id}
-                className="rounded-[14px] border border-paper/10 bg-ink"
+                className="rounded-inset border border-paper/10 bg-ink"
               >
                 <ul>
                   <HabitRow

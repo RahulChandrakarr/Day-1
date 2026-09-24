@@ -136,8 +136,8 @@ export default function ReminderSettings({
   }
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
-      <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <div className="flex flex-col gap-4">
+      <section className="rounded-card border border-paper/10 bg-surface p-4">
         <h3 className="font-serif text-xl sm:text-2xl">This device</h3>
         {permission === "unsupported" ? (
           <p className="mt-2 text-sm text-paper/55">
@@ -201,7 +201,7 @@ export default function ReminderSettings({
         </AnimatePresence>
       </section>
 
-      <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+      <section className="rounded-card border border-paper/10 bg-surface p-4">
         <h3 className="font-serif text-xl sm:text-2xl">Reminders</h3>
         <p className="mt-1 text-sm text-paper/55">
           Times are Indian time. A reminder is skipped when the thing is already

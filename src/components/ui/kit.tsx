@@ -1,23 +1,29 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// The shared look, taken from the Overview design: soft cards, hairline
-// dividers, serif headings, 44px tap targets.
+// The shared look: soft cards, hairline dividers, serif headings, 44px tap
+// targets. Three weights of container, so a page can have a lead: Card for
+// blocks of data, CardList for rows, DarkCard for the one thing that leads.
+// CardGrid, Rail and Band arrange them.
 
 export function Card({
   children,
   className = "",
   padded = true,
+  container = false,
 }: {
   children: ReactNode;
   className?: string;
   padded?: boolean;
+  // Lets the card's own contents respond to the card's width. Never set it on
+  // a card holding a dialog or sheet: they would stop covering the window.
+  container?: boolean;
 }) {
   return (
     <section
-      className={`rounded-[18px] border border-paper/10 bg-surface ${
-        padded ? "p-4 sm:p-5" : ""
-      } ${className}`}
+      className={`min-w-0 rounded-card border border-paper/10 bg-surface ${
+        container ? "@container" : ""
+      } ${padded ? "p-4" : ""} ${className}`}
     >
       {children}
     </section>
@@ -34,7 +40,7 @@ export function CardList({
 }) {
   return (
     <ul
-      className={`overflow-hidden rounded-[18px] border border-paper/10 bg-surface [&>li+li]:border-t [&>li+li]:border-paper/[0.06] ${className}`}
+      className={`overflow-hidden rounded-card border border-paper/10 bg-surface [&>li+li]:border-t [&>li+li]:border-paper/[0.06] ${className}`}
     >
       {children}
     </ul>
@@ -70,8 +76,8 @@ export function SectionHead({
   aside?: string;
 }) {
   return (
-    <div className="-mb-2 mt-3 flex items-baseline justify-between gap-3">
-      <h2 className="min-w-0 truncate font-serif text-[22px] sm:text-2xl">
+    <div className="flex items-baseline justify-between gap-3">
+      <h2 className="min-w-0 truncate font-serif text-2xl">
         {title}
       </h2>
       {href && link ? (
@@ -103,7 +109,7 @@ export function CardHead({
 }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h3 className="min-w-0 truncate font-serif text-xl">{title}</h3>
+      <h3 className="min-w-0 truncate font-serif text-[19px]">{title}</h3>
       {href && link ? (
         <Link href={href} className="shrink-0 text-[13px] font-semibold text-ember">
           {link} →
@@ -114,6 +120,117 @@ export function CardHead({
         )
       )}
     </div>
+  );
+}
+
+// Cards side by side once there is room. The column counts come from the
+// space actually left after the sidebar and page padding: two columns need
+// ~650px, three need ~985px, so a laptop gets two and a wide screen three.
+const LAYOUTS = {
+  // Ordinary cards
+  pair: "lg:grid-cols-2",
+  // Cards that hold a short list, so a third column still reads
+  triple: "lg:grid-cols-2 2xl:grid-cols-3",
+  // Small self-contained cards: habits, notes
+  dense: "sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4",
+  // Figures, never one to a row
+  tiles: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6",
+} as const;
+
+export function CardGrid({
+  children,
+  layout = "pair",
+  align = "stretch",
+  className = "",
+}: {
+  children: ReactNode;
+  layout?: keyof typeof LAYOUTS;
+  // Cards in a row share a height, so the row ends flush and the leftover
+  // space sits inside a card rather than as a gap between cards. "start" is
+  // for rows whose heights are wildly different.
+  align?: "stretch" | "start";
+  className?: string;
+}) {
+  const fill = align === "start" ? "items-start" : "items-stretch [&>*]:h-full";
+  return (
+    <div className={`grid min-w-0 gap-3 ${fill} ${LAYOUTS[layout]} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// A full-width row inside a CardGrid, for what can't be squeezed:
+// wide tables and charts
+export function Band({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={`col-span-full min-w-0 ${className}`}>{children}</div>;
+}
+
+// A main column with a narrow one beside it. It splits at xl, not lg: at lg
+// the main column would be left with about 370px, which is narrower than one
+// column of a plain grid.
+const RAILS = {
+  xl: "xl:grid-cols-[minmax(0,1fr)_minmax(0,var(--rail))]",
+  "2xl": "2xl:grid-cols-[minmax(0,1fr)_minmax(0,var(--rail))]",
+} as const;
+
+export function Rail({
+  children,
+  aside,
+  at = "xl",
+  className = "",
+}: {
+  children: ReactNode;
+  aside: ReactNode;
+  at?: keyof typeof RAILS;
+  className?: string;
+}) {
+  return (
+    <div className={`grid min-w-0 items-start gap-3 ${RAILS[at]} ${className}`}>
+      <div className="flex min-w-0 flex-col gap-3">{children}</div>
+      <div className="flex min-w-0 flex-col gap-3">{aside}</div>
+    </div>
+  );
+}
+
+// The one vertical rhythm between cards
+export function Stack({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={`flex min-w-0 flex-col gap-3 ${className}`}>{children}</div>;
+}
+
+// A heading with the cards it belongs to, so the space under a heading is
+// always the same
+export function Section({
+  title,
+  href,
+  link,
+  aside,
+  children,
+  className = "",
+}: {
+  title: string;
+  href?: string;
+  link?: string;
+  aside?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`flex min-w-0 flex-col gap-2 ${className}`}>
+      <SectionHead title={title} href={href} link={link} aside={aside} />
+      {children}
+    </section>
   );
 }
 
@@ -129,16 +246,19 @@ export function Figure({
   value: string;
   hint?: string;
   tone?: "good" | "bad";
-  // "mobile" keeps the row line only while the tiles wrap onto several rows
-  divide?: boolean | "mobile";
+  // "mobile" keeps the row line only while the tiles wrap onto several rows;
+  // "wrapped" drops it once they all fit on one
+  divide?: boolean | "mobile" | "wrapped";
 }) {
   const line = !divide
     ? ""
     : divide === "mobile"
       ? "border-b border-paper/[0.06] sm:border-b-0"
-      : "border-b border-paper/[0.06]";
+      : divide === "wrapped"
+        ? "border-b border-paper/[0.06] @2xl:border-b-0"
+        : "border-b border-paper/[0.06]";
   return (
-    <div className={`min-w-0 py-3 ${line}`}>
+    <div className={`min-w-0 py-2.5 ${line}`}>
       <p className="truncate text-xs text-paper/55">{label}</p>
       <p
         className={`mt-0.5 truncate text-[19px] font-bold tabular-nums ${toneClass(tone)}`}
@@ -162,13 +282,13 @@ export function FigureGrid({
   }[];
 }) {
   return (
-    <Card padded={false} className="px-4 py-1">
-      <div className="grid grid-cols-2">
+    <Card padded={false} container className="px-4 py-1">
+      <div className="grid grid-cols-2 @2xl:grid-cols-4">
         {items.map((item, i) => (
           <Figure
             key={item.label}
             {...item}
-            divide={i < items.length - 2}
+            divide={i < items.length - 2 ? "wrapped" : false}
           />
         ))}
       </div>
@@ -215,7 +335,7 @@ export function Empty({
   href?: string;
 }) {
   const className =
-    "block rounded-[18px] border border-dashed border-paper/15 px-4 py-8 text-center text-sm text-paper/55";
+    "block rounded-card border border-dashed border-paper/15 px-4 py-8 text-center text-sm text-paper/55";
   return href ? (
     <Link
       href={href}
@@ -263,7 +383,7 @@ export const quietButtonClass =
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-[18px] bg-paper/[0.06] ${className}`}
+      className={`animate-pulse rounded-card bg-paper/[0.06] ${className}`}
       aria-hidden
     />
   );
@@ -295,7 +415,7 @@ export function Reminder({
   return (
     <Link
       href={href}
-      className="flex min-h-11 flex-1 items-center gap-3 rounded-[14px] border border-paper/10 bg-surface px-4 py-3 transition active:bg-ink"
+      className="flex min-h-11 flex-1 items-center gap-3 rounded-inset border border-paper/10 bg-surface px-4 py-3 transition active:bg-ink"
     >
       <span className="text-base">{emoji}</span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>

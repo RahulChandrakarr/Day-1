@@ -66,7 +66,7 @@ export default async function BodyPage() {
       />
 
       <div className="flex flex-col gap-4 lg:gap-6">
-        <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+        <section className="rounded-card border border-paper/10 bg-surface p-4">
           <h3 className="font-serif text-xl sm:text-2xl">Your numbers</h3>
           {bmiValue ? (
             <>
@@ -140,13 +140,13 @@ export default async function BodyPage() {
               </p>
             </>
           ) : (
-            <p className="mt-4 rounded-[14px] border border-dashed border-paper/10 px-4 py-8 text-center text-sm text-paper/50">
+            <p className="mt-4 rounded-inset border border-dashed border-paper/10 px-4 py-8 text-center text-sm text-paper/50">
               Add your height and weight to see BMI, calories and your plan.
             </p>
           )}
         </section>
 
-        <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+        <section className="rounded-card border border-paper/10 bg-surface p-4">
           <h3 className="mb-3 font-serif text-xl sm:text-2xl">Weight</h3>
           <WeightChart logs={logs} />
           <LogList logs={logs} />

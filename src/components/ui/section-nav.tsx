@@ -44,8 +44,8 @@ export function SectionSidebar({
 
   return (
     <aside
-      className={`sticky top-6 hidden shrink-0 flex-col gap-1 self-start rounded-2xl border border-paper/10 bg-surface p-2 transition-[width] duration-300 xl:flex ${
-        collapsed ? "w-14" : "w-52"
+      className={`sticky top-4 hidden shrink-0 flex-col gap-1 self-start rounded-2xl border border-paper/10 bg-surface p-2 transition-[width] duration-300 xl:flex ${
+        collapsed ? "w-14" : "w-48"
       }`}
     >
       <button

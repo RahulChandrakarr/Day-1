@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PlanLayout({ children }: LayoutProps<"/plan">) {
   return (
     <PageShell title="Plan" description="Year → month → week → today.">
-      <div className="flex flex-col gap-4 md:gap-5">
+      <div className="flex flex-col gap-4">
         <PlanTabs />
         {children}
       </div>

@@ -89,11 +89,11 @@ export default function PersonaPicker() {
       >
         {view.kind === "list" ? (
           <div className="flex flex-col gap-4">
-            <ul className="overflow-hidden rounded-[18px] border border-paper/10">{builtIns.map(row)}</ul>
+            <ul className="overflow-hidden rounded-card border border-paper/10">{builtIns.map(row)}</ul>
             {custom.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <p className="px-1 text-xs font-medium text-paper/55">Your personas</p>
-                <ul className="overflow-hidden rounded-[18px] border border-paper/10">{custom.map(row)}</ul>
+                <ul className="overflow-hidden rounded-card border border-paper/10">{custom.map(row)}</ul>
               </div>
             )}
             <button

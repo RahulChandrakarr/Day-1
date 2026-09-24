@@ -161,7 +161,7 @@ export default async function YearlyFinancePage({
         empty="No yearly entries this year."
       />
 
-      <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+      <section className="rounded-card border border-paper/10 bg-surface p-4">
         <h3 className="font-serif text-2xl">Month by month</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {year}.
@@ -212,7 +212,7 @@ function MonthPlanTable({
   const spentInPlanned = planned.reduce((s, r) => s + r.bucket.expense, 0);
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <h3 className="font-serif text-2xl">Monthly plans in {year}</h3>
       <p className="mb-4 text-sm text-paper/50">
         {planned.length === 0

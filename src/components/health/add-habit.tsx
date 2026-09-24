@@ -50,7 +50,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
   }
 
   return (
-    <section className="rounded-[18px] border border-paper/10 bg-surface p-4">
+    <section className="rounded-card border border-paper/10 bg-surface p-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();

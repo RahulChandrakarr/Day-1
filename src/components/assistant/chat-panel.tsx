@@ -52,7 +52,7 @@ export default function ChatPanel() {
   }, [messages, statusLabel]);
 
   return (
-    <section className="relative flex h-[calc(100dvh-11rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] min-h-[420px] flex-col md:h-[calc(100dvh-10rem)] md:min-h-[520px]">
+    <section className="relative flex min-h-[420px] flex-1 flex-col md:min-h-[520px]">
       <header className="flex items-center gap-1.5 border-b border-paper/10 pb-3">
         <PersonaPicker />
         <div className="flex min-w-0 flex-1 justify-center">

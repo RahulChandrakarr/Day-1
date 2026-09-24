@@ -62,7 +62,7 @@ export default function CategoryManager({
   return (
     <section
       id="categories"
-      className="scroll-mt-24 rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5"
+      className="scroll-mt-24 rounded-card border border-paper/10 bg-surface p-4"
     >
       <button
         type="button"

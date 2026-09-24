@@ -25,7 +25,7 @@ export default function AddUserForm() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-3xl border border-paper/10 bg-paper/[0.04] p-6 md:sticky md:top-8"
+      className="rounded-card border border-paper/10 bg-paper/[0.04] p-4 xl:sticky xl:top-4"
     >
       <h2 className="font-serif text-2xl">Add someone</h2>
       <p className="mt-1 text-sm text-paper/50">They join as a regular user.</p>

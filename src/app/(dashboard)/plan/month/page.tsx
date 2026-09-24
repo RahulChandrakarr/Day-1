@@ -103,7 +103,7 @@ export default async function PlanMonthPage({
                     <Link
                       key={week}
                       href={`/plan/week?month=${month}&week=${week}`}
-                      className={`rounded-[14px] border p-2.5 transition hover:border-paper/25 ${
+                      className={`rounded-inset border p-2.5 transition hover:border-paper/25 ${
                         week === currentWeek
                           ? "border-ember/50 bg-ember/5"
                           : "border-paper/10"

@@ -35,7 +35,7 @@ export default function GymChecklist({
   const percent = total ? Math.round((finished / total) * 100) : 0;
 
   return (
-    <section className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+    <section className="overflow-hidden rounded-card border border-paper/10 bg-surface">
       <div className="px-4 pb-2.5 pt-3.5">
         <div className="mb-2 flex justify-between text-xs text-paper/55">
           <span className="font-semibold text-moss">

@@ -117,7 +117,7 @@ export default function HabitCard({
       animate={{ opacity: removing ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
       className={`rounded-3xl border bg-surface ${
-        compact ? "p-3" : "p-4 sm:p-5"
+        compact ? "p-3" : "p-4"
       } ${
         draft.done === true
           ? "border-moss/40"

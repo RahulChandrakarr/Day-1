@@ -116,7 +116,7 @@ export default async function DailyFinancePage({
           />
         </div>
         {spending.length > 0 && (
-          <section className="rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5 lg:col-start-2">
+          <section className="rounded-card border border-paper/10 bg-surface p-4 lg:col-start-2">
             <h3 className="mb-4 font-serif text-2xl">Spending by category</h3>
             <CategoryBars slices={spending} />
           </section>

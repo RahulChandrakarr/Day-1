@@ -40,7 +40,7 @@ export default function BankAccounts({
   const total = accounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
-    <section className="min-w-0 rounded-[18px] border border-paper/10 bg-surface p-4 sm:p-5">
+    <section className="min-w-0 rounded-card border border-paper/10 bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-serif text-2xl">Bank accounts</h3>
@@ -65,7 +65,7 @@ export default function BankAccounts({
       </div>
 
       {accounts.length === 0 ? (
-        <div className="mt-4 flex flex-col items-start gap-3 rounded-[14px] border border-dashed border-paper/10 p-4">
+        <div className="mt-4 flex flex-col items-start gap-3 rounded-inset border border-dashed border-paper/10 p-4">
           <p className="text-sm text-paper/55">
             Add SBI, Axis, cash… with what&apos;s in each right now. Entries you log
             come out of the account you pick, and Net balance shows the total.

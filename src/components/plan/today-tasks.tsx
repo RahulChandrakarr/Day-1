@@ -31,7 +31,7 @@ export default function TodayTasks({
     return (
       <Link
         href={href}
-        className="flex min-h-11 items-center gap-3 rounded-[14px] border border-dashed border-ember/40 bg-ember/5 px-4 py-2.5"
+        className="flex min-h-11 items-center gap-3 rounded-inset border border-dashed border-ember/40 bg-ember/5 px-4 py-2.5"
       >
         <span className="text-base">🗓️</span>
         <span className="min-w-0 flex-1 text-sm font-medium">
@@ -55,7 +55,7 @@ export default function TodayTasks({
         href={href}
         link={`${doneCount}/${items.length}`}
       />
-      <section className="rounded-[18px] border border-paper/10 bg-surface px-4 py-1.5">
+      <section className="rounded-card border border-paper/10 bg-surface px-4 py-1.5">
         <ItemList
           goals={goals}
           level="day"

@@ -13,7 +13,7 @@ export default function PlanSummary({
     return (
       <Link
         href="/financial/monthly"
-        className="group flex flex-col gap-2 rounded-[18px] border border-dashed border-paper/15 p-5 transition hover:border-ember/50 sm:p-6"
+        className="group flex flex-col gap-2 rounded-card border border-dashed border-paper/15 p-5 transition hover:border-ember/50 sm:p-6"
       >
         <h3 className="font-serif text-2xl">Plan {monthLabel}</h3>
         <p className="text-sm text-paper/55">
