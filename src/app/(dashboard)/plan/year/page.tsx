@@ -4,7 +4,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import GoalSheet from "@/components/plan/goal-sheet";
 import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, DarkCard, Empty } from "@/components/ui/kit";
+import { Stack, Card, DarkCard, Empty } from "@/components/ui/kit";
 import { formatMonthShort, parseYearParam, todayISO } from "@/lib/finance";
 import {
   goalActiveIn,
@@ -33,7 +33,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
     : 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <Stack>
       <PeriodNav
         label={`${year} plan`}
         prevHref={`/plan/year?year=${year - 1}`}
@@ -85,7 +85,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
           learning, career. Each goal breaks down into months, weeks and days.
         </Empty>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid items-start gap-3 xl:grid-cols-2">
           {goals.map((goal, index) => {
             const p = progress[index];
             return (
@@ -199,6 +199,6 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
           })}
         </ul>
       )}
-    </div>
+    </Stack>
   );
 }

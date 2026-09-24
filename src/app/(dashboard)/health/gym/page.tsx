@@ -3,6 +3,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import AddPrep from "@/components/health/add-prep";
 import GymTracker from "@/components/health/gym-tracker";
 import NextBlock from "@/components/health/next-block";
+import { Rail, Stack } from "@/components/ui/kit";
 import PlanDialog from "@/components/health/plan-dialog";
 import {
   addDays,
@@ -43,8 +44,38 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
     week.some((d) => !d.rest && d.exercises.length > 0) &&
     !week.some((d) => d.exercises.some((e) => (e.phase ?? "main") !== "main"));
 
+  // The week at a glance, shown beside today's workout on a wide screen
+  const weekStrip = week.map((d, i) => {
+    const dayDate = addDays(weekStart, i);
+    const doneCount = d.exercises.filter((e) =>
+      (checkins[dayDate] ?? []).includes(e.id),
+    ).length;
+    const total = d.exercises.length;
+    const selected = dayDate === date;
+    const complete = total > 0 && doneCount === total;
+    return (
+      <li key={d.weekday}>
+        <Link
+          href={dayDate === today ? "/health/gym" : `/health/gym?date=${dayDate}`}
+          aria-current={selected ? "date" : undefined}
+          className={`flex h-full flex-col items-center gap-1 rounded-2xl border px-1 py-2 text-center transition ${
+            selected ? "border-ember/60 bg-ember/15" : "border-paper/10 hover:bg-paper/5"
+          }`}
+        >
+          <span className="text-xs text-paper/55">{WEEKDAYS[i].short}</span>
+          <span className="text-base leading-none">
+            {d.rest ? "😴" : complete ? "✅" : total ? `${doneCount}/${total}` : "—"}
+          </span>
+          <span className="w-full truncate text-[10px] text-paper/45">
+            {d.rest ? "Rest" : d.title || (total ? "Workout" : "")}
+          </span>
+        </Link>
+      </li>
+    );
+  });
+
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
+    <Stack>
       {finished && block && (
         <NextBlock
           blockNumber={block.number}
@@ -91,7 +122,22 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           </Link>
         </section>
       ) : (
-        <>
+        <Rail
+          at="2xl"
+          aside={
+            <section className="rounded-card border border-paper/10 bg-surface p-4">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h3 className="font-serif text-[19px]">This week</h3>
+                {block && ends && (
+                  <span className="text-xs text-paper/45">
+                    Block ends {formatShortDate(ends)}
+                  </span>
+                )}
+              </div>
+              <ul className="grid grid-cols-7 gap-1.5">{weekStrip}</ul>
+            </section>
+          }
+        >
           <section className="rounded-card border border-paper/10 bg-surface p-4">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
@@ -132,52 +178,8 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             />
           </section>
 
-          <section className="rounded-card border border-paper/10 bg-surface p-4">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h3 className="font-serif text-xl sm:text-2xl">This week</h3>
-              {block && ends && (
-                <span className="text-xs text-paper/45">
-                  Block ends {formatShortDate(ends)}
-                </span>
-              )}
-            </div>
-            <ul className="grid grid-cols-7 gap-1.5">
-              {week.map((d, i) => {
-                const dayDate = addDays(weekStart, i);
-                const doneCount = d.exercises.filter((e) =>
-                  (checkins[dayDate] ?? []).includes(e.id),
-                ).length;
-                const total = d.exercises.length;
-                const selected = dayDate === date;
-                const complete = total > 0 && doneCount === total;
-                return (
-                  <li key={d.weekday}>
-                    <Link
-                      href={dayDate === today ? "/health/gym" : `/health/gym?date=${dayDate}`}
-                      aria-current={selected ? "date" : undefined}
-                      className={`flex h-full flex-col items-center gap-1 rounded-2xl border px-1 py-2 text-center transition ${
-                        selected
-                          ? "border-ember/60 bg-ember/15"
-                          : "border-paper/10 hover:bg-paper/5"
-                      }`}
-                    >
-                      <span className="text-xs text-paper/55">
-                        {WEEKDAYS[i].short}
-                      </span>
-                      <span className="text-base leading-none">
-                        {d.rest ? "😴" : complete ? "✅" : total ? `${doneCount}/${total}` : "—"}
-                      </span>
-                      <span className="w-full truncate text-[10px] text-paper/45">
-                        {d.rest ? "Rest" : d.title || (total ? "Workout" : "")}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </>
+        </Rail>
       )}
-    </div>
+    </Stack>
   );
 }

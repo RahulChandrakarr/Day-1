@@ -82,7 +82,7 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <button type="button" onClick={() => open()} className={primaryButtonClass}>
         ＋ New note
       </button>
@@ -105,7 +105,7 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
       ) : shown.length === 0 ? (
         <Empty>No notes match “{query}”.</Empty>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {shown.map((note) => (
             <li key={note.id}>
               <article className="flex h-full flex-col rounded-card border border-paper/10 bg-surface p-4">

@@ -50,7 +50,7 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
 
   return (
     <PageShell title="Daily" description="Your journal for the day.">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <PeriodNav
           label={
             date === today
@@ -66,7 +66,7 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
           <PdfLink variant="icon" href={`/api/reports/journal?month=${date.slice(0, 7)}`} label="Month PDF" />
         </PeriodNav>
 
-        <nav aria-label="This week" className="grid grid-cols-7 gap-1.5">
+        <nav aria-label="This week" className="grid grid-cols-7 gap-1.5 2xl:max-w-4xl">
           {week.map((d) => {
             const day = byDate.get(d);
             const mood = MOODS.find((m) => m.value === day?.mood);

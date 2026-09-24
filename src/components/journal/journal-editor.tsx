@@ -149,8 +149,8 @@ export default function JournalEditor({
         />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
-        <div className="flex flex-col gap-4 lg:gap-6">
+      <div className="grid min-w-0 items-start gap-3 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-3">
           <Card title="How was today?">
             <div className="grid grid-cols-5 gap-1.5">
               {MOODS.map((m) => {
@@ -361,7 +361,7 @@ export default function JournalEditor({
           </Card>
         </div>
 
-        <div className="flex flex-col gap-4 lg:gap-6">
+        <div className="flex min-w-0 flex-col gap-3">
           <Card title="Notes">
             <div className="relative">
               <AutoTextarea

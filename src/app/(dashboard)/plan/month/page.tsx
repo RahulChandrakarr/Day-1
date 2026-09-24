@@ -4,7 +4,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import { LogProgress, SplitButton } from "@/components/plan/goal-actions";
 import ItemList from "@/components/plan/item-list";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, Empty } from "@/components/ui/kit";
+import { CardGrid, Stack, Card, Empty } from "@/components/ui/kit";
 import {
   addMonths,
   daysInMonth,
@@ -40,7 +40,7 @@ export default async function PlanMonthPage({
   const currentWeek = isCurrent ? weekOfMonth(today) : null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <Stack>
       <PeriodNav
         label={formatMonth(month)}
         prevHref={`/plan/month?month=${addMonths(month, -1)}`}
@@ -59,7 +59,8 @@ export default async function PlanMonthPage({
             : "No goals run in this month. Check the start and end months on the Year tab →"}
         </Empty>
       ) : (
-        goals.map((goal) => {
+        <CardGrid layout="triple">
+          {goals.map((goal) => {
           const p = goalProgress(goal, items, logs, { month });
           const target = periodTarget(goal, items, { month });
           const monthItems = items.filter(
@@ -95,7 +96,7 @@ export default async function PlanMonthPage({
               />
 
               <p className="mb-2 mt-4 text-xs font-medium text-paper/50">Weeks</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2">
                 {WEEKS.map((week) => {
                   const wp = goalProgress(goal, items, logs, { month, week });
                   const { from, to } = weekRange(month, week);
@@ -144,10 +145,11 @@ export default async function PlanMonthPage({
                   <LogProgress goal={goal} date={today} />
                 </div>
               )}
-            </Card>
-          );
-        })
+              </Card>
+            );
+          })}
+        </CardGrid>
       )}
-    </div>
+    </Stack>
   );
 }

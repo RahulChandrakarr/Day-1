@@ -4,6 +4,7 @@ import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
+import { CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   budgetReport,
@@ -92,7 +93,7 @@ export default async function YearlyFinancePage({
     : [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <PeriodNav
         label={key}
         prevHref={`/financial/yearly?year=${year - 1}`}
@@ -150,19 +151,22 @@ export default async function YearlyFinancePage({
         thisMonth={today.slice(0, 7)}
       />
 
-      <TransactionList
+      <CardGrid>
+        <TransactionList
+          categories={categories}
+          bankAccounts={banks}
+          title="Yearly entries"
+          transactions={yearlyEntries}
+          showDate
+          empty="No yearly entries this year."
+        />
 
-        categories={categories}
+        <CategoryManager categories={categories} />
+      </CardGrid>
 
-        bankAccounts={banks}
-        title="Yearly entries"
-        transactions={yearlyEntries}
-        showDate
-        empty="No yearly entries this year."
-      />
-
+      {/* Twelve pairs of bars: full width or nothing */}
       <section className="rounded-card border border-paper/10 bg-surface p-4">
-        <h3 className="font-serif text-2xl">Month by month</h3>
+        <h3 className="font-serif text-[19px]">Month by month</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {year}.
         </p>
@@ -172,8 +176,7 @@ export default async function YearlyFinancePage({
         </div>
       </section>
 
-      <CategoryManager categories={categories} />
-    </div>
+    </Stack>
   );
 }
 
@@ -213,13 +216,13 @@ function MonthPlanTable({
 
   return (
     <section className="rounded-card border border-paper/10 bg-surface p-4">
-      <h3 className="font-serif text-2xl">Monthly plans in {year}</h3>
+      <h3 className="font-serif text-[19px]">Monthly plans in {year}</h3>
       <p className="mb-4 text-sm text-paper/50">
         {planned.length === 0
           ? "No monthly plans yet. Open a month to set one."
           : `${planned.length} of 12 months planned · ${formatMoney(spentInPlanned)} spent against ${formatMoney(plannedTotal)} planned.`}
       </p>
-      <div className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <table className="w-full min-w-[34rem] text-sm">
           <thead>
             <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/45">

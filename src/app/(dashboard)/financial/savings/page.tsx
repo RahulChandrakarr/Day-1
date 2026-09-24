@@ -4,6 +4,7 @@ import AllocationCard from "@/components/finance/savings/allocation-card";
 import HoldingsCard from "@/components/finance/savings/holdings-card";
 import { AddAccountForm } from "@/components/finance/savings/savings-forms";
 import PeriodNav from "@/components/finance/period-nav";
+import { Rail, Stack } from "@/components/ui/kit";
 import {
   formatMoney,
   formatMonth,
@@ -127,7 +128,7 @@ export default async function SavingsPage({
   const yearNet = rows.reduce((s, r) => s + r.net, 0);
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {tiles.map((tile) => (
           <div
@@ -145,27 +146,28 @@ export default async function SavingsPage({
         ))}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        <div className="flex flex-col gap-6">
-          <HoldingsCard
-            holdings={stocks}
-            syncedLabel={timeAgo(sync?.synced_at ?? null)}
-            status={sync?.status ?? null}
-            message={sync?.message ?? null}
-            connected={growwConfigured()}
-          />
-          <AccountList accounts={summaries} />
-        </div>
-        <div className="flex flex-col gap-6">
-          <AllocationCard slices={slices} />
-          <AddAccountForm startOpen={accounts.length === 0 && stocks.length === 0} />
-        </div>
-      </div>
+      <Rail
+        aside={
+          <>
+            <AllocationCard slices={slices} />
+            <AddAccountForm startOpen={accounts.length === 0 && stocks.length === 0} />
+          </>
+        }
+      >
+        <HoldingsCard
+          holdings={stocks}
+          syncedLabel={timeAgo(sync?.synced_at ?? null)}
+          status={sync?.status ?? null}
+          message={sync?.message ?? null}
+          connected={growwConfigured()}
+        />
+        <AccountList accounts={summaries} />
+      </Rail>
 
       <section className="rounded-card border border-paper/10 bg-surface p-4">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 className="font-serif text-2xl">Saved each month</h3>
+            <h3 className="font-serif text-[19px]">Saved each month</h3>
             <p className="text-sm text-paper/50">
               {formatMoney(Math.max(yearNet, 0))} saved in {year}, against the
               savings target in each month&apos;s plan.
@@ -180,7 +182,7 @@ export default async function SavingsPage({
           isCurrent={year === thisYear}
           currentLabel="This year"
         />
-        <div className="-mx-5 mt-4 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+        <div className="-mx-4 mt-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <table className="w-full min-w-[32rem] text-sm">
             <thead>
               <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/45">
@@ -235,6 +237,6 @@ export default async function SavingsPage({
           </table>
         </div>
       </section>
-    </div>
+    </Stack>
   );
 }

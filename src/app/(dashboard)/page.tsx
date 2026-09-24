@@ -20,7 +20,7 @@ import { getBankAccounts, getCategories, getRecentTransactions } from "@/lib/fin
 import { getPlanDay } from "@/lib/plan-queries";
 import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
-import { Empty, ReminderChip, SectionHead } from "@/components/ui/kit";
+import { CardGrid, Empty, ReminderChip, Section, Stack } from "@/components/ui/kit";
 import TodoList from "@/components/dashboard/todo-list";
 import BriefingToggle from "@/components/assistant/briefing-toggle";
 import { AddNoteButton, AddTodoButton } from "@/components/dashboard/quick-add";
@@ -230,8 +230,8 @@ export default async function OverviewPage() {
     <PageShell title="Overview">
       {/* The day's summary spans the page; everything else sits in columns
           that fill a wide screen instead of one tall stack */}
-      <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-3 gap-2 lg:max-w-2xl">
+      <Stack>
+        <div className="grid grid-cols-3 gap-2 sm:max-w-md">
           <Suspense fallback={<div className="h-12 rounded-2xl bg-ember/60" />}>
             <AddEntry compact />
           </Suspense>
@@ -252,7 +252,7 @@ export default async function OverviewPage() {
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ember">
+            <p className="text-[13px] font-semibold text-ember">
               {allClear ? "All done today 🎉" : "Today so far"}
             </p>
             <p className="truncate text-[13px] lg:whitespace-normal">
@@ -278,16 +278,15 @@ export default async function OverviewPage() {
           limit={4}
         />
 
-        <div className="grid items-start gap-3 lg:grid-cols-2 lg:gap-x-6 2xl:grid-cols-3">
+        <CardGrid layout="triple">
           {pendingTodos.length > 0 && (
-            <section className="flex flex-col gap-3">
-              <SectionHead
-                title="To do"
-                href="/daily"
-                link={`${todos.length - pendingTodos.length}/${todos.length}`}
-              />
+            <Section
+              title="To do"
+              href="/daily"
+              link={`${todos.length - pendingTodos.length}/${todos.length}`}
+            >
               <TodoList date={today} todos={pendingTodos} />
-            </section>
+            </Section>
           )}
 
           {!hasPlan ? (
@@ -301,12 +300,11 @@ export default async function OverviewPage() {
             </Link>
           ) : (
             pendingExercises.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <SectionHead
-                  title={gymDay.title || "Workout"}
-                  href="/health/gym"
-                  link={`${doneIds.length}/${gymDay.exercises.length}`}
-                />
+              <Section
+                title={gymDay.title || "Workout"}
+                href="/health/gym"
+                link={`${doneIds.length}/${gymDay.exercises.length}`}
+              >
                 <GymChecklist
                   exercises={gymShown}
                   date={today}
@@ -316,11 +314,11 @@ export default async function OverviewPage() {
                   }
                 />
                 {pendingExercises.length > GYM_LIMIT && (
-                  <Link href="/health/gym" className="-mt-1 text-xs font-semibold text-ember">
+                  <Link href="/health/gym" className="text-xs font-semibold text-ember">
                     +{pendingExercises.length - GYM_LIMIT} more exercises →
                   </Link>
                 )}
-              </section>
+              </Section>
             )
           )}
 
@@ -328,12 +326,11 @@ export default async function OverviewPage() {
             <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
           ) : (
             pendingHabits.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <SectionHead
-                  title="Habits"
-                  href="/health/habits"
-                  link={`${habits.length - pendingHabits.length}/${habits.length}`}
-                />
+              <Section
+                title="Habits"
+                href="/health/habits"
+                link={`${habits.length - pendingHabits.length}/${habits.length}`}
+              >
                 <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface">
                   {pendingHabits.map((habit, i) => (
                     <HabitRow
@@ -349,13 +346,12 @@ export default async function OverviewPage() {
                     />
                   ))}
                 </ul>
-              </section>
+              </Section>
             )
           )}
 
           {/* Money: what's in the bank, then today / month */}
-          <section className="flex flex-col gap-2">
-            <SectionHead title="Money" href="/financial/daily" link="Open" />
+          <Section title="Money" href="/financial/daily" link="Open">
             <Link
               href="/financial/daily"
               className="flex flex-col rounded-card border border-paper/10 bg-surface"
@@ -412,7 +408,7 @@ export default async function OverviewPage() {
                 Top today: {topToday.map((c) => `${c.name} ${formatMoney(c.amount)}`).join(" · ")}
               </p>
             )}
-          </section>
+          </Section>
 
           {recent.length > 0 && (
             <TransactionList
@@ -431,19 +427,18 @@ export default async function OverviewPage() {
 
           {/* The rest of what the numbers say, which only the strip above showed */}
           {insights.length > 1 && (
-            <section className="flex flex-col gap-3">
-              <SectionHead title="Worth knowing" />
-              <ul className="flex flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
+            <Section title="Worth knowing">
+              <ul className="flex h-full flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
                 {insights.slice(1, 6).map((line) => (
                   <li key={line} className="py-2.5 text-[13px] text-paper/75">
                     {line}
                   </li>
                 ))}
               </ul>
-            </section>
+            </Section>
           )}
-        </div>
-      </div>
+        </CardGrid>
+      </Stack>
     </PageShell>
   );
 }

@@ -7,6 +7,7 @@ import {
 } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
+import { CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   addMonths,
@@ -46,7 +47,7 @@ function Card({
 }) {
   return (
     <section className="rounded-card border border-paper/10 bg-surface p-4">
-      <h3 className="font-serif text-2xl">{title}</h3>
+      <h3 className="font-serif text-[19px]">{title}</h3>
       {subtitle && <p className="text-sm text-paper/50">{subtitle}</p>}
       <div className="mt-4">{children}</div>
     </section>
@@ -129,7 +130,7 @@ export default async function TrackingPage({
   const unit = view === "daily" ? "Day" : view === "monthly" ? "Month" : "Year";
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       {/* Filters: one row above everything they scope */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex gap-1 rounded-xl border border-paper/10 p-1">
@@ -190,22 +191,22 @@ export default async function TrackingPage({
         <BalanceChart data={buckets} />
       </Card>
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <CardGrid layout="triple">
         <Card title="Where money went" subtitle="Expenses by category">
           <CategoryBars slices={spending} />
         </Card>
         <Card title="Where money came from" subtitle="Income by category">
           <CategoryBars slices={earning} />
         </Card>
-      </div>
 
-      <TransactionList
-        title="Biggest expenses"
-        transactions={biggest}
-        showDate
-        empty="No expenses in this range."
-      />
-    </div>
+        <TransactionList
+          title="Biggest expenses"
+          transactions={biggest}
+          showDate
+          empty="No expenses in this range."
+        />
+      </CardGrid>
+    </Stack>
   );
 }
 

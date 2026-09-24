@@ -1,7 +1,7 @@
 import PeriodNav from "@/components/finance/period-nav";
 import ItemList from "@/components/plan/item-list";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, Empty, SectionHead } from "@/components/ui/kit";
+import { Card, CardGrid, Empty, Section, Stack } from "@/components/ui/kit";
 import {
   addMonths,
   formatMonth,
@@ -47,7 +47,7 @@ export default async function PlanWeekPage({
   const isCurrent = today >= from && today <= to;
 
   return (
-    <div className="flex flex-col gap-4">
+    <Stack>
       <PeriodNav
         label={`Week ${week} · ${formatMonth(month).split(" ")[0]} ${Number(from.slice(8))}–${Number(to.slice(8))}`}
         prevHref={`/plan/week?${prev}`}
@@ -65,8 +65,9 @@ export default async function PlanWeekPage({
         </Empty>
       ) : (
         <>
-          <SectionHead title="This week's targets" href={`/plan/month?month=${month}`} link="Month" />
-          <Card>
+          <CardGrid>
+            <Section title="This week's targets" href={`/plan/month?month=${month}`} link="Month">
+              <Card>
             <ul className="flex flex-col gap-4">
               {goals.map((goal) => {
                 const p = goalProgress(goal, items, logs, { month, week });
@@ -94,11 +95,12 @@ export default async function PlanWeekPage({
                   </li>
                 );
               })}
-            </ul>
-          </Card>
+                </ul>
+              </Card>
+            </Section>
 
-          <SectionHead title="Day by day" />
-          <ul className="flex flex-col gap-3">
+            <Section title="Day by day">
+              <ul className="flex flex-col gap-2">
             {days.map((day) => {
               const dayItems = items.filter(
                 (i) => i.level === "day" && i.period === day,
@@ -130,9 +132,11 @@ export default async function PlanWeekPage({
                 </li>
               );
             })}
-          </ul>
+              </ul>
+            </Section>
+          </CardGrid>
         </>
       )}
-    </div>
+    </Stack>
   );
 }

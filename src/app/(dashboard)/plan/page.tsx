@@ -2,7 +2,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import { LogProgress } from "@/components/plan/goal-actions";
 import ItemList from "@/components/plan/item-list";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, DarkCard, Empty, SectionHead } from "@/components/ui/kit";
+import { Card, CardGrid, DarkCard, Empty, Section, Stack } from "@/components/ui/kit";
 import {
   addDays,
   formatFullDate,
@@ -34,7 +34,7 @@ export default async function PlanTodayPage({
   const numeric = goals.filter((g) => g.target_value);
 
   return (
-    <div className="flex flex-col gap-4">
+    <Stack>
       <PeriodNav
         label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
         prevHref={`/plan?date=${addDays(date, -1)}`}
@@ -65,22 +65,23 @@ export default async function PlanTodayPage({
             </p>
           </DarkCard>
 
-          <SectionHead title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week" />
-          <Card>
-            <ItemList
-              goals={goals}
-              level="day"
-              period={date}
-              items={dayItems}
-              placeholder="What will you do today?"
-              showGoal
-            />
-          </Card>
+          <CardGrid>
+            <Section title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week">
+              <Card>
+                <ItemList
+                  goals={goals}
+                  level="day"
+                  period={date}
+                  items={dayItems}
+                  placeholder="What will you do today?"
+                  showGoal
+                />
+              </Card>
+            </Section>
 
-          {numeric.length > 0 && (
-            <>
-              <SectionHead title="Log progress" />
-              <ul className="flex flex-col gap-3">
+            {numeric.length > 0 && (
+              <Section title="Log progress">
+                <ul className="flex flex-col gap-2">
                 {numeric.map((goal) => {
                   const p = goalProgress(goal, items, logs, { month, week });
                   const dayTarget = periodTarget(goal, items, { day: date });
@@ -104,11 +105,12 @@ export default async function PlanTodayPage({
                     </li>
                   );
                 })}
-              </ul>
-            </>
-          )}
+                </ul>
+              </Section>
+            )}
+          </CardGrid>
         </>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -2,6 +2,7 @@ import EmiList from "@/components/finance/emi/emi-list";
 import { emiSummaries } from "@/lib/emis";
 import { formatMoney, formatShortDate, todayISO } from "@/lib/finance";
 import { getEmiPayments, getEmis } from "@/lib/finance-queries";
+import { Stack } from "@/components/ui/kit";
 
 export default async function EmiPage() {
   const today = todayISO();
@@ -58,7 +59,7 @@ export default async function EmiPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile, i) => (
           <div
@@ -87,6 +88,6 @@ export default async function EmiPage() {
       </p>
 
       <EmiList emis={summaries} />
-    </div>
+    </Stack>
   );
 }

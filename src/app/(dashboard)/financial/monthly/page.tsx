@@ -3,6 +3,7 @@ import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
+import { CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   addMonths,
@@ -82,7 +83,7 @@ export default async function MonthlyFinancePage({
   const expenseHint = report ? `of ${formatMoney(report.planned)} planned` : undefined;
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <PeriodNav
         label={formatMonth(month)}
         prevHref={`/financial/monthly?month=${addMonths(month, -1)}`}
@@ -132,19 +133,22 @@ export default async function MonthlyFinancePage({
         }))}
       />
 
-      <TransactionList
+      <CardGrid>
+        <TransactionList
+          categories={categories}
+          bankAccounts={banks}
+          title="Monthly entries"
+          transactions={monthlyEntries}
+          showDate
+          empty="No monthly entries this month."
+        />
 
-        categories={categories}
+        <CategoryManager categories={categories} />
+      </CardGrid>
 
-        bankAccounts={banks}
-        title="Monthly entries"
-        transactions={monthlyEntries}
-        showDate
-        empty="No monthly entries this month."
-      />
-
+      {/* The chart needs the whole width: a month is up to 31 pairs of bars */}
       <section className="rounded-card border border-paper/10 bg-surface p-4">
-        <h3 className="font-serif text-2xl">Day by day</h3>
+        <h3 className="font-serif text-[19px]">Day by day</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {formatMonth(month)}.
         </p>
@@ -154,7 +158,6 @@ export default async function MonthlyFinancePage({
         </div>
       </section>
 
-      <CategoryManager categories={categories} />
-    </div>
+    </Stack>
   );
 }

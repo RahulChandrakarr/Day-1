@@ -51,7 +51,7 @@ export default function PeopleList({
             : "All settled. Nobody owes anything."}
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-3 grid items-start gap-2 lg:grid-cols-2 2xl:grid-cols-3">
           <AnimatePresence initial={false}>
             {shown.map((person) => (
               <PersonCard

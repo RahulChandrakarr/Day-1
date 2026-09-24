@@ -17,7 +17,7 @@ export default function BudgetReportView({
   const diff = planned - actual;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Headline report={report} periodLabel={periodLabel} diff={diff} />
 
       {planned > 0 && (

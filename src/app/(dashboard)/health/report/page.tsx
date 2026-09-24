@@ -1,4 +1,5 @@
 import PeriodNav from "@/components/finance/period-nav";
+import { CardGrid, Stack } from "@/components/ui/kit";
 import PdfLink from "@/components/settings/pdf-link";
 import { addMonths, formatMonth, parseMonthParam } from "@/lib/finance";
 import { reasonLabel } from "@/lib/health";
@@ -17,7 +18,7 @@ export default async function ReportPage({
   const lows = changes.filter((c) => !c.good);
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
+    <Stack>
       <PeriodNav
         label={formatMonth(month)}
         prevHref={`/health/report?month=${previousMonth}`}
@@ -76,26 +77,27 @@ export default async function ReportPage({
             />
           </div>
 
-          {(growth.length > 0 || lows.length > 0) && (
-            <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
-              <Card title="Growth 📈">
-                {growth.length ? (
-                  <ChangeList items={growth} tone="good" />
-                ) : (
-                  <Empty>Nothing clearly up on last month yet.</Empty>
-                )}
-              </Card>
-              <Card title="Slipping 📉">
-                {lows.length ? (
-                  <ChangeList items={lows} tone="bad" />
-                ) : (
-                  <Empty>Nothing went backwards. Good month.</Empty>
-                )}
-              </Card>
-            </div>
-          )}
+          <CardGrid layout="triple">
+            {(growth.length > 0 || lows.length > 0) && (
+              <>
+                <Card title="Growth 📈">
+                  {growth.length ? (
+                    <ChangeList items={growth} tone="good" />
+                  ) : (
+                    <Empty>Nothing clearly up on last month yet.</Empty>
+                  )}
+                </Card>
+                <Card title="Slipping 📉">
+                  {lows.length ? (
+                    <ChangeList items={lows} tone="bad" />
+                  ) : (
+                    <Empty>Nothing went backwards. Good month.</Empty>
+                  )}
+                </Card>
+              </>
+            )}
 
-          <Card title="Gym">
+            <Card title="Gym">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Bar
@@ -238,10 +240,11 @@ export default async function ReportPage({
             ) : (
               <Empty>No weigh-ins this month. Add one on the Body tab.</Empty>
             )}
-          </Card>
+            </Card>
+          </CardGrid>
         </>
       )}
-    </div>
+    </Stack>
   );
 }
 

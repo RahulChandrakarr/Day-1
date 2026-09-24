@@ -50,7 +50,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
               </p>
             </div>
           )}
-          <ul className="mt-4 grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
+          <ul className="mt-3 grid items-start gap-2 lg:grid-cols-2 2xl:grid-cols-3">
             <AnimatePresence initial={false}>
               {emis.map((emi) => (
                 <EmiCard key={emi.id} emi={emi} />

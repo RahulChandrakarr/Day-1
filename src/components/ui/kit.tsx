@@ -227,9 +227,13 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section className={`flex min-w-0 flex-col gap-2 ${className}`}>
+    <section className={`flex h-full min-w-0 flex-col gap-2 ${className}`}>
       <SectionHead title={title} href={href} link={link} aside={aside} />
-      {children}
+      {/* The card under the heading takes the leftover height, so cards in a
+          row end level; a footnote after it keeps its own height */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 [&>*:first-child]:flex-1">
+        {children}
+      </div>
     </section>
   );
 }

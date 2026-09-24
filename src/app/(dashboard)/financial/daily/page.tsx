@@ -1,4 +1,5 @@
 import BankAccounts from "@/components/finance/bank-accounts";
+import { Card, Rail, Stack } from "@/components/ui/kit";
 import CategoryManager from "@/components/finance/category-manager";
 import { CategoryBars } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
@@ -65,7 +66,7 @@ export default async function DailyFinancePage({
   const flow = cashFlow(transactions, dayDebts, daySavings);
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <PeriodNav
         label={
           date === today
@@ -96,34 +97,34 @@ export default async function DailyFinancePage({
         }
       />
 
-      {/* Phones: accounts, entries, spending. Wide screens: entries on the
-          left, accounts and spending beside them. */}
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-          <BankAccounts accounts={banks} asOf={asOf} today={today} />
-        </div>
-        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
-          <TransactionList
-            categories={categories}
-            bankAccounts={banks}
-            title="Entries"
-            transactions={transactions}
-            debts={dayDebts}
-            savings={daySavings}
-            emis={dayEmis}
-            transfers={transfers}
-            empty="Nothing logged for this day yet. Tap Add entry above."
-          />
-        </div>
-        {spending.length > 0 && (
-          <section className="rounded-card border border-paper/10 bg-surface p-4 lg:col-start-2">
-            <h3 className="mb-4 font-serif text-2xl">Spending by category</h3>
-            <CategoryBars slices={spending} />
-          </section>
-        )}
-      </div>
+      {/* Entries lead; accounts and spending sit beside them once there's room */}
+      <Rail
+        aside={
+          <>
+            <BankAccounts accounts={banks} asOf={asOf} today={today} />
+            {spending.length > 0 && (
+              <Card>
+                <h3 className="mb-3 font-serif text-[19px]">Spending by category</h3>
+                <CategoryBars slices={spending} />
+              </Card>
+            )}
+          </>
+        }
+      >
+        <TransactionList
+          categories={categories}
+          bankAccounts={banks}
+          title="Entries"
+          transactions={transactions}
+          debts={dayDebts}
+          savings={daySavings}
+          emis={dayEmis}
+          transfers={transfers}
+          empty="Nothing logged for this day yet. Tap Add entry above."
+        />
+      </Rail>
 
       <CategoryManager categories={categories} />
-    </div>
+    </Stack>
   );
 }

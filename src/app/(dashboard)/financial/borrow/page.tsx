@@ -17,6 +17,7 @@ import {
   getPeople,
   getTransactions,
 } from "@/lib/finance-queries";
+import { Stack } from "@/components/ui/kit";
 
 export default async function BorrowPage() {
   const today = todayISO();
@@ -68,7 +69,7 @@ export default async function BorrowPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <Stack>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {tiles.map((tile, i) => (
           <div
@@ -105,6 +106,6 @@ export default async function BorrowPage() {
         plans={plans}
         monthLabel={formatMonthShort(month)}
       />
-    </div>
+    </Stack>
   );
 }

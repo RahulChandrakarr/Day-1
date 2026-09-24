@@ -1,4 +1,5 @@
 import PeriodNav from "@/components/finance/period-nav";
+import { CardGrid, Stack } from "@/components/ui/kit";
 import AddHabit from "@/components/health/add-habit";
 import HabitCard from "@/components/health/habit-card";
 import {
@@ -26,7 +27,7 @@ export default async function HabitsPage({
   const doneToday = checkins.filter((c) => c.check_date === date && c.done).length;
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
+    <Stack>
       <PeriodNav
         label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
         prevHref={`/health/habits?date=${addDays(date, -1)}`}
@@ -53,7 +54,7 @@ export default async function HabitsPage({
           </p>
         </section>
       ) : (
-        <div className="grid items-start gap-3 md:grid-cols-2 md:gap-4">
+        <CardGrid layout="dense" align="start">
           {habits.map((habit) => {
             const own = checkins.filter((c) => c.habit_id === habit.id);
             const missed = own.filter((c) => !c.done && c.reason);
@@ -83,10 +84,10 @@ export default async function HabitsPage({
               </div>
             );
           })}
-        </div>
+        </CardGrid>
       )}
 
       <AddHabit existing={habits.map((h) => h.name)} />
-    </div>
+    </Stack>
   );
 }
