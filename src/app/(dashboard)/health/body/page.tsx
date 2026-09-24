@@ -16,6 +16,7 @@ import {
   getBodyProfile,
   getCurrentBlock,
 } from "@/lib/health-queries";
+import { CardGrid } from "@/components/ui/kit";
 
 const kg = (n: number) => `${n.toFixed(1)} kg`;
 
@@ -57,7 +58,7 @@ export default async function BodyPage() {
     t === "good" ? "text-moss" : t === "bad" ? "text-red-700 dark:text-red-300" : t === "warn" ? "text-chart-expense" : "";
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-6">
+    <CardGrid>
       <BodyForm
         profile={profile}
         latest={latest}
@@ -65,7 +66,7 @@ export default async function BodyPage() {
         hasBlock={Boolean(block)}
       />
 
-      <div className="flex flex-col gap-4 lg:gap-6">
+      <div className="flex min-w-0 flex-col gap-3">
         <section className="rounded-card border border-paper/10 bg-surface p-4">
           <h3 className="font-serif text-xl sm:text-2xl">Your numbers</h3>
           {bmiValue ? (
@@ -147,12 +148,12 @@ export default async function BodyPage() {
         </section>
 
         <section className="rounded-card border border-paper/10 bg-surface p-4">
-          <h3 className="mb-3 font-serif text-xl sm:text-2xl">Weight</h3>
+          <h3 className="mb-3 font-serif text-[19px]">Weight</h3>
           <WeightChart logs={logs} />
           <LogList logs={logs} />
         </section>
       </div>
-    </div>
+    </CardGrid>
   );
 }
 

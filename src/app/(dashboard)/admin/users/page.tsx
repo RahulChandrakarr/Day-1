@@ -3,6 +3,7 @@ import { requireAdmin, type Profile } from "@/lib/auth";
 import PageShell from "@/components/dashboard/page-shell";
 import AddUserForm from "./add-user-form";
 import UserList from "./user-list";
+import { Rail } from "@/components/ui/kit";
 
 export const metadata: Metadata = {
   title: "Users · Day One",
@@ -18,10 +19,9 @@ export default async function UsersPage() {
 
   return (
     <PageShell title="Users" description="Everyone who can sign in to Day One.">
-      <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
+      <Rail aside={<AddUserForm />}>
         <UserList users={users ?? []} />
-        <AddUserForm />
-      </div>
+      </Rail>
     </PageShell>
   );
 }

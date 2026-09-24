@@ -9,7 +9,7 @@ import {
   updateDocument,
 } from "@/app/(dashboard)/settings/actions";
 import Sheet from "@/components/ui/sheet";
-import { Empty, Field, inputClass, primaryButtonClass } from "@/components/ui/kit";
+import { CardList, Empty, Field, inputClass, primaryButtonClass } from "@/components/ui/kit";
 import { formatShortDate } from "@/lib/finance";
 import type { DocumentRow } from "@/lib/profile-queries";
 import { createClient } from "@/lib/supabase/client";
@@ -100,11 +100,11 @@ export default function DocumentsBoard({
             : "No files match."}
         </Empty>
       ) : (
-        <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface">
+        <CardList>
           {shown.map((doc) => (
             <DocumentItem key={doc.id} doc={doc} folders={folders} />
           ))}
-        </ul>
+        </CardList>
       )}
 
       <UploadSheet

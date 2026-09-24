@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/kit";
+import { Card, CardGrid, Stack } from "@/components/ui/kit";
 import { addMonths, formatMonth } from "@/lib/finance";
 import PdfLink from "./pdf-link";
 
@@ -40,16 +40,16 @@ const REPORTS: { kind: Kind; emoji: string; title: string; about: string; yearly
 
 export default function ReportsPanel({ today }: { today: string }) {
   return (
-    <>
+    <Stack>
       <p className="text-sm text-paper/55">
         Pick a period and download a PDF you can save, print or share.
       </p>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <CardGrid layout="wide">
         {REPORTS.map((r) => (
           <ReportCard key={r.kind} report={r} today={today} />
         ))}
-      </div>
-    </>
+      </CardGrid>
+    </Stack>
   );
 }
 

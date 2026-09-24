@@ -129,6 +129,8 @@ export function CardHead({
 const LAYOUTS = {
   // Ordinary cards
   pair: "lg:grid-cols-2",
+  // Cards holding controls or a wide chart: they pair later
+  wide: "xl:grid-cols-2",
   // Cards that hold a short list, so a third column still reads
   triple: "lg:grid-cols-2 2xl:grid-cols-3",
   // Small self-contained cards: habits, notes
@@ -393,14 +395,34 @@ export function Skeleton({ className = "" }: { className?: string }) {
   );
 }
 
-export function PageSkeleton({ rows = 3 }: { rows?: number }) {
+// The placeholder has to claim the same shape the page will take, or the
+// content visibly jumps into columns when it arrives.
+export function PageSkeleton({
+  rows = 3,
+  layout,
+  rail = false,
+}: {
+  rows?: number;
+  layout?: keyof typeof LAYOUTS;
+  rail?: boolean;
+}) {
+  const blocks = Array.from({ length: rows }, (_, i) => (
+    <Skeleton key={i} className={i % 2 ? "h-40" : "h-56"} />
+  ));
   return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-12 rounded-2xl" />
-      <Skeleton className="h-20 rounded-2xl" />
-      {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className={i % 2 ? "h-32" : "h-40"} />
-      ))}
+    <div className="flex flex-col gap-3">
+      <Skeleton className="h-11 max-w-xs rounded-inset" />
+      <Skeleton className="h-20" />
+      {rail ? (
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,var(--rail))]">
+          <Skeleton className="h-96" />
+          <Skeleton className="h-56" />
+        </div>
+      ) : layout ? (
+        <div className={`grid gap-3 ${LAYOUTS[layout]}`}>{blocks}</div>
+      ) : (
+        blocks
+      )}
       <span className="sr-only">Loading…</span>
     </div>
   );

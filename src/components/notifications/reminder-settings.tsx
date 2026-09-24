@@ -10,6 +10,7 @@ import {
   type ReminderKind,
   type ReminderSetting,
 } from "@/lib/reminders";
+import { Rail } from "@/components/ui/kit";
 
 type Permission = "default" | "granted" | "denied" | "unsupported";
 
@@ -136,73 +137,75 @@ export default function ReminderSettings({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="rounded-card border border-paper/10 bg-surface p-4">
-        <h3 className="font-serif text-xl sm:text-2xl">This device</h3>
-        {permission === "unsupported" ? (
-          <p className="mt-2 text-sm text-paper/55">
-            This browser can&apos;t show notifications. On iPhone, add Day One to
-            your home screen first, then open it from there.
-          </p>
-        ) : (
-          <>
-            <p className="mt-1 text-sm text-paper/55">
-              {deviceCount === 0
-                ? "No device is set up yet."
-                : `${deviceCount} device${deviceCount === 1 ? "" : "s"} set up.`}{" "}
-              Reminders arrive even when the app is closed.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={enableOnThisDevice}
-                disabled={busy}
-                className="h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60"
-              >
-                {permission === "granted"
-                  ? "Set up this device"
-                  : "Allow notifications"}
-              </button>
-              <button
-                type="button"
-                onClick={sendTest}
-                disabled={busy || deviceCount === 0}
-                className="h-11 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5 disabled:opacity-50"
-              >
-                Send a test
-              </button>
-              {deviceCount > 0 && (
-                <button
-                  type="button"
-                  onClick={turnOffHere}
-                  disabled={busy}
-                  className="h-11 rounded-xl px-4 text-sm text-paper/50 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+    <Rail
+      aside={
+          <section className="rounded-card border border-paper/10 bg-surface p-4">
+            <h3 className="font-serif text-[19px]">This device</h3>
+            {permission === "unsupported" ? (
+              <p className="mt-2 text-sm text-paper/55">
+                This browser can&apos;t show notifications. On iPhone, add Day One to
+                your home screen first, then open it from there.
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 text-sm text-paper/55">
+                  {deviceCount === 0
+                    ? "No device is set up yet."
+                    : `${deviceCount} device${deviceCount === 1 ? "" : "s"} set up.`}{" "}
+                  Reminders arrive even when the app is closed.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={enableOnThisDevice}
+                    disabled={busy}
+                    className="h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60"
+                  >
+                    {permission === "granted"
+                      ? "Set up this device"
+                      : "Allow notifications"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={sendTest}
+                    disabled={busy || deviceCount === 0}
+                    className="h-11 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5 disabled:opacity-50"
+                  >
+                    Send a test
+                  </button>
+                  {deviceCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={turnOffHere}
+                      disabled={busy}
+                      className="h-11 rounded-xl px-4 text-sm text-paper/50 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+                    >
+                      Turn off here
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+            <AnimatePresence>
+              {(message || error) && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  role={error ? "alert" : "status"}
+                  className={`mt-3 text-sm ${
+                    error ? "text-red-700 dark:text-red-300" : "text-moss"
+                  }`}
                 >
-                  Turn off here
-                </button>
+                  {error ?? message}
+                </motion.p>
               )}
-            </div>
-          </>
-        )}
-        <AnimatePresence>
-          {(message || error) && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              role={error ? "alert" : "status"}
-              className={`mt-3 text-sm ${
-                error ? "text-red-700 dark:text-red-300" : "text-moss"
-              }`}
-            >
-              {error ?? message}
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </section>
-
+            </AnimatePresence>
+          </section>
+      }
+    >
       <section className="rounded-card border border-paper/10 bg-surface p-4">
-        <h3 className="font-serif text-xl sm:text-2xl">Reminders</h3>
+        <h3 className="font-serif text-[19px]">Reminders</h3>
         <p className="mt-1 text-sm text-paper/55">
           Times are Indian time. A reminder is skipped when the thing is already
           done.
@@ -210,7 +213,7 @@ export default function ReminderSettings({
         <ul className="mt-4 flex flex-col gap-3">
           {pinned && (
             <li
-              className={`flex flex-wrap items-center gap-3 rounded-2xl border p-3 transition ${
+              className={`flex flex-wrap items-center gap-3 rounded-inset border p-3 transition ${
                 pinned.enabled
                   ? "border-paper/15 bg-ink"
                   : "border-paper/10 opacity-70"
@@ -248,7 +251,7 @@ export default function ReminderSettings({
             return (
               <li
                 key={reminder.kind}
-                className={`flex flex-wrap items-center gap-3 rounded-2xl border p-3 transition ${
+                className={`flex flex-wrap items-center gap-3 rounded-inset border p-3 transition ${
                   setting.enabled
                     ? "border-paper/15 bg-ink"
                     : "border-paper/10 opacity-70"
@@ -297,6 +300,6 @@ export default function ReminderSettings({
           })}
         </ul>
       </section>
-    </div>
+    </Rail>
   );
 }

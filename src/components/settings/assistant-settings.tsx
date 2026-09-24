@@ -9,14 +9,7 @@ import {
 } from "@/app/(dashboard)/settings/actions";
 import { handsFree, useHandsFree } from "@/components/assistant/hands-free";
 import { canListen } from "@/components/assistant/speech";
-import {
-  Card,
-  CardHead,
-  Field,
-  inputClass,
-  primaryButtonClass,
-  quietButtonClass,
-} from "@/components/ui/kit";
+import { Card, CardGrid, CardHead, Field, inputClass, primaryButtonClass, quietButtonClass } from "@/components/ui/kit";
 import type { Memory } from "@/lib/assistant-memory";
 
 type Message = { ok: boolean; text: string } | null;
@@ -41,11 +34,11 @@ export default function AssistantSettings({
   memories: Memory[];
 }) {
   return (
-    <>
+    <CardGrid>
       <NameCard name={name} />
       <HandsFreeCard name={name} />
       <MemoryCard name={name} memories={memories} />
-    </>
+    </CardGrid>
   );
 }
 

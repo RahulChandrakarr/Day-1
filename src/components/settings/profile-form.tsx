@@ -7,14 +7,7 @@ import { useRef, useState, useTransition } from "react";
 import { saveBodyProfile } from "@/app/(dashboard)/health/actions";
 import { logout } from "@/app/login/actions";
 import { changePassword, updateProfile } from "@/app/(dashboard)/settings/actions";
-import {
-  Card,
-  CardHead,
-  Field,
-  inputClass,
-  primaryButtonClass,
-  quietButtonClass,
-} from "@/components/ui/kit";
+import { Band, Card, CardGrid, CardHead, Field, inputClass, primaryButtonClass, quietButtonClass } from "@/components/ui/kit";
 import { ACTIVITIES, GOALS, type BodyProfile } from "@/lib/fitness";
 import { createClient } from "@/lib/supabase/client";
 
@@ -58,7 +51,7 @@ export default function ProfileForm({
   body: BodyProfile | null;
 }) {
   return (
-    <>
+    <CardGrid>
       <AboutCard
         userId={userId}
         email={email}
@@ -68,12 +61,14 @@ export default function ProfileForm({
       />
       <BodyCard body={body ?? DEFAULT_BODY} />
       <PasswordCard />
-      <form action={logout}>
-        <button type="submit" className={`${quietButtonClass} w-full text-red-700 dark:text-red-300`}>
-          Sign out
-        </button>
-      </form>
-    </>
+      <Band className="max-w-xs">
+        <form action={logout}>
+          <button type="submit" className={`${quietButtonClass} w-full text-red-700 dark:text-red-300`}>
+            Sign out
+          </button>
+        </form>
+      </Band>
+    </CardGrid>
   );
 }
 
