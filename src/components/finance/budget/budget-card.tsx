@@ -9,7 +9,7 @@ import type {
   BudgetScope,
   Category,
 } from "@/lib/finance";
-import { PencilIcon, TrashIcon } from "@/components/ui/kit";
+import { Card, PencilIcon, TrashIcon } from "@/components/ui/kit";
 import BudgetEditor, { type PlanPerson } from "./budget-editor";
 import BudgetReportView from "./budget-report";
 
@@ -46,7 +46,7 @@ export default function BudgetCard({
     mode === "edit" ? budget : mode === "copy" ? previous : null;
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-serif text-2xl">
@@ -142,6 +142,6 @@ export default function BudgetCard({
           )}
         </motion.div>
       </AnimatePresence>
-    </section>
+    </Card>
   );
 }

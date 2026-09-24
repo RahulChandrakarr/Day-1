@@ -13,6 +13,7 @@ import {
   type AccountSummary,
   type InvestmentEntry,
 } from "@/lib/investments";
+import { Card } from "@/components/ui/kit";
 
 const signed = (n: number) => `${n < 0 ? "−" : "+"}${formatMoney(Math.abs(n))}`;
 const pct = (gain: number, base: number) =>
@@ -26,7 +27,7 @@ export default function AccountList({
   const total = accounts.reduce((s, a) => s + Math.max(a.current, 0), 0);
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <h3 className="font-serif text-2xl">Accounts</h3>
 
       {accounts.length === 0 ? (
@@ -65,7 +66,7 @@ export default function AccountList({
           </ul>
         </>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -86,7 +87,7 @@ function AccountCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: pending ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden rounded-2xl border border-paper/10 bg-ink"
+      className="overflow-hidden rounded-inset border border-paper/10 bg-ink"
     >
       <button
         type="button"

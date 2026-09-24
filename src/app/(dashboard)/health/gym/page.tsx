@@ -3,7 +3,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import AddPrep from "@/components/health/add-prep";
 import GymTracker from "@/components/health/gym-tracker";
 import NextBlock from "@/components/health/next-block";
-import { Rail, Stack } from "@/components/ui/kit";
+import { Card, Rail, Stack } from "@/components/ui/kit";
 import PlanDialog from "@/components/health/plan-dialog";
 import {
   addDays,
@@ -125,7 +125,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
         <Rail
           at="2xl"
           aside={
-            <section className="rounded-card border border-paper/10 bg-surface p-4">
+            <Card>
               <div className="mb-3 flex items-baseline justify-between gap-3">
                 <h3 className="font-serif text-[19px]">This week</h3>
                 {block && ends && (
@@ -135,10 +135,10 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
                 )}
               </div>
               <ul className="grid grid-cols-7 gap-1.5">{weekStrip}</ul>
-            </section>
+            </Card>
           }
         >
-          <section className="rounded-card border border-paper/10 bg-surface p-4">
+          <Card>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wider text-paper/45">
@@ -176,7 +176,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
               doneIds={checkins[date] ?? []}
               week={blockWeekNow}
             />
-          </section>
+          </Card>
 
         </Rail>
       )}

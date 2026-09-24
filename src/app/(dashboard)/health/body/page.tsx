@@ -16,7 +16,7 @@ import {
   getBodyProfile,
   getCurrentBlock,
 } from "@/lib/health-queries";
-import { CardGrid } from "@/components/ui/kit";
+import { Card, CardGrid } from "@/components/ui/kit";
 
 const kg = (n: number) => `${n.toFixed(1)} kg`;
 
@@ -67,7 +67,7 @@ export default async function BodyPage() {
       />
 
       <div className="flex min-w-0 flex-col gap-3">
-        <section className="rounded-card border border-paper/10 bg-surface p-4">
+        <Card>
           <h3 className="font-serif text-xl sm:text-2xl">Your numbers</h3>
           {bmiValue ? (
             <>
@@ -145,13 +145,13 @@ export default async function BodyPage() {
               Add your height and weight to see BMI, calories and your plan.
             </p>
           )}
-        </section>
+        </Card>
 
-        <section className="rounded-card border border-paper/10 bg-surface p-4">
+        <Card>
           <h3 className="mb-3 font-serif text-[19px]">Weight</h3>
           <WeightChart logs={logs} />
           <LogList logs={logs} />
-        </section>
+        </Card>
       </div>
     </CardGrid>
   );

@@ -7,6 +7,7 @@ import { AddEmiButton, EditEmiForm, PayForm } from "@/components/finance/emi/emi
 import Sheet from "@/components/ui/sheet";
 import { dueDayLabel, type EmiPayment, type EmiSummary } from "@/lib/emis";
 import { formatMoney, formatShortDate } from "@/lib/finance";
+import { Card } from "@/components/ui/kit";
 
 function monthsLabel(emi: EmiSummary) {
   if (emi.tenure)
@@ -20,7 +21,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
   const totalDue = running.reduce((s, e) => s + e.remaining, 0);
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-serif text-2xl">Your EMIs</h3>
         <AddEmiButton />
@@ -59,7 +60,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
           </ul>
         </>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -76,7 +77,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: pending ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden rounded-2xl border border-paper/10 bg-ink"
+      className="overflow-hidden rounded-inset border border-paper/10 bg-ink"
     >
       <button
         type="button"

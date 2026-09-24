@@ -7,7 +7,7 @@ import {
 } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
-import { CardGrid, Stack } from "@/components/ui/kit";
+import { Card as Shell, CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   addMonths,
@@ -46,11 +46,11 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Shell>
       <h3 className="font-serif text-[19px]">{title}</h3>
       {subtitle && <p className="text-sm text-paper/50">{subtitle}</p>}
-      <div className="mt-4">{children}</div>
-    </section>
+      <div className="mt-3">{children}</div>
+    </Shell>
   );
 }
 

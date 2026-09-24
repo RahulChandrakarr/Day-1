@@ -10,6 +10,7 @@ import {
 } from "@/app/(dashboard)/financial/bank/actions";
 import Sheet from "@/components/ui/sheet";
 import { formatMoney, formatShortDate, type BankAccount } from "@/lib/finance";
+import { Card } from "@/components/ui/kit";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
@@ -40,7 +41,7 @@ export default function BankAccounts({
   const total = accounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
-    <section className="min-w-0 rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-serif text-2xl">Bank accounts</h3>
@@ -125,7 +126,7 @@ export default function BankAccounts({
           <TransferForm accounts={accounts} today={today} onDone={() => setMoving(false)} />
         )}
       </Sheet>
-    </section>
+    </Card>
   );
 }
 

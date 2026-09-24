@@ -20,6 +20,7 @@ import {
 } from "@/lib/finance";
 import type { InvestmentEntry } from "@/lib/investments";
 import type { EmiPayment } from "@/lib/emis";
+import { Card } from "@/components/ui/kit";
 
 export type SavingsActivity = InvestmentEntry & {
   accountName: string;
@@ -284,7 +285,7 @@ export default function TransactionList({
     items.sort((a, b) => b.on.localeCompare(a.on) || b.at.localeCompare(a.at));
 
   return (
-    <section className="min-w-0 rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">{title}</h3>
         {aside ?? (
@@ -389,6 +390,6 @@ export default function TransactionList({
           )}
         </Sheet>
       )}
-    </section>
+    </Card>
   );
 }

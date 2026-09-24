@@ -3,7 +3,7 @@ import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
-import { CardGrid, Stack } from "@/components/ui/kit";
+import { Card, CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   addMonths,
@@ -147,7 +147,7 @@ export default async function MonthlyFinancePage({
       </CardGrid>
 
       {/* The chart needs the whole width: a month is up to 31 pairs of bars */}
-      <section className="rounded-card border border-paper/10 bg-surface p-4">
+      <Card>
         <h3 className="font-serif text-[19px]">Day by day</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {formatMonth(month)}.
@@ -156,7 +156,7 @@ export default async function MonthlyFinancePage({
         <div className="mt-4">
           <BucketTable data={dayBuckets(month, transactions)} heading="Day" />
         </div>
-      </section>
+      </Card>
 
     </Stack>
   );

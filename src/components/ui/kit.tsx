@@ -57,7 +57,7 @@ export function DarkCard({
 }) {
   return (
     <section
-      className={`rounded-2xl bg-paper px-4 py-3.5 text-ink ${className}`}
+      className={`rounded-card bg-paper px-4 py-3.5 text-ink ${className}`}
     >
       {children}
     </section>

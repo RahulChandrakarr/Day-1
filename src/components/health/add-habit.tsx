@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addHabit } from "@/app/(dashboard)/daily/actions";
+import { Card } from "@/components/ui/kit";
 
 type Suggestion = {
   name: string;
@@ -50,7 +51,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
   }
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -139,6 +140,6 @@ export default function AddHabit({ existing }: { existing: string[] }) {
           </button>
         ))}
       </div>
-    </section>
+    </Card>
   );
 }

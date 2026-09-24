@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { FormState } from "@/app/(dashboard)/financial/actions";
 import { addAccount } from "@/app/(dashboard)/financial/savings/actions";
 import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
+import { Card } from "@/components/ui/kit";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
@@ -19,7 +20,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
   const [state, action, pending] = useActionState(addAccount, initial);
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -135,7 +136,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
           </motion.form>
         )}
       </AnimatePresence>
-    </section>
+    </Card>
   );
 }
 

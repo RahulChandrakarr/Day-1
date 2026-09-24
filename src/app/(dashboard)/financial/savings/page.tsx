@@ -4,7 +4,7 @@ import AllocationCard from "@/components/finance/savings/allocation-card";
 import HoldingsCard from "@/components/finance/savings/holdings-card";
 import { AddAccountForm } from "@/components/finance/savings/savings-forms";
 import PeriodNav from "@/components/finance/period-nav";
-import { Rail, Stack } from "@/components/ui/kit";
+import { Card, Rail, Stack } from "@/components/ui/kit";
 import {
   formatMoney,
   formatMonth,
@@ -164,7 +164,7 @@ export default async function SavingsPage({
         <AccountList accounts={summaries} />
       </Rail>
 
-      <section className="rounded-card border border-paper/10 bg-surface p-4">
+      <Card>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 className="font-serif text-[19px]">Saved each month</h3>
@@ -236,7 +236,7 @@ export default async function SavingsPage({
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </Stack>
   );
 }

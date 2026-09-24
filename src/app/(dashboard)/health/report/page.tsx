@@ -1,5 +1,5 @@
 import PeriodNav from "@/components/finance/period-nav";
-import { CardGrid, Stack } from "@/components/ui/kit";
+import { Card as Shell, CardGrid, CardHead, Stack } from "@/components/ui/kit";
 import PdfLink from "@/components/settings/pdf-link";
 import { addMonths, formatMonth, parseMonthParam } from "@/lib/finance";
 import { reasonLabel } from "@/lib/health";
@@ -250,10 +250,10 @@ export default async function ReportPage({
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
-      <h3 className="mb-3 font-serif text-xl sm:text-2xl">{title}</h3>
+    <Shell>
+      <CardHead title={title} />
       {children}
-    </section>
+    </Shell>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useOptimistic, useTransition } from "react";
 import { setTodoDone } from "@/app/(dashboard)/daily/actions";
+import { CardList } from "@/components/ui/kit";
 
 export type Todo = { text: string; done: boolean; index: number };
 
@@ -13,7 +14,7 @@ export default function TodoList({ date, todos }: { date: string; todos: Todo[] 
   );
 
   return (
-    <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
+    <CardList className="px-4">
       {list.map((todo) => (
         <li
           key={todo.index}
@@ -47,6 +48,6 @@ export default function TodoList({ date, todos }: { date: string; todos: Todo[] 
           </span>
         </li>
       ))}
-    </ul>
+    </CardList>
   );
 }

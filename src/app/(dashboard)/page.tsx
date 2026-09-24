@@ -20,7 +20,15 @@ import { getBankAccounts, getCategories, getRecentTransactions } from "@/lib/fin
 import { getPlanDay } from "@/lib/plan-queries";
 import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
-import { CardGrid, Empty, ReminderChip, Section, Stack } from "@/components/ui/kit";
+import {
+  CardGrid,
+  CardList,
+  DarkCard,
+  Empty,
+  ReminderChip,
+  Section,
+  Stack,
+} from "@/components/ui/kit";
 import TodoList from "@/components/dashboard/todo-list";
 import BriefingToggle from "@/components/assistant/briefing-toggle";
 import { AddNoteButton, AddTodoButton } from "@/components/dashboard/quick-add";
@@ -240,7 +248,7 @@ export default async function OverviewPage() {
         </div>
 
         {/* Today so far: ring, one insight, what's done */}
-        <section className="flex items-center gap-3 rounded-2xl bg-paper px-3.5 py-3 text-ink">
+        <DarkCard className="flex items-center gap-3">
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
             style={{
@@ -265,7 +273,7 @@ export default async function OverviewPage() {
             )}
           </div>
           {reminders.length > 0 && <div className="flex shrink-0 gap-1.5">{reminders}</div>}
-        </section>
+        </DarkCard>
 
         <BriefingToggle />
 
@@ -331,7 +339,7 @@ export default async function OverviewPage() {
                 href="/health/habits"
                 link={`${habits.length - pendingHabits.length}/${habits.length}`}
               >
-                <ul className="overflow-hidden rounded-card border border-paper/10 bg-surface">
+                <CardList>
                   {pendingHabits.map((habit, i) => (
                     <HabitRow
                       key={habit.id}
@@ -345,7 +353,7 @@ export default async function OverviewPage() {
                       first={i === 0}
                     />
                   ))}
-                </ul>
+                </CardList>
               </Section>
             )
           )}
@@ -428,13 +436,13 @@ export default async function OverviewPage() {
           {/* The rest of what the numbers say, which only the strip above showed */}
           {insights.length > 1 && (
             <Section title="Worth knowing">
-              <ul className="flex h-full flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-card border border-paper/10 bg-surface px-4">
+              <CardList className="flex h-full flex-col divide-y divide-paper/[0.06] px-4">
                 {insights.slice(1, 6).map((line) => (
                   <li key={line} className="py-2.5 text-[13px] text-paper/75">
                     {line}
                   </li>
                 ))}
-              </ul>
+              </CardList>
             </Section>
           )}
         </CardGrid>

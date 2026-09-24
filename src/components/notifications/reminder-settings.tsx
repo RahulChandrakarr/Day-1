@@ -10,7 +10,7 @@ import {
   type ReminderKind,
   type ReminderSetting,
 } from "@/lib/reminders";
-import { Rail } from "@/components/ui/kit";
+import { Card, Rail } from "@/components/ui/kit";
 
 type Permission = "default" | "granted" | "denied" | "unsupported";
 
@@ -139,7 +139,7 @@ export default function ReminderSettings({
   return (
     <Rail
       aside={
-          <section className="rounded-card border border-paper/10 bg-surface p-4">
+          <Card>
             <h3 className="font-serif text-[19px]">This device</h3>
             {permission === "unsupported" ? (
               <p className="mt-2 text-sm text-paper/55">
@@ -201,10 +201,10 @@ export default function ReminderSettings({
                 </motion.p>
               )}
             </AnimatePresence>
-          </section>
+          </Card>
       }
     >
-      <section className="rounded-card border border-paper/10 bg-surface p-4">
+      <Card>
         <h3 className="font-serif text-[19px]">Reminders</h3>
         <p className="mt-1 text-sm text-paper/55">
           Times are Indian time. A reminder is skipped when the thing is already
@@ -299,7 +299,7 @@ export default function ReminderSettings({
             );
           })}
         </ul>
-      </section>
+      </Card>
     </Rail>
   );
 }

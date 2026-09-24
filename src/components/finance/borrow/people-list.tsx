@@ -8,6 +8,7 @@ import {
 } from "@/app/(dashboard)/financial/borrow/actions";
 import { formatMoney, formatShortDate } from "@/lib/finance";
 import { DEBT_KINDS, type DebtEntry, type PersonBalance } from "@/lib/debts";
+import { Card } from "@/components/ui/kit";
 
 // This month's plan for a person: money to return / collect
 export type PersonPlan = {
@@ -30,7 +31,7 @@ export default function PeopleList({
   const shown = showSettled ? people : open;
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h3 className="font-serif text-2xl">People</h3>
         {settled > 0 && (
@@ -64,7 +65,7 @@ export default function PeopleList({
           </AnimatePresence>
         </ul>
       )}
-    </section>
+    </Card>
   );
 }
 
@@ -92,7 +93,7 @@ function PersonCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: pending ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden rounded-2xl border border-paper/10 bg-ink"
+      className="overflow-hidden rounded-inset border border-paper/10 bg-ink"
     >
       <button
         type="button"

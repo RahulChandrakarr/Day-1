@@ -4,7 +4,7 @@ import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
-import { CardGrid, Stack } from "@/components/ui/kit";
+import { Card, CardGrid, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   budgetReport,
@@ -165,7 +165,7 @@ export default async function YearlyFinancePage({
       </CardGrid>
 
       {/* Twelve pairs of bars: full width or nothing */}
-      <section className="rounded-card border border-paper/10 bg-surface p-4">
+      <Card>
         <h3 className="font-serif text-[19px]">Month by month</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {year}.
@@ -174,7 +174,7 @@ export default async function YearlyFinancePage({
         <div className="mt-4">
           <BucketTable data={buckets} heading="Month" />
         </div>
-      </section>
+      </Card>
 
     </Stack>
   );
@@ -215,7 +215,7 @@ function MonthPlanTable({
   const spentInPlanned = planned.reduce((s, r) => s + r.bucket.expense, 0);
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <h3 className="font-serif text-[19px]">Monthly plans in {year}</h3>
       <p className="mb-4 text-sm text-paper/50">
         {planned.length === 0
@@ -296,6 +296,6 @@ function MonthPlanTable({
       <p className="mt-3 text-xs text-paper/40">
         Saved is money put into savings &amp; investments that month, against the plan&apos;s savings target.
       </p>
-    </section>
+    </Card>
   );
 }

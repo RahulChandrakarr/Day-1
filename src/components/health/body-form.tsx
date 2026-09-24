@@ -17,6 +17,7 @@ import {
   type Goal,
   type Sex,
 } from "@/lib/fitness";
+import { Card } from "@/components/ui/kit";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
@@ -132,7 +133,7 @@ export default function BodyForm({
   }
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <Card>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl sm:text-2xl">Your details</h3>
         <AnimatePresence>
@@ -338,7 +339,7 @@ export default function BodyForm({
         The plan is built from your goal, level, days a week and session length,
         with weeks 1–3 getting harder and week 4 lighter to recover.
       </p>
-    </section>
+    </Card>
   );
 }
 

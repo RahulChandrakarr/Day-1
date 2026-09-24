@@ -23,6 +23,7 @@ import {
   type JournalEntry,
 } from "@/lib/journal";
 import VoiceInput from "./voice-input";
+import { Card as Shell, CardHead } from "@/components/ui/kit";
 
 type Status = "idle" | "pending" | "saving" | "saved" | "error";
 
@@ -447,13 +448,10 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
-        {aside && <span className="text-xs text-paper/50">{aside}</span>}
-      </div>
+    <Shell>
+      <CardHead title={title} aside={aside} />
       {children}
-    </section>
+    </Shell>
   );
 }
 
