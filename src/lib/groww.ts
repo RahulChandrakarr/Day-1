@@ -1,13 +1,17 @@
 import "server-only";
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 // Groww's trading API, read-only: the demat holdings and their live prices.
 // Docs: https://groww.in/trade-api/docs/curl
 //
-// Auth is two-step. The API key and TOTP secret sit in server env vars (they
-// can place real orders, so they never touch the database or the browser).
-// Those buy a daily access token, which every call carries. Token requests are
-// capped at 150 a day, so the token is kept in memory until it expires.
+// Auth is two-step. The credentials sit in server env vars (they can place
+// real orders, so they never touch the database or the browser) and buy a
+// daily access token, which every call carries. Token requests are capped at
+// 150 a day, so the token is kept in memory until it expires.
+//
+// Groww offers two ways to sign in, and the pair you were given decides which:
+// an API secret (hashed with a timestamp) or a TOTP secret from an
+// authenticator app (base32, six digits every 30 seconds).
 
 const BASE = "https://api.groww.in/v1";
 const TIMEOUT = 12_000;
@@ -26,7 +30,18 @@ type Ok<T> = { ok: true } & T;
 export type GrowwResult<T> = Ok<T> | Fail;
 
 export const growwConfigured = () =>
-  Boolean(process.env.GROWW_API_KEY && process.env.GROWW_TOTP_SECRET);
+  Boolean(
+    process.env.GROWW_API_KEY &&
+      (process.env.GROWW_API_SECRET || process.env.GROWW_TOTP_SECRET),
+  );
+
+// --- Signing in --------------------------------------------------------------
+
+// The secret flow: sha256(secret + epoch seconds), which Groww checks against
+// the same sum. The timestamp is good for ten minutes.
+export function checksum(secret: string, timestampSeconds: number) {
+  return createHash("sha256").update(`${secret}${timestampSeconds}`).digest("hex");
+}
 
 // --- TOTP -------------------------------------------------------------------
 // Standard 30-second, 6-digit, SHA-1 TOTP (RFC 6238) from a base32 secret,
@@ -66,6 +81,25 @@ export function totp(secret: string, atMs: number = Date.now()) {
 // --- Access token -----------------------------------------------------------
 
 let cached: { token: string; expiresAt: number } | null = null;
+
+// Some responses wrap the data in `payload`, others return it at the top level
+const envelope = (body: unknown) => {
+  const b = (body ?? {}) as { payload?: unknown };
+  return (b.payload ?? b) as Record<string, unknown>;
+};
+
+// Their expiry is an IST wall-clock string ("2026-09-25T06:00:00"), sometimes
+// an epoch number instead
+function expiryMs(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value))
+    return value * (value > 1e12 ? 1 : 1000);
+  if (typeof value === "string") {
+    const iso = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(value) ? value : `${value}+05:30`;
+    const parsed = Date.parse(iso);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return nextExpiry();
+}
 
 // Groww expires tokens daily at 6am IST (00:30 UTC), whatever time they were made
 function nextExpiry(now = Date.now()) {
@@ -113,29 +147,37 @@ async function accessToken(): Promise<GrowwResult<{ token: string }>> {
     return { ok: true, token: cached.token };
 
   const key = process.env.GROWW_API_KEY;
-  const secret = process.env.GROWW_TOTP_SECRET;
-  if (!key || !secret)
-    return { ok: false, error: "Groww isn't set up: GROWW_API_KEY and GROWW_TOTP_SECRET are missing." };
+  const secret = process.env.GROWW_API_SECRET;
+  const totpSecret = process.env.GROWW_TOTP_SECRET;
+  if (!key || (!secret && !totpSecret))
+    return {
+      ok: false,
+      error: "Groww isn't set up: add GROWW_API_KEY and GROWW_API_SECRET (or GROWW_TOTP_SECRET).",
+    };
 
-  let code: string;
-  try {
-    code = totp(secret);
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Bad TOTP secret." };
+  let payload: Record<string, string>;
+  if (secret) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    payload = { key_type: "approval", checksum: checksum(secret, timestamp), timestamp: String(timestamp) };
+  } else {
+    try {
+      payload = { key_type: "totp", totp: totp(totpSecret!) };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "Bad TOTP secret." };
+    }
   }
 
   const { status, body } = await call("/token/api/access", {
     method: "POST",
     token: key,
-    body: JSON.stringify({ key_type: "totp", totp: code }),
+    body: JSON.stringify(payload),
   });
   if (status !== 200) return { ok: false, error: why(status, body) };
 
-  const payload = (body?.payload ?? {}) as { token?: string; access_token?: string; expiry?: number };
-  const token = payload.token ?? payload.access_token;
+  const data = envelope(body) as { token?: string; access_token?: string; expiry?: unknown };
+  const token = data.token ?? data.access_token;
   if (!token) return { ok: false, error: "Groww didn't return a token." };
-  // Their expiry is in seconds when present; otherwise it's the daily 6am cutoff
-  const expiresAt = payload.expiry ? payload.expiry * 1000 : nextExpiry();
+  const expiresAt = expiryMs(data.expiry);
   cached = { token, expiresAt };
   return { ok: true, token };
 }
@@ -154,10 +196,8 @@ export async function fetchHoldings(): Promise<GrowwResult<{ holdings: GrowwHold
   const { status, body } = await call("/holdings/user", { token: auth.token });
   if (status !== 200) return { ok: false, error: why(status, body) };
 
-  const payload = body?.payload;
-  const rows = Array.isArray(payload)
-    ? payload
-    : ((payload as { holdings?: unknown[] } | null)?.holdings ?? []);
+  const data = envelope(body);
+  const rows = Array.isArray(data) ? data : ((data.holdings as unknown[]) ?? []);
   const holdings = (rows as Record<string, unknown>[])
     .map((row) => ({
       isin: String(row.isin ?? "").trim(),
@@ -197,9 +237,9 @@ export async function fetchPrices(
           return { ok: false, error: why(status, body) };
         continue;
       }
-      const payload = (body?.payload ?? {}) as Record<string, unknown>;
+      const data = envelope(body);
       for (const symbol of batch) {
-        const raw = payload[`${exchange}_${symbol}`];
+        const raw = data[`${exchange}_${symbol}`];
         const lastPrice = typeof raw === "object" && raw !== null ? num((raw as { ltp?: number }).ltp) : num(raw);
         if (lastPrice > 0) prices[symbol] = { lastPrice, dayChangePerc: null, exchange };
       }

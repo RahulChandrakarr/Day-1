@@ -19,7 +19,7 @@ export async function syncPortfolio(
   if (!growwConfigured())
     return {
       ok: false,
-      error: "Groww isn't connected. Add GROWW_API_KEY and GROWW_TOTP_SECRET on the server.",
+      error: "Groww isn't connected. Add GROWW_API_KEY and GROWW_API_SECRET on the server.",
     };
 
   const note = async (status: "ok" | "failed", message: string | null, holdings: number) => {
