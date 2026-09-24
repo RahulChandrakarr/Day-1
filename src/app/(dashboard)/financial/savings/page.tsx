@@ -14,6 +14,7 @@ import {
 } from "@/lib/finance";
 import {
   getAccounts,
+  getHoldingLots,
   getHoldings,
   getInvestmentEntries,
   getMonthBudgets,
@@ -31,11 +32,12 @@ export default async function SavingsPage({
   const thisYear = Number(today.slice(0, 4));
   const month = today.slice(0, 7);
 
-  const [accounts, entries, monthBudgets, holdings, sync] = await Promise.all([
+  const [accounts, entries, monthBudgets, holdings, lots, sync] = await Promise.all([
     getAccounts(),
     getInvestmentEntries(),
     getMonthBudgets(year),
     getHoldings(),
+    getHoldingLots(),
     getPortfolioSync(),
   ]);
   const summaries = accountSummaries(accounts, entries);
@@ -156,6 +158,8 @@ export default async function SavingsPage({
       >
         <HoldingsCard
           holdings={stocks}
+          lots={lots}
+          today={today}
           syncedLabel={timeAgo(sync?.synced_at ?? null)}
           status={sync?.status ?? null}
           message={sync?.message ?? null}

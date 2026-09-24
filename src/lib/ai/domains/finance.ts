@@ -23,6 +23,7 @@ import {
   getDebts,
   getEmiPayments,
   getEmis,
+  getHoldingLots,
   getHoldings,
   getInvestmentEntries,
   getPortfolioSync,
@@ -36,7 +37,7 @@ import { addEmiPayment } from "@/app/(dashboard)/financial/emi/actions";
 import { addInvestmentEntry } from "@/app/(dashboard)/financial/savings/actions";
 import { DEBT_KINDS } from "@/lib/debts";
 import { accountKindLabel } from "@/lib/investments";
-import { holdingSummaries, portfolioTotals, timeAgo } from "@/lib/portfolio";
+import { exemptionView, holdingLots, holdingSummaries, holdingTiming, lotTiming, portfolioTotals, timeAgo } from "@/lib/portfolio";
 import { syncPortfolio } from "@/lib/groww-sync";
 import type { Supabase } from "../types";
 import {
@@ -277,23 +278,43 @@ function financeWriteTools(ctx: ToolContext) {
         "Stocks held in the Groww demat account: quantity, average buy price, last traded price, what each is worth now and the gain. Prices are from the last sync, so say when that was. Mutual funds are not here — they're in get_savings.",
       inputSchema: z.object({}),
       execute: async () => {
-        const [holdings, sync] = await Promise.all([getHoldings(), getPortfolioSync()]);
+        const [holdings, lots, sync] = await Promise.all([
+          getHoldings(),
+          getHoldingLots(),
+          getPortfolioSync(),
+        ]);
         const stocks = holdingSummaries(holdings);
         const totals = portfolioTotals(stocks);
+        const exemption = exemptionView(
+          stocks.flatMap((h) => holdingLots(h, lots).map((l) => lotTiming(l, h.last_price, todayISO()))),
+          todayISO(),
+        );
         return {
+          taxYear: exemption.year,
+          unrealisedLongTermGain: exemption.longTermGain,
+          longTermExemptionLeft: exemption.headroom,
           pricesFrom: sync?.synced_at ? `${sync.synced_at} (${timeAgo(sync.synced_at)})` : "never synced",
           lastSyncFailed: sync?.status === "failed" ? sync.message : null,
           totalPutIn: totals.invested,
           totalWorthNow: totals.worth,
           gain: totals.gain,
-          stocks: stocks.map((h) => ({
-            symbol: h.symbol,
-            shares: h.quantity,
-            averagePrice: h.average_price,
-            lastPrice: h.last_price,
-            worthNow: h.worth,
-            gain: h.gain,
-          })),
+          stocks: stocks.map((h) => {
+            const timing = holdingTiming(h, lots, todayISO());
+            return {
+              symbol: h.symbol,
+              heldAs: h.mode === "swing" ? "swing trade" : "long term",
+              shares: h.quantity,
+              averagePrice: h.average_price,
+              lastPrice: h.last_price,
+              worthNow: h.worth,
+              gain: h.gain,
+              boughtOn: h.bought_on,
+              theirTarget: h.target_price,
+              theirStop: h.stop_price,
+              daysToLongTerm: timing?.next?.daysToLongTerm ?? (timing?.allLongTerm ? 0 : null),
+              taxSavedByWaiting: timing?.saving ?? null,
+            };
+          }),
         };
       },
     }),
@@ -487,6 +508,8 @@ export const finance: Domain = {
 - When logging, pass the bank account they name; if they don't say, the tool uses the account from their last entry. Mention the account in your one-line confirmation.
 - For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
 - Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates. EMIs are loans: monthly payment, paid so far, remaining, next due. EMI payments are not daily spend unless also logged as an expense.
+- Never suggest what to buy or sell, and never call a stock good or bad — you have no current market data and it's their money. Report what they hold and what they themselves decided: their target, their stop, the tax clock.
+- Tax timing is arithmetic you can do: Indian listed equity sold within 12 months is taxed at 20%, after that at 12.5% above ₹1.25 lakh of long-term gains a financial year. Say "waiting N days saves about ₹X in tax", and call it an estimate before costs.
 - Stocks come from Groww and are separate from savings accounts: get_portfolio for shares and their live value, get_savings for mutual funds, FDs and the rest. Stock prices are as of the last sync, so say how old they are ("as of an hour ago"); refresh_portfolio fetches them again.
 - When logging an expense, pick an existing category (list_categories) that clearly fits; if none fits, log it without a category and say so.`,
   tools: (ctx) => ({ ...financeReadTools(), ...financeWriteTools(ctx) }),

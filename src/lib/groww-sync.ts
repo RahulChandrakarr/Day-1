@@ -36,6 +36,13 @@ export async function syncPortfolio(
     );
   };
 
+  // What we knew before, so a quantity going up can be recorded as a purchase
+  const { data: before } = await supabase
+    .from("finance_holdings")
+    .select("symbol, quantity")
+    .returns<{ symbol: string; quantity: number | string }[]>();
+  const wasHeld = new Map((before ?? []).map((r) => [r.symbol, Number(r.quantity)]));
+
   const fetched = await fetchHoldings();
   if (!fetched.ok) {
     await note("failed", fetched.error, 0);
@@ -83,6 +90,21 @@ export async function syncPortfolio(
     await note("failed", deleteError.message, rows.length);
     return { ok: false, error: deleteError.message };
   }
+
+  // A symbol we already knew, now with more shares, was bought today. A symbol
+  // appearing for the first time could have been bought years ago, so it gets
+  // no lot and the user enters its date.
+  const bought = fetched.holdings
+    .filter((h) => wasHeld.has(h.symbol) && h.quantity > (wasHeld.get(h.symbol) ?? 0))
+    .map((h) => ({
+      user_id: userId,
+      symbol: h.symbol,
+      quantity: h.quantity - (wasHeld.get(h.symbol) ?? 0),
+      price: prices[h.symbol]?.lastPrice ?? h.averagePrice,
+      bought_on: now.slice(0, 10),
+      estimated: true,
+    }));
+  if (bought.length > 0) await supabase.from("finance_holding_lots").insert(bought);
 
   const unpriced = rows.filter((r) => r.last_price === null).length;
   await note(

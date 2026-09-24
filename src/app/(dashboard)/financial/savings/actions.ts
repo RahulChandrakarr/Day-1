@@ -1,6 +1,6 @@
 "use server";
 
-import { isValidDate } from "@/lib/finance";
+import { isValidDate, todayISO } from "@/lib/finance";
 import { syncPortfolio } from "@/lib/groww-sync";
 import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investments";
 import {
@@ -163,4 +163,45 @@ export async function refreshPortfolio(): Promise<{ ok: boolean; message: string
       ? `${count} ${count === 1 ? "stock" : "stocks"} updated, ${unpriced} without a live price.`
       : `${count} ${count === 1 ? "stock" : "stocks"} updated.`,
   };
+}
+
+// How a stock is being held, and the lines the user set for it. The prices are
+// their own plan, not a suggestion from anywhere.
+export async function saveHoldingPlan(input: {
+  id: string;
+  mode: "long_term" | "swing";
+  bought_on: string | null;
+  target_price: string | null;
+  stop_price: string | null;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!uuid.test(input.id)) return { ok: false, error: "Unknown holding." };
+  if (input.mode !== "long_term" && input.mode !== "swing")
+    return { ok: false, error: "Pick long term or swing." };
+  if (input.bought_on && !isValidDate(input.bought_on))
+    return { ok: false, error: "Pick a valid buy date." };
+  if (input.bought_on && input.bought_on > todayISO())
+    return { ok: false, error: "The buy date can't be in the future." };
+
+  const price = (raw: string | null) => (raw?.trim() ? parseAmount(raw) : null);
+  const target = price(input.target_price);
+  const stop = price(input.stop_price);
+  if (input.target_price?.trim() && target === null)
+    return { ok: false, error: "That target price isn't a number." };
+  if (input.stop_price?.trim() && stop === null)
+    return { ok: false, error: "That stop price isn't a number." };
+
+  const supabase = await authedClient();
+  const { error } = await supabase
+    .from("finance_holdings")
+    .update({
+      mode: input.mode,
+      bought_on: input.bought_on,
+      target_price: target,
+      stop_price: stop,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.id);
+  if (error) return { ok: false, error: error.message };
+  refresh();
+  return { ok: true };
 }

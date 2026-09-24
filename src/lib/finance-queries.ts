@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { DebtEntry, Person } from "@/lib/debts";
 import type { Emi, EmiPayment } from "@/lib/emis";
 import type { Account, InvestmentEntry } from "@/lib/investments";
-import type { Holding, PortfolioSync } from "@/lib/portfolio";
+import type { Holding, Lot, PortfolioSync } from "@/lib/portfolio";
 import type {
   BankAccount,
   BankTransfer,
@@ -380,15 +380,20 @@ export async function getHoldings(): Promise<Holding[]> {
   const { data, error } = await supabase
     .from("finance_holdings")
     .select(
-      "id, isin, symbol, name, exchange, quantity, average_price, last_price, day_change_perc, priced_at",
+      "id, isin, symbol, name, exchange, quantity, average_price, last_price, day_change_perc, priced_at, mode, bought_on, target_price, stop_price",
     )
     .order("symbol")
     .returns<
-      (Omit<Holding, "quantity" | "average_price" | "last_price" | "day_change_perc"> & {
+      (Omit<
+        Holding,
+        "quantity" | "average_price" | "last_price" | "day_change_perc" | "target_price" | "stop_price"
+      > & {
         quantity: number | string;
         average_price: number | string;
         last_price: number | string | null;
         day_change_perc: number | string | null;
+        target_price: number | string | null;
+        stop_price: number | string | null;
       })[]
     >();
   if (error) throw new Error(error.message);
@@ -398,6 +403,8 @@ export async function getHoldings(): Promise<Holding[]> {
     average_price: Number(h.average_price),
     last_price: h.last_price === null ? null : Number(h.last_price),
     day_change_perc: h.day_change_perc === null ? null : Number(h.day_change_perc),
+    target_price: h.target_price === null ? null : Number(h.target_price),
+    stop_price: h.stop_price === null ? null : Number(h.stop_price),
   }));
 }
 
@@ -410,4 +417,16 @@ export async function getPortfolioSync(): Promise<PortfolioSync | null> {
     .maybeSingle<PortfolioSync>();
   if (error) throw new Error(error.message);
   return data ?? null;
+}
+
+// Each purchase, for working out tax timing per lot
+export async function getHoldingLots(): Promise<Lot[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_holding_lots")
+    .select("id, symbol, quantity, price, bought_on, estimated")
+    .order("bought_on", { ascending: true })
+    .returns<(Omit<Lot, "quantity" | "price"> & { quantity: number | string; price: number | string })[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((l) => ({ ...l, quantity: Number(l.quantity), price: Number(l.price) }));
 }
