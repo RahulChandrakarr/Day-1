@@ -24,11 +24,18 @@ export type NavSection = {
   label: string;
   hint: string;
   icon: ReactNode;
+  // A page that belongs under the section above it
+  child?: boolean;
 };
 
 function useActive(sections: NavSection[]) {
   const pathname = usePathname();
-  return sections.find((s) => pathname.startsWith(s.href)) ?? sections[0];
+  // Longest match wins, or /financial/savings would stay lit on its own
+  // sub-pages as well as the child that is actually open
+  const matches = sections
+    .filter((s) => pathname === s.href || pathname.startsWith(`${s.href}/`))
+    .sort((a, b) => b.href.length - a.href.length);
+  return matches[0] ?? sections[0];
 }
 
 // Wide screens: a slim sidebar that can collapse to icons.
@@ -75,6 +82,8 @@ export function SectionSidebar({
               title={s.label}
               aria-current={isActive ? "page" : undefined}
               className={`flex h-10 items-center gap-3 rounded-xl px-2.5 text-sm transition-colors ${
+                s.child && !collapsed ? "ml-4" : ""
+              } ${
                 isActive
                   ? "bg-ember text-on-ember"
                   : "text-paper/60 hover:bg-paper/5 hover:text-paper"
@@ -184,6 +193,8 @@ export function SectionMenuButton({
                         onClick={close}
                         aria-current={isActive ? "page" : undefined}
                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                          s.child ? "ml-4" : ""
+                        } ${
                           isActive
                             ? "bg-ember text-on-ember"
                             : "text-paper/75 hover:bg-paper/5 hover:text-paper"

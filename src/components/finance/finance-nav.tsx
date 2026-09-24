@@ -57,11 +57,48 @@ const sections: NavSection[] = [
   {
     href: "/financial/savings",
     label: "Savings & Investments",
-    hint: "Stocks, funds & FDs",
+    hint: "Everything you put away",
     icon: (
       <svg {...iconProps}>
         <path d="M19 7h-1.5A6 6 0 0 0 7 5.5 6.5 6.5 0 0 0 5 17v3h3v-2h6v2h3v-3.5a5 5 0 0 0 2-2.5h2v-4h-2a5 5 0 0 0 0-3z" />
         <circle cx="15.5" cy="10.5" r="0.5" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    href: "/financial/savings/stocks",
+    label: "Stocks",
+    hint: "Holdings, targets, tax clock",
+    child: true,
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 17l5-5 4 3 4-6 5 4" />
+        <path d="M3 21h18" />
+      </svg>
+    ),
+  },
+  {
+    href: "/financial/savings/funds",
+    label: "Funds & FDs",
+    hint: "Mutual funds, SIPs, deposits",
+    child: true,
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3" y="6" width="18" height="12" rx="2" />
+        <path d="M3 10h18" />
+        <circle cx="12" cy="14" r="1.6" />
+      </svg>
+    ),
+  },
+  {
+    href: "/financial/savings/history",
+    label: "History",
+    hint: "Saved each month",
+    child: true,
+    icon: (
+      <svg {...iconProps}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
       </svg>
     ),
   },

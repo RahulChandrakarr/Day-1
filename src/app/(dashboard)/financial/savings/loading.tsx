@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/ui/kit";
 
 export default function Loading() {
-  return <PageSkeleton rail />;
+  return <PageSkeleton rows={3} layout="triple" />;
 }
