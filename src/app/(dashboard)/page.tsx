@@ -228,8 +228,10 @@ export default async function OverviewPage() {
 
   return (
     <PageShell title="Overview">
+      {/* The day's summary spans the page; everything else sits in columns
+          that fill a wide screen instead of one tall stack */}
       <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 lg:max-w-2xl">
           <Suspense fallback={<div className="h-12 rounded-2xl bg-ember/60" />}>
             <AddEntry compact />
           </Suspense>
@@ -253,11 +255,11 @@ export default async function OverviewPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ember">
               {allClear ? "All done today 🎉" : "Today so far"}
             </p>
-            <p className="truncate text-[13px]">
+            <p className="truncate text-[13px] lg:whitespace-normal">
               {insights[0] ?? "Log something and your day starts filling in."}
             </p>
             {finished.length > 0 && (
-              <p className="truncate text-xs text-ink/60">
+              <p className="truncate text-xs text-ink/60 lg:whitespace-normal">
                 ✓ {finished.join(" · ")}
               </p>
             )}
@@ -266,17 +268,6 @@ export default async function OverviewPage() {
         </section>
 
         <BriefingToggle />
-
-        {pendingTodos.length > 0 && (
-          <>
-            <SectionHead
-              title="To do"
-              href="/daily"
-              link={`${todos.length - pendingTodos.length}/${todos.length}`}
-            />
-            <TodoList date={today} todos={pendingTodos} />
-          </>
-        )}
 
         <TodayTasks
           date={today}
@@ -287,141 +278,171 @@ export default async function OverviewPage() {
           limit={4}
         />
 
-        {!hasPlan ? (
-          <Link
-            href="/health/body"
-            className="flex min-h-11 items-center gap-3 rounded-[14px] border border-dashed border-paper/15 px-4 py-2.5 text-sm text-paper/60"
-          >
-            <span>🏋️</span>
-            <span className="flex-1">No gym plan yet. Build your 4-week plan</span>
-            <span className="text-ember">→</span>
-          </Link>
-        ) : (
-          pendingExercises.length > 0 && (
-            <>
+        <div className="grid items-start gap-3 lg:grid-cols-2 lg:gap-x-6 2xl:grid-cols-3">
+          {pendingTodos.length > 0 && (
+            <section className="flex flex-col gap-3">
               <SectionHead
-                title={gymDay.title || "Workout"}
-                href="/health/gym"
-                link={`${doneIds.length}/${gymDay.exercises.length}`}
+                title="To do"
+                href="/daily"
+                link={`${todos.length - pendingTodos.length}/${todos.length}`}
               />
-              <GymChecklist
-                exercises={gymShown}
-                date={today}
-                doneBefore={doneIds.length}
-                week={
-                  block ? blockWeek(block.start_date, today, block.weeks) : null
-                }
-              />
-              {pendingExercises.length > GYM_LIMIT && (
-                <Link href="/health/gym" className="-mt-1 text-xs font-semibold text-ember">
-                  +{pendingExercises.length - GYM_LIMIT} more exercises →
-                </Link>
-              )}
-            </>
-          )
-        )}
+              <TodoList date={today} todos={pendingTodos} />
+            </section>
+          )}
 
-        {habits.length === 0 ? (
-          <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
-        ) : (
-          pendingHabits.length > 0 && (
-            <>
-              <SectionHead
-                title="Habits"
-                href="/health/habits"
-                link={`${habits.length - pendingHabits.length}/${habits.length}`}
-              />
-              <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
-                {pendingHabits.map((habit, i) => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={habit}
-                    date={today}
-                    checkin={null}
-                    streak={streak(
-                      habitCheckins.filter((c) => c.habit_id === habit.id),
-                      today,
-                    )}
-                    first={i === 0}
-                  />
+          {!hasPlan ? (
+            <Link
+              href="/health/body"
+              className="flex min-h-11 items-center gap-3 rounded-[14px] border border-dashed border-paper/15 px-4 py-2.5 text-sm text-paper/60"
+            >
+              <span>🏋️</span>
+              <span className="flex-1">No gym plan yet. Build your 4-week plan</span>
+              <span className="text-ember">→</span>
+            </Link>
+          ) : (
+            pendingExercises.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <SectionHead
+                  title={gymDay.title || "Workout"}
+                  href="/health/gym"
+                  link={`${doneIds.length}/${gymDay.exercises.length}`}
+                />
+                <GymChecklist
+                  exercises={gymShown}
+                  date={today}
+                  doneBefore={doneIds.length}
+                  week={
+                    block ? blockWeek(block.start_date, today, block.weeks) : null
+                  }
+                />
+                {pendingExercises.length > GYM_LIMIT && (
+                  <Link href="/health/gym" className="-mt-1 text-xs font-semibold text-ember">
+                    +{pendingExercises.length - GYM_LIMIT} more exercises →
+                  </Link>
+                )}
+              </section>
+            )
+          )}
+
+          {habits.length === 0 ? (
+            <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
+          ) : (
+            pendingHabits.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <SectionHead
+                  title="Habits"
+                  href="/health/habits"
+                  link={`${habits.length - pendingHabits.length}/${habits.length}`}
+                />
+                <ul className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+                  {pendingHabits.map((habit, i) => (
+                    <HabitRow
+                      key={habit.id}
+                      habit={habit}
+                      date={today}
+                      checkin={null}
+                      streak={streak(
+                        habitCheckins.filter((c) => c.habit_id === habit.id),
+                        today,
+                      )}
+                      first={i === 0}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )
+          )}
+
+          {/* Money: what's in the bank, then today / month */}
+          <section className="flex flex-col gap-2">
+            <SectionHead title="Money" href="/financial/daily" link="Open" />
+            <Link
+              href="/financial/daily"
+              className="flex flex-col rounded-[18px] border border-paper/10 bg-surface"
+            >
+              {banks.length > 0 && (
+                <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] text-paper/50">Net balance</p>
+                    <p className="truncate text-xs text-paper/55">
+                      {banks
+                        .map((a) => `${a.name} ${a.balance < 0 ? "−" : ""}${formatMoney(Math.abs(a.balance))}`)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <p
+                    className={`shrink-0 text-xl font-bold tabular-nums ${
+                      bankTotal < 0 ? "text-[#b3372e] dark:text-red-300" : "text-moss"
+                    }`}
+                  >
+                    {bankTotal < 0 ? "−" : ""}
+                    {formatMoney(Math.abs(bankTotal))}
+                  </p>
+                </div>
+              )}
+              {/* Money in (up) and out (down), for today and this month */}
+              <div className="grid grid-cols-2 divide-x divide-paper/[0.06] py-2.5">
+                {[
+                  { label: "Today", flow: todayFlow },
+                  { label: "Month", flow: monthFlow },
+                ].map(({ label, flow }) => (
+                  <div key={label} className="min-w-0 px-2 text-center">
+                    <p className="truncate text-[11px] text-paper/50">{label}</p>
+                    <p className="flex flex-wrap items-center justify-center gap-x-3 text-sm font-bold tabular-nums">
+                      <span className="text-moss" title={`${formatMoney(flow.income)} came in`}>
+                        <span aria-hidden>↑ </span>
+                        <span className="sr-only">In: </span>
+                        {formatMoney(flow.income)}
+                      </span>
+                      <span
+                        className="text-[#b3372e] dark:text-red-300"
+                        title={`${formatMoney(flow.expense)} went out`}
+                      >
+                        <span aria-hidden>↓ </span>
+                        <span className="sr-only">Out: </span>
+                        {formatMoney(flow.expense)}
+                      </span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Link>
+            {topToday.length > 0 && (
+              <p className="truncate px-1 text-xs text-paper/45">
+                Top today: {topToday.map((c) => `${c.name} ${formatMoney(c.amount)}`).join(" · ")}
+              </p>
+            )}
+          </section>
+
+          {recent.length > 0 && (
+            <TransactionList
+              title="Recent entries"
+              transactions={recent}
+              showDate
+              categories={categories}
+              bankAccounts={banks}
+              aside={
+                <Link href="/financial/daily" className="text-sm font-medium text-ember">
+                  See all →
+                </Link>
+              }
+            />
+          )}
+
+          {/* The rest of what the numbers say, which only the strip above showed */}
+          {insights.length > 1 && (
+            <section className="flex flex-col gap-3">
+              <SectionHead title="Worth knowing" />
+              <ul className="flex flex-col divide-y divide-paper/[0.06] overflow-hidden rounded-[18px] border border-paper/10 bg-surface px-4">
+                {insights.slice(1, 6).map((line) => (
+                  <li key={line} className="py-2.5 text-[13px] text-paper/75">
+                    {line}
+                  </li>
                 ))}
               </ul>
-            </>
-          )
-        )}
-
-        {/* Money: what's in the bank, then today / month */}
-        <Link
-          href="/financial/daily"
-          className="mt-1 flex flex-col rounded-[18px] border border-paper/10 bg-surface"
-        >
-          {banks.length > 0 && (
-            <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-paper/50">Net balance</p>
-                <p className="truncate text-xs text-paper/55">
-                  {banks
-                    .map((a) => `${a.name} ${a.balance < 0 ? "−" : ""}${formatMoney(Math.abs(a.balance))}`)
-                    .join(" · ")}
-                </p>
-              </div>
-              <p
-                className={`shrink-0 text-xl font-bold tabular-nums ${
-                  bankTotal < 0 ? "text-[#b3372e] dark:text-red-300" : "text-moss"
-                }`}
-              >
-                {bankTotal < 0 ? "−" : ""}
-                {formatMoney(Math.abs(bankTotal))}
-              </p>
-            </div>
+            </section>
           )}
-          {/* Money in (up) and out (down), for today and this month */}
-          <div className="grid grid-cols-2 divide-x divide-paper/[0.06] py-2.5">
-            {[
-              { label: "Today", flow: todayFlow },
-              { label: "Month", flow: monthFlow },
-            ].map(({ label, flow }) => (
-              <div key={label} className="min-w-0 px-2 text-center">
-                <p className="truncate text-[11px] text-paper/50">{label}</p>
-                <p className="flex flex-wrap items-center justify-center gap-x-3 text-sm font-bold tabular-nums">
-                  <span className="text-moss" title={`${formatMoney(flow.income)} came in`}>
-                    <span aria-hidden>↑ </span>
-                    <span className="sr-only">In: </span>
-                    {formatMoney(flow.income)}
-                  </span>
-                  <span
-                    className="text-[#b3372e] dark:text-red-300"
-                    title={`${formatMoney(flow.expense)} went out`}
-                  >
-                    <span aria-hidden>↓ </span>
-                    <span className="sr-only">Out: </span>
-                    {formatMoney(flow.expense)}
-                  </span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </Link>
-        {topToday.length > 0 && (
-          <p className="-mt-1 truncate px-1 text-xs text-paper/45">
-            Top today: {topToday.map((c) => `${c.name} ${formatMoney(c.amount)}`).join(" · ")}
-          </p>
-        )}
-
-        {recent.length > 0 && (
-          <TransactionList
-            title="Recent entries"
-            transactions={recent}
-            showDate
-            categories={categories}
-            bankAccounts={banks}
-            aside={
-              <Link href="/financial/daily" className="text-sm font-medium text-ember">
-                See all →
-              </Link>
-            }
-          />
-        )}
+        </div>
       </div>
     </PageShell>
   );
