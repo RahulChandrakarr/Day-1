@@ -25,6 +25,7 @@ import {
   getEmis,
   getHoldingLots,
   getHoldings,
+  getTrades,
   getInvestmentEntries,
   getPortfolioSync,
   getPeople,
@@ -39,6 +40,8 @@ import { DEBT_KINDS } from "@/lib/debts";
 import { accountKindLabel } from "@/lib/investments";
 import { exemptionView, holdingLots, holdingSummaries, holdingTiming, lotTiming, portfolioTotals, timeAgo } from "@/lib/portfolio";
 import { syncPortfolio } from "@/lib/groww-sync";
+import { groupTrades, holdingDays, isClosed, rMultiple, tradePnl, tradeStats } from "@/lib/trades";
+import { closeTrade, logTrade } from "@/app/(dashboard)/financial/savings/trades/actions";
 import type { Supabase } from "../types";
 import {
   changed,
@@ -47,6 +50,7 @@ import {
   idInput,
   formData,
   INITIAL_FORM,
+  dateInput,
   monthInput,
   NEEDS_CONFIRMATION,
   pick,
@@ -185,6 +189,74 @@ function financeReadTools() {
 
 function financeWriteTools(ctx: ToolContext) {
   return {
+    log_trade: tool({
+      description:
+        "Record a trade the user says they took: stock, how many shares, entry price, and their stop, target and reason if they give them. Never suggest a trade or a level — only write down what they tell you.",
+      inputSchema: z.object({
+        symbol: z.string().max(40),
+        shares: z.number().positive(),
+        entry_price: z.number().positive(),
+        kind: z.enum(["intraday", "swing", "investment"]).default("swing"),
+        side: z.enum(["long", "short"]).default("long"),
+        entry_on: dateInput.optional(),
+        stop_price: z.number().positive().optional(),
+        target_price: z.number().positive().optional(),
+        setup: z.string().max(40).optional(),
+        thesis: z.string().max(1000).optional(),
+      }),
+      execute: async (input) => {
+        const result = await logTrade({
+          symbol: input.symbol,
+          kind: input.kind,
+          side: input.side,
+          quantity: String(input.shares),
+          entry_price: String(input.entry_price),
+          entry_on: input.entry_on ?? ctx.today,
+          stop_price: input.stop_price ? String(input.stop_price) : null,
+          target_price: input.target_price ? String(input.target_price) : null,
+          setup: input.setup ?? null,
+          thesis: input.thesis ?? null,
+          screenshot_path: null,
+        });
+        if (!result.ok) return failed(result.error);
+        return changed(
+          ctx,
+          `Logged ${input.side === "short" ? "short " : ""}${input.shares} ${input.symbol.toUpperCase()} at ₹${input.entry_price}.`,
+        );
+      },
+    }),
+
+    close_trade: tool({
+      description:
+        "Close an open trade in the journal at the price the user says they got out at, and why.",
+      inputSchema: z.object({
+        symbol: z.string().max(40),
+        exit_price: z.number().positive(),
+        exit_on: dateInput.optional(),
+        reason: z.enum(["target", "stop", "manual", "other"]).default("manual"),
+        review: z.string().max(1000).optional(),
+      }),
+      execute: async (input) => {
+        const open = (await getTrades()).filter((t) => !isClosed(t));
+        const found = pick(open, input.symbol, (t) => t.symbol);
+        if ("error" in found) return failed(found.error);
+        const result = await closeTrade(found.item.id, {
+          exit_price: String(input.exit_price),
+          exit_on: input.exit_on ?? ctx.today,
+          exit_reason: input.reason,
+          review: input.review ?? null,
+          costs: null,
+        });
+        if (!result.ok) return failed(result.error);
+        const closed = { ...found.item, exit_price: input.exit_price, exit_on: input.exit_on ?? ctx.today };
+        const pnl = tradePnl(closed);
+        return changed(
+          ctx,
+          `Closed ${found.item.symbol} at ₹${input.exit_price}: ${pnl && pnl.net < 0 ? "−" : "+"}₹${Math.abs(Math.round(pnl?.net ?? 0))} after charges.`,
+        );
+      },
+    }),
+
     refresh_portfolio: tool({
       description:
         "Fetch the latest stock holdings and live prices from Groww. Use it when the user asks to refresh their portfolio, or when they want today's value and the last sync is old.",
@@ -315,6 +387,54 @@ function financeWriteTools(ctx: ToolContext) {
               taxSavedByWaiting: timing?.saving ?? null,
             };
           }),
+        };
+      },
+    }),
+
+    get_trades: tool({
+      description:
+        "The trading journal: open trades with their stop and target, closed trades with profit after charges and R multiple, and the statistics — win rate, average trade, average R, and which setups pay. Report it; never rate a trade or suggest one.",
+      inputSchema: z.object({
+        open_only: z.boolean().optional().describe("Only the trades still running"),
+      }),
+      execute: async ({ open_only }) => {
+        const all = await getTrades();
+        const trades = open_only ? all.filter((t) => !isClosed(t)) : all;
+        const stats = tradeStats(all);
+        return {
+          stats: {
+            closed: stats.closed,
+            open: stats.open,
+            winRatePercent: stats.winRate,
+            averageTrade: stats.expectancy,
+            averageR: stats.avgR,
+            netAfterCharges: stats.net,
+            stopMoves: stats.stopMoves,
+          },
+          bySetup: groupTrades(all.filter(isClosed), "setup").map((g) => ({
+            setup: g.name,
+            closed: g.stats.closed,
+            winRatePercent: g.stats.winRate,
+            net: g.stats.net,
+          })),
+          trades: trades.slice(0, 30).map((t) => ({
+            symbol: t.symbol,
+            heldAs: t.kind,
+            side: t.side,
+            shares: t.quantity,
+            entry: t.entry_price,
+            entryOn: t.entry_on,
+            stop: t.stop_price,
+            target: t.target_price,
+            setup: t.setup,
+            daysOpen: isClosed(t) ? null : holdingDays(t, ctx.today),
+            exit: t.exit_price,
+            exitOn: t.exit_on,
+            exitReason: t.exit_reason,
+            profitAfterCharges: tradePnl(t)?.net ?? null,
+            r: rMultiple(t),
+            stopMoves: t.stop_moves,
+          })),
         };
       },
     }),
@@ -495,6 +615,9 @@ export const finance: Domain = {
     get_borrow: "Checking who owes what…",
     get_savings: "Checking your savings…",
     get_portfolio: "Checking your stocks…",
+    get_trades: "Reading your trading journal…",
+    log_trade: "Writing the trade down…",
+    close_trade: "Closing the trade…",
     refresh_portfolio: "Fetching prices from Groww…",
     get_emis: "Checking your EMIs…",
     add_transaction: "Logging the entry…",
@@ -508,6 +631,7 @@ export const finance: Domain = {
 - When logging, pass the bank account they name; if they don't say, the tool uses the account from their last entry. Mention the account in your one-line confirmation.
 - For comparisons fetch each period separately with exact date ranges, and check the direction (bigger = up). Compare month-to-date with the same days of last month.
 - Borrowed/lent money is NOT income or spending unless the entry counts in the balance. Savings & investments are accounts with deposits, withdrawals and value updates. EMIs are loans: monthly payment, paid so far, remaining, next due. EMI payments are not daily spend unless also logged as an expense.
+- The trading journal is his record: get_trades for what he holds, what he closed and his win rate, average R and which setups pay. log_trade and close_trade only write down what he tells you. Quote his own numbers back; never judge a trade as good or bad, and never propose an entry, stop or target.
 - Never suggest what to buy or sell, and never call a stock good or bad — you have no current market data and it's their money. Report what they hold and what they themselves decided: their target, their stop, the tax clock.
 - Tax timing is arithmetic you can do: Indian listed equity sold within 12 months is taxed at 20%, after that at 12.5% above ₹1.25 lakh of long-term gains a financial year. Say "waiting N days saves about ₹X in tax", and call it an estimate before costs.
 - Stocks come from Groww and are separate from savings accounts: get_portfolio for shares and their live value, get_savings for mutual funds, FDs and the rest. Stock prices are as of the last sync, so say how old they are ("as of an hour ago"); refresh_portfolio fetches them again.

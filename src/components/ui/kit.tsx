@@ -276,6 +276,47 @@ export function Figure({
   );
 }
 
+// Numbers on the page itself, with no box around them. For pages that are
+// mostly figures and lists, a card around every group is noise.
+export function Figures({
+  items,
+  className = "",
+}: {
+  items: { label: string; value: string; hint?: string; tone?: "good" | "bad" }[];
+  className?: string;
+}) {
+  return (
+    <dl className={`grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4 ${className}`}>
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0">
+          <dt className="truncate text-xs text-paper/55">{item.label}</dt>
+          <dd
+            className={`mt-0.5 truncate text-2xl font-semibold tabular-nums ${toneClass(item.tone)}`}
+          >
+            {item.value}
+          </dd>
+          {item.hint && <dd className="truncate text-xs text-paper/40">{item.hint}</dd>}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+// A list separated by hairlines, without a card around it
+export function Rows({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <ul className={`divide-y divide-paper/[0.06] border-y border-paper/[0.06] ${className}`}>
+      {children}
+    </ul>
+  );
+}
+
 // 2-up grid of figures inside one card
 export function FigureGrid({
   items,

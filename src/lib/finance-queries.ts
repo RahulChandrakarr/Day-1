@@ -4,6 +4,7 @@ import type { DebtEntry, Person } from "@/lib/debts";
 import type { Emi, EmiPayment } from "@/lib/emis";
 import type { Account, InvestmentEntry } from "@/lib/investments";
 import type { Holding, Lot, PortfolioSync } from "@/lib/portfolio";
+import type { Trade } from "@/lib/trades";
 import type {
   BankAccount,
   BankTransfer,
@@ -429,4 +430,40 @@ export async function getHoldingLots(): Promise<Lot[]> {
     .returns<(Omit<Lot, "quantity" | "price"> & { quantity: number | string; price: number | string })[]>();
   if (error) throw new Error(error.message);
   return (data ?? []).map((l) => ({ ...l, quantity: Number(l.quantity), price: Number(l.price) }));
+}
+
+// The trading journal, newest entry first
+export async function getTrades(): Promise<Trade[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_trades")
+    .select(
+      "id, symbol, kind, side, quantity, entry_price, entry_on, stop_price, target_price, setup, thesis, exit_price, exit_on, exit_reason, review, costs, screenshot_path, stop_moves",
+    )
+    .order("entry_on", { ascending: false })
+    .order("created_at", { ascending: false })
+    .returns<
+      (Omit<
+        Trade,
+        "quantity" | "entry_price" | "stop_price" | "target_price" | "exit_price" | "costs"
+      > & {
+        quantity: number | string;
+        entry_price: number | string;
+        stop_price: number | string | null;
+        target_price: number | string | null;
+        exit_price: number | string | null;
+        costs: number | string | null;
+      })[]
+    >();
+  if (error) throw new Error(error.message);
+  const maybe = (v: number | string | null) => (v === null ? null : Number(v));
+  return (data ?? []).map((t) => ({
+    ...t,
+    quantity: Number(t.quantity),
+    entry_price: Number(t.entry_price),
+    stop_price: maybe(t.stop_price),
+    target_price: maybe(t.target_price),
+    exit_price: maybe(t.exit_price),
+    costs: maybe(t.costs),
+  }));
 }

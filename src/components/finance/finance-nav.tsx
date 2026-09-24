@@ -91,6 +91,21 @@ const sections: NavSection[] = [
     ),
   },
   {
+    href: "/financial/savings/trades",
+    label: "Trades",
+    hint: "Journal & stats",
+    child: true,
+    icon: (
+      <svg {...iconProps}>
+        <path d="M4 19V5" />
+        <path d="M8 19v-6" />
+        <path d="M12 19V9" />
+        <path d="M16 19v-4" />
+        <path d="M20 19V7" />
+      </svg>
+    ),
+  },
+  {
     href: "/financial/savings/history",
     label: "History",
     hint: "Saved each month",
