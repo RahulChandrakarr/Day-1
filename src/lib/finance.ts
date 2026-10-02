@@ -296,14 +296,17 @@ export function categoryBreakdown(rows: Transaction[], type: TxType) {
 // ---------------------------------------------------------------------------
 export type BudgetScope = "month" | "year";
 
-export type BudgetLineKind = "spend" | "repay" | "collect";
+export type BudgetLineKind = "spend" | "repay" | "collect" | "emi";
 
 export type BudgetLine = {
   kind: BudgetLineKind;
   category_id: string | null; // spend lines
   person_id: string | null; // repay / collect lines
-  name: string; // category or person name
+  emi_id: string | null; // emi lines
+  name: string; // category, person or EMI name
   color: number;
+  // What was planned. An EMI line ignores this and uses the EMI's own
+  // installment, so changing the EMI changes the plan.
   amount: number;
   note: string | null;
 };
@@ -331,6 +334,9 @@ export type BudgetActivity = {
   transactions: Transaction[];
   debts?: DebtEntry[];
   investments?: Pick<InvestmentEntry, "kind" | "amount">[];
+  // Installments paid in the period, and the EMIs they belong to
+  emiPayments?: { emi_id: string; amount: number }[];
+  emis?: { id: string; name: string; color: number; monthly_amount: number }[];
 };
 
 export type BudgetReport = {
@@ -373,7 +379,17 @@ export function budgetReport(
   activity: BudgetActivity,
   today = todayISO(),
 ): BudgetReport {
-  const { transactions, debts = [], investments = [] } = activity;
+  const {
+    transactions,
+    debts = [],
+    investments = [],
+    emiPayments = [],
+    emis = [],
+  } = activity;
+  const emiById = new Map(emis.map((e) => [e.id, e]));
+  const paidPerEmi = new Map<string, number>();
+  for (const p of emiPayments)
+    paidPerEmi.set(p.emi_id, (paidPerEmi.get(p.emi_id) ?? 0) + p.amount);
   const spent = new Map(
     categoryBreakdown(transactions, "expense").map((s) => [s.id, s]),
   );
@@ -386,7 +402,12 @@ export function budgetReport(
   ) => {
     const grouped = new Map<string, BudgetRow>();
     for (const line of budget.lines) {
-      const id = kind === "spend" ? line.category_id : line.person_id;
+      const id =
+        kind === "spend"
+          ? line.category_id
+          : kind === "emi"
+            ? line.emi_id
+            : line.person_id;
       if (line.kind !== kind || !id) continue;
       const row = grouped.get(id) ?? {
         id,
@@ -396,17 +417,20 @@ export function budgetReport(
         actual: actualOf(id),
         items: [],
       };
-      row.planned += line.amount;
+      // An EMI's installment is the plan; a copied number would go stale
+      row.planned += kind === "emi" ? (emiById.get(id)?.monthly_amount ?? line.amount) : line.amount;
       row.items.push({ label: line.note, amount: line.amount });
       grouped.set(id, row);
     }
     return [...grouped.values()];
   };
 
-  const rows = group("spend", (id) => spent.get(id)?.amount ?? 0);
+  const spendRows = group("spend", (id) => spent.get(id)?.amount ?? 0);
+  const emiRows = group("emi", (id) => paidPerEmi.get(id) ?? 0);
   const repay = group("repay", (id) => flows.repaid.get(id) ?? 0);
   const collect = group("collect", (id) => flows.received.get(id) ?? 0);
 
+  const rows = [...spendRows, ...emiRows];
   const plannedIds = new Set(rows.map((r) => r.id));
   const unplanned = [...spent.values()]
     .filter((s) => !plannedIds.has(s.id))

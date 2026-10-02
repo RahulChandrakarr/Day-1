@@ -167,7 +167,7 @@ export async function getYearsWithData(currentYear: number) {
 }
 
 const BUDGET_COLUMNS =
-  "id, scope, period_key, expected_income, savings_target, lines:finance_budget_lines(kind, category_id, person_id, position, amount, note, created_at, category:finance_categories(name, color), person:finance_people(name))";
+  "id, scope, period_key, expected_income, savings_target, lines:finance_budget_lines(kind, category_id, person_id, emi_id, position, amount, note, created_at, category:finance_categories(name, color), person:finance_people(name), emi:finance_emis(name, color, monthly_amount))";
 
 type Joined<T> = T | T[] | null;
 const one = <T>(value: Joined<T>) =>
@@ -180,12 +180,14 @@ type BudgetRowData = Omit<Budget, "expected_income" | "savings_target" | "lines"
     kind: BudgetLine["kind"];
     category_id: string | null;
     person_id: string | null;
+    emi_id: string | null;
     position: number;
     amount: number | string;
     note: string | null;
     created_at: string;
     category: Joined<{ name: string; color: number }>;
     person: Joined<{ name: string }>;
+    emi: Joined<{ name: string; color: number; monthly_amount: number | string }>;
   }[];
 };
 
@@ -203,16 +205,26 @@ function toBudget(row: BudgetRowData): Budget {
       .map((line) => {
         const category = one(line.category);
         const person = one(line.person);
+        const emi = one(line.emi);
         return {
           kind: line.kind,
           category_id: line.category_id,
           person_id: line.person_id,
+          emi_id: line.emi_id,
           name:
             line.kind === "spend"
               ? (category?.name ?? "Deleted category")
-              : (person?.name ?? "Deleted person"),
-          color: line.kind === "spend" ? (category?.color ?? 8) : 8,
-          amount: Number(line.amount),
+              : line.kind === "emi"
+                ? (emi?.name ?? "Deleted EMI")
+                : (person?.name ?? "Deleted person"),
+          color:
+            line.kind === "spend"
+              ? (category?.color ?? 8)
+              : line.kind === "emi"
+                ? (emi?.color ?? 8)
+                : 8,
+          // An EMI line follows the EMI's installment
+          amount: line.kind === "emi" && emi ? Number(emi.monthly_amount) : Number(line.amount),
           note: line.note,
         };
       }),

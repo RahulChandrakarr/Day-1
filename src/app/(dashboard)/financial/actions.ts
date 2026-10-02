@@ -178,9 +178,10 @@ export async function deleteCategory(id: string) {
 }
 
 type LineInput = {
-  kind: "spend" | "repay" | "collect";
+  kind: "spend" | "repay" | "collect" | "emi";
   category_id: string | null;
   person_id: string | null;
+  emi_id: string | null;
   amount: number;
   note: string | null;
 };
@@ -245,6 +246,7 @@ export async function saveBudget(
     category_id: string | null;
     category_name: string | null;
     person_id: string | null;
+    emi_id: string | null;
     label: string | null;
     amount: number;
   }[] = [];
@@ -255,12 +257,18 @@ export async function saveBudget(
       .trim()
       .replace(/\s+/g, " ");
     const person_id = String(raw?.person_id ?? "").trim();
+    const emi_id = String(raw?.emi_id ?? "").trim();
     const label = String(raw?.label ?? "").trim();
     const amountText = String(raw?.amount ?? "").replace(/,/g, "").trim();
-    if (!category_id && !category_name && !person_id && !label && !amountText)
+    if (!category_id && !category_name && !person_id && !emi_id && !label && !amountText)
       continue; // blank row
     const what = label ? `"${label}"` : "every line";
-    if (kindText !== "spend" && kindText !== "repay" && kindText !== "collect")
+    if (
+      kindText !== "spend" &&
+      kindText !== "repay" &&
+      kindText !== "collect" &&
+      kindText !== "emi"
+    )
       return fail("Invalid line type.");
     const kind = kindText;
     if (kind === "spend") {
@@ -270,6 +278,8 @@ export async function saveBudget(
         return fail("Invalid category.");
       if (category_name.length > 40)
         return fail("Keep category names under 40 characters.");
+    } else if (kind === "emi") {
+      if (!uuid.test(emi_id)) return fail("Pick which EMI that line is for.");
     } else if (!uuid.test(person_id)) {
       return fail("Invalid person.");
     }
@@ -281,7 +291,8 @@ export async function saveBudget(
       kind,
       category_id: kind === "spend" && category_id ? category_id : null,
       category_name: kind === "spend" && !category_id ? category_name : null,
-      person_id: kind === "spend" ? null : person_id,
+      person_id: kind === "spend" || kind === "emi" ? null : person_id,
+      emi_id: kind === "emi" ? emi_id : null,
       label: label || null,
       amount,
     });
@@ -352,11 +363,35 @@ export async function saveBudget(
         : byName.get(e.category_name!.toLowerCase());
       if (!category_id)
         return fail("Plan lines must use your expense categories.");
-      lines.push({ kind: "spend", category_id, person_id: null, amount: e.amount, note: e.label });
+      lines.push({
+        kind: "spend",
+        category_id,
+        person_id: null,
+        emi_id: null,
+        amount: e.amount,
+        note: e.label,
+      });
+    } else if (e.kind === "emi") {
+      // The stored amount is only a fallback; the plan reads the EMI itself
+      lines.push({
+        kind: "emi",
+        category_id: null,
+        person_id: null,
+        emi_id: e.emi_id,
+        amount: e.amount,
+        note: e.label,
+      });
     } else {
       if (!personIds.has(e.person_id!))
         return fail("That person isn't in your Borrow list any more.");
-      lines.push({ kind: e.kind, category_id: null, person_id: e.person_id, amount: e.amount, note: e.label });
+      lines.push({
+        kind: e.kind,
+        category_id: null,
+        person_id: e.person_id,
+        emi_id: null,
+        amount: e.amount,
+        note: e.label,
+      });
     }
   }
 

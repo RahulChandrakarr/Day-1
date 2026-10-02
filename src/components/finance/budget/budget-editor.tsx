@@ -27,11 +27,19 @@ export type PlanPerson = {
   owed: number; // they owe me
 };
 
+export type PlanEmi = {
+  id: string;
+  name: string;
+  color: number;
+  monthly_amount: number;
+};
+
 type DraftLine = {
   key: string;
   kind: BudgetLineKind;
   category_id: string;
   person_id: string;
+  emi_id: string;
   // Set while typing a brand-new category name instead of picking one
   new_category: string | null;
   label: string;
@@ -45,6 +53,7 @@ const blankLine = (): DraftLine => ({
   kind: "spend",
   category_id: "",
   person_id: "",
+  emi_id: "",
   new_category: null,
   label: "",
   amount: "",
@@ -62,6 +71,7 @@ function draftFrom(budget: Budget | null): DraftLine[] {
     kind: line.kind,
     category_id: line.category_id ?? "",
     person_id: line.person_id ?? "",
+    emi_id: line.emi_id ?? "",
     new_category: null,
     label: line.note ?? "",
     amount: String(line.amount),
@@ -73,6 +83,7 @@ export default function BudgetEditor({
   periodKey,
   categories,
   people,
+  emis,
   initial,
   onCancel,
   onSaved,
@@ -81,6 +92,7 @@ export default function BudgetEditor({
   periodKey: string;
   categories: Category[];
   people: PlanPerson[];
+  emis: PlanEmi[];
   // The plan being edited, or a previous plan to copy from
   initial: Budget | null;
   onCancel?: () => void;
@@ -154,7 +166,8 @@ export default function BudgetEditor({
             category_id:
               l.kind === "spend" && l.new_category === null ? l.category_id : "",
             category_name: l.kind === "spend" ? (l.new_category ?? "") : "",
-            person_id: l.kind === "spend" ? "" : l.person_id,
+            person_id: l.kind === "spend" || l.kind === "emi" ? "" : l.person_id,
+            emi_id: l.kind === "emi" ? l.emi_id : "",
             label: l.label,
             amount: l.amount,
           })),
@@ -200,6 +213,7 @@ export default function BudgetEditor({
                 line={line}
                 categories={expense}
                 people={people}
+                emis={emis}
                 onChange={(patch) => update(line.key, patch)}
               />
               <input
@@ -351,11 +365,13 @@ function CategoryField({
   line,
   categories,
   people,
+  emis,
   onChange,
 }: {
   line: DraftLine;
   categories: Category[];
   people: PlanPerson[];
+  emis: PlanEmi[];
   onChange: (patch: Partial<DraftLine>) => void;
 }) {
   const selected = categories.find((c) => c.id === line.category_id);
@@ -405,7 +421,9 @@ function CategoryField({
   const value =
     line.kind === "spend"
       ? line.category_id
-      : `${line.kind}:${line.person_id}`;
+      : line.kind === "emi"
+        ? `emi:${line.emi_id}`
+        : `${line.kind}:${line.person_id}`;
   // People you owe first for returns; people who owe you first for collections
   const owing = people.filter(
     (p) => p.owe > 0 || (line.kind === "repay" && p.id === line.person_id),
@@ -430,7 +448,19 @@ function CategoryField({
               person_id,
               category_id: "",
             });
-          } else onChange({ kind: "spend", category_id: v, person_id: "" });
+          } else if (v.startsWith("emi:")) {
+            const emi_id = v.slice(4);
+            const emi = emis.find((e) => e.id === emi_id);
+            onChange({
+              kind: "emi",
+              emi_id,
+              category_id: "",
+              person_id: "",
+              // The installment is the plan, so it fills itself in
+              amount: emi ? String(emi.monthly_amount) : "",
+              label: emi?.name ?? "",
+            });
+          } else onChange({ kind: "spend", category_id: v, person_id: "", emi_id: "" });
         }}
         aria-label="Category or person"
         className={`${inputClass} pl-8 ${value ? "" : "text-paper/40"}`}
@@ -444,6 +474,15 @@ function CategoryField({
           ))}
           <option value={NEW_CATEGORY}>+ New category…</option>
         </optgroup>
+        {emis.length > 0 && (
+          <optgroup label="EMIs">
+            {emis.map((e) => (
+              <option key={e.id} value={`emi:${e.id}`}>
+                {e.name} ({formatMoney(e.monthly_amount)} a month)
+              </option>
+            ))}
+          </optgroup>
+        )}
         {owing.length > 0 && (
           <optgroup label="Return money to">
             {owing.map((p) => (

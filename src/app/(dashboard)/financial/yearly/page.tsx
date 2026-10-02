@@ -21,10 +21,12 @@ import {
 import { personBalances } from "@/lib/debts";
 import { netSaved, type InvestmentEntry } from "@/lib/investments";
 import {
+  getBankAccounts,
   getBudget,
   getCategories,
   getDebts,
-  getBankAccounts,
+  getEmiPayments,
+  getEmis,
   getInvestmentEntries,
   getMonthBudgets,
   getPeople,
@@ -50,6 +52,8 @@ export default async function YearlyFinancePage({
     people,
     debts,
     investments,
+    emis,
+    emiPayments,
     banks,
   ] = await Promise.all([
     getTransactions({ from, to }),
@@ -60,6 +64,8 @@ export default async function YearlyFinancePage({
     getPeople(),
     getDebts(),
     getInvestmentEntries({ from, to }),
+    getEmis(),
+    getEmiPayments({ from, to }),
     // What's in the accounts at year end, or now for this year
     getBankAccounts(to < today ? to : today),
   ]);
@@ -74,6 +80,8 @@ export default async function YearlyFinancePage({
           transactions,
           debts: debts.filter((d) => d.occurred_on >= from && d.occurred_on <= to),
           investments,
+          emis,
+          emiPayments,
         },
         today,
       )
@@ -135,6 +143,7 @@ export default async function YearlyFinancePage({
         previous={previous}
         previousLabel={previous?.period_key ?? null}
         categories={categories}
+        emis={emis}
         people={personBalances(people, debts).map(({ id, name, owe, owed }) => ({
           id,
           name,

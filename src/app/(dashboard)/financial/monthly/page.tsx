@@ -19,10 +19,12 @@ import {
 } from "@/lib/finance";
 import { personBalances } from "@/lib/debts";
 import {
+  getBankAccounts,
   getBudget,
   getCategories,
   getDebts,
-  getBankAccounts,
+  getEmiPayments,
+  getEmis,
   getInvestmentEntries,
   getPeople,
   getPreviousBudget,
@@ -37,7 +39,18 @@ export default async function MonthlyFinancePage({
   const thisMonth = today.slice(0, 7);
   const { from, to } = monthRange(month);
 
-  const [transactions, categories, budget, previous, people, debts, investments, banks] =
+  const [
+    transactions,
+    categories,
+    budget,
+    previous,
+    people,
+    debts,
+    investments,
+    emis,
+    emiPayments,
+    banks,
+  ] =
     await Promise.all([
       getTransactions({ from, to }),
       getCategories(),
@@ -46,6 +59,8 @@ export default async function MonthlyFinancePage({
       getPeople(),
       getDebts(),
       getInvestmentEntries({ from, to }),
+      getEmis(),
+      getEmiPayments({ from, to }),
       // What's in the accounts at month end, or now for this month
       getBankAccounts(to < today ? to : today),
     ]);
@@ -59,7 +74,7 @@ export default async function MonthlyFinancePage({
         budget,
         "month",
         month,
-        { transactions, debts: periodDebts, investments },
+        { transactions, debts: periodDebts, investments, emis, emiPayments },
         today,
       )
     : null;
@@ -125,6 +140,7 @@ export default async function MonthlyFinancePage({
         previous={previous}
         previousLabel={previous ? formatMonth(previous.period_key) : null}
         categories={categories}
+        emis={emis}
         people={personBalances(people, debts).map(({ id, name, owe, owed }) => ({
           id,
           name,
