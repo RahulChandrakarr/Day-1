@@ -51,6 +51,18 @@ export type BankOption = Pick<BankAccount, "id" | "name" | "color" | "balance">;
 
 // The account an entry came out of last time, so the next one starts there
 const BANK_KEY = "day-one:bank-account";
+// Remembers the account across entries, so it only has to be picked once
+function useBankChoice(accounts: BankOption[]) {
+  const [bankId, setBankId] = useState(() => lastBankAccount(accounts));
+  function chooseBank(id: string) {
+    setBankId(id);
+    try {
+      localStorage.setItem(BANK_KEY, id);
+    } catch {}
+  }
+  return { bankId, chooseBank };
+}
+
 function lastBankAccount(accounts: BankOption[]) {
   try {
     const saved = localStorage.getItem(BANK_KEY);
@@ -507,6 +519,7 @@ function EntryForm({
               key={debtKind}
               kind={debtKind}
               people={people}
+              bankAccounts={bankAccounts}
               onSaved={onSaved}
               defaultDate={defaultDate}
             />
@@ -522,12 +535,18 @@ function EntryForm({
             <SavingsFields
               kind={savingsKind}
               accounts={accounts}
+              bankAccounts={bankAccounts}
               onSaved={onSaved}
               defaultDate={defaultDate}
             />
           </>
         ) : variant === "emi" ? (
-          <EmiFields emis={emis} onSaved={onSaved} defaultDate={defaultDate} />
+          <EmiFields
+            emis={emis}
+            bankAccounts={bankAccounts}
+            onSaved={onSaved}
+            defaultDate={defaultDate}
+          />
         ) : (
           <>
             <Segmented
@@ -548,6 +567,7 @@ function EntryForm({
                 key={borrowKind}
                 kind={borrowKind}
                 people={people}
+                bankAccounts={bankAccounts}
                 {...shared}
               />
             ) : (
@@ -598,14 +618,7 @@ function TransactionFields({
   const [state, action, pending] = useActionState(addTransaction, initialState);
   const amountRef = useSavedEffect(state, onSaved);
   const values = state.ok ? undefined : state.values;
-  const [bankId, setBankId] = useState(() => lastBankAccount(bankAccounts));
-
-  function chooseBank(id: string) {
-    setBankId(id);
-    try {
-      localStorage.setItem(BANK_KEY, id);
-    } catch {}
-  }
+  const { bankId, chooseBank } = useBankChoice(bankAccounts);
 
   return (
     <form
@@ -652,13 +665,19 @@ function TransactionFields({
 function BorrowFields({
   kind,
   people,
+  bankAccounts,
   categorySelect,
   categoryPanel,
   onSaved,
   defaultDate,
-}: SharedProps & { kind: DebtKind; people: EntryPerson[] }) {
+}: SharedProps & {
+  kind: DebtKind;
+  people: EntryPerson[];
+  bankAccounts: BankOption[];
+}) {
   const [state, action, pending] = useActionState(addDebt, initialState);
   const [person, setPerson] = useState("");
+  const { bankId, chooseBank } = useBankChoice(bankAccounts);
   const [inBalance, setInBalance] = useState<"" | "yes" | "no">("");
   const amountRef = useSavedEffect(state, () => {
     setPerson("");
@@ -715,6 +734,15 @@ function BorrowFields({
       </div>
       {categoryPanel}
 
+      {/* Repaying or lending takes money out of an account; borrowing or
+          being repaid puts it back in */}
+      <BankPicker
+        accounts={bankAccounts}
+        type={kind === "borrowed" || kind === "received" ? "income" : "expense"}
+        value={bankId}
+        onChange={chooseBank}
+      />
+
       <div className="flex flex-col gap-1.5">
         <span className={labelClass}>
           {kind === "borrowed" || kind === "received" ? "From" : "To"}
@@ -770,14 +798,17 @@ function BorrowFields({
 function SavingsFields({
   kind,
   accounts,
+  bankAccounts,
   onSaved,
   defaultDate,
 }: {
   kind: InvestmentKind;
   accounts: Account[];
+  bankAccounts: BankOption[];
   onSaved: () => void;
   defaultDate: string;
 }) {
+  const { bankId, chooseBank } = useBankChoice(bankAccounts);
   const [state, action, pending] = useActionState(
     addInvestmentEntry,
     initialState,
@@ -865,19 +896,31 @@ function SavingsFields({
           defaultValue={values?.occurred_on || sip?.date || defaultDate}
         />
       </div>
+
+      {kind !== "value" && (
+        <BankPicker
+          accounts={bankAccounts}
+          type={kind === "withdrawal" ? "income" : "expense"}
+          value={bankId}
+          onChange={chooseBank}
+        />
+      )}
     </form>
   );
 }
 
 function EmiFields({
   emis,
+  bankAccounts,
   onSaved,
   defaultDate,
 }: {
   emis: Pick<EmiSummary, "id" | "name" | "color" | "monthly_amount" | "remaining">[];
+  bankAccounts: BankOption[];
   onSaved: () => void;
   defaultDate: string;
 }) {
+  const { bankId, chooseBank } = useBankChoice(bankAccounts);
   const open = emis.filter((e) => e.remaining > 0);
   const options = open.length ? open : emis;
   const [emiId, setEmiId] = useState(options[0]?.id ?? "");
@@ -937,6 +980,13 @@ function EmiFields({
           defaultValue={state.values?.occurred_on || defaultDate}
         />
       </div>
+
+      <BankPicker
+        accounts={bankAccounts}
+        type="expense"
+        value={bankId}
+        onChange={chooseBank}
+      />
     </form>
   );
 }

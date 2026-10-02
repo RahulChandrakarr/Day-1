@@ -108,6 +108,7 @@ export async function addInvestmentEntry(
     "amount",
     "occurred_on",
     "note",
+    "bank_account_id",
   ]);
   const fail = (error: string): FormState => ({
     error,
@@ -134,6 +135,11 @@ export async function addInvestmentEntry(
     amount,
     occurred_on: values.occurred_on,
     note: values.note || null,
+    // A value update is just a revaluation; no money leaves an account
+    bank_account_id:
+      values.kind !== "value" && uuid.test(values.bank_account_id)
+        ? values.bank_account_id
+        : null,
   });
   if (error) return fail(error.message);
 

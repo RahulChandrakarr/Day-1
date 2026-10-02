@@ -208,6 +208,7 @@ export async function addEmiPayment(
     "amount",
     "occurred_on",
     "note",
+    "bank_account_id",
   ]);
   const fail = (error: string): FormState => ({
     error,
@@ -229,6 +230,7 @@ export async function addEmiPayment(
     amount,
     occurred_on: values.occurred_on,
     note: values.note || null,
+    bank_account_id: uuid.test(values.bank_account_id) ? values.bank_account_id : null,
   });
   if (error) return fail(error.message);
 

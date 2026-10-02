@@ -23,6 +23,7 @@ export async function addDebt(
     "occurred_on",
     "note",
     "in_balance",
+    "bank_account_id",
   ]);
   const fail = (error: string): FormState => ({
     error,
@@ -71,6 +72,7 @@ export async function addDebt(
     occurred_on: values.occurred_on,
     note: values.note || null,
     in_balance: values.in_balance === "yes",
+    bank_account_id: uuid.test(values.bank_account_id) ? values.bank_account_id : null,
   });
   if (error) return fail(error.message);
 
