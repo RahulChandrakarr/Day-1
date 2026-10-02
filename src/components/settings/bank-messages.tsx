@@ -28,7 +28,7 @@ export default function BankMessages({
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="font-serif text-2xl">Forward your bank SMS</h2>
+          <h2 className="font-bold tracking-tight text-2xl">Forward your bank SMS</h2>
           <p className="mt-1 text-sm text-paper/55">
             India has no way for a personal app to read your bank directly — the account
             aggregator system is only open to licensed companies. What works instead is the
@@ -67,7 +67,7 @@ export default function BankMessages({
 
       {untagged.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-serif text-2xl">Tell the app which account is which</h2>
+          <h2 className="font-bold tracking-tight text-2xl">Tell the app which account is which</h2>
           <p className="text-sm text-paper/55">
             {untagged.map((a) => a.name).join(" and ")}{" "}
             {untagged.length === 1 ? "has" : "have"} no account digits saved, so a forwarded
@@ -80,7 +80,7 @@ export default function BankMessages({
       <Tester />
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-2xl">What has arrived</h2>
+        <h2 className="font-bold tracking-tight text-2xl">What has arrived</h2>
         {recent.length === 0 ? (
           <p className="text-sm text-paper/55">
             Nothing yet. Once the macro is on, send yourself a small payment and it should show
@@ -115,7 +115,7 @@ export default function BankMessages({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-serif text-2xl">If the address leaks</h2>
+        <h2 className="font-bold tracking-tight text-2xl">If the address leaks</h2>
         <p className="text-sm text-paper/55">
           Anyone holding it could add messages to your waiting list. They couldn&apos;t read
           anything or change your money, but a new address stops the old one at once — you would
@@ -159,7 +159,7 @@ function Tester() {
   return (
     <section className="flex flex-col gap-2">
       <div>
-        <h2 className="font-serif text-2xl">Try a message</h2>
+        <h2 className="font-bold tracking-tight text-2xl">Try a message</h2>
         <p className="mt-1 text-sm text-paper/55">
           Paste one of your bank&apos;s texts to see what it would record. Nothing is saved.
         </p>

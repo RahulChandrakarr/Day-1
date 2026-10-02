@@ -362,7 +362,7 @@ export default async function OverviewPage() {
           <Section title="Money" href="/financial/daily" link="Open">
             <Link
               href="/financial/daily"
-              className="flex flex-col rounded-card border border-paper/10 bg-surface"
+              className="flex flex-col card"
             >
               {banks.length > 0 && (
                 <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">

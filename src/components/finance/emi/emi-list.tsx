@@ -23,11 +23,11 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-serif text-2xl">Your EMIs</h3>
+        <h3 className="font-bold tracking-tight text-2xl">Your EMIs</h3>
         <AddEmiButton />
       </div>
       {emis.length === 0 ? (
-        <p className="mt-6 rounded-inset border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/40">
           No EMIs yet. Add a loan or installment to track what’s left.
         </p>
       ) : (

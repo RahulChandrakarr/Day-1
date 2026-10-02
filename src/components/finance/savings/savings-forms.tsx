@@ -28,7 +28,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <h3 className="font-serif text-2xl">New account</h3>
+          <h3 className="font-bold tracking-tight text-2xl">New account</h3>
           <p className="mt-0.5 text-sm text-paper/50">
             FD, mutual fund, stocks, PPF, gold…
           </p>

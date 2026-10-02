@@ -368,7 +368,7 @@ export default function QuickAssistant({ name }: { name: string }) {
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.15 }}
             style={{ width: bubbleWidth, left: bubbleLeft }}
-            className={`absolute rounded-2xl border border-paper/10 bg-surface p-3 text-sm shadow-xl ${
+            className={`absolute card p-3 text-sm shadow-xl ${
               below ? "top-[4.25rem]" : "bottom-[4.25rem]"
             }`}
           >

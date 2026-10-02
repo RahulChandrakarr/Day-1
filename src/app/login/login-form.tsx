@@ -103,7 +103,7 @@ export default function LoginForm() {
 
           <motion.h1
             variants={item}
-            className="font-serif text-5xl leading-[0.95] tracking-tight sm:text-7xl"
+            className="font-bold tracking-tight text-5xl leading-[0.95] tracking-tight sm:text-7xl"
           >
             {now ? greeting(now.getHours()) : "Welcome back"}.
             <br />
@@ -153,7 +153,7 @@ export default function LoginForm() {
             animate={shake}
             className="rounded-3xl border border-paper/10 bg-paper/[0.04] p-6 shadow-2xl shadow-black/10 dark:shadow-black/40 backdrop-blur-xl sm:p-8"
           >
-            <h2 className="font-serif text-3xl">Sign in</h2>
+            <h2 className="font-bold tracking-tight text-3xl">Sign in</h2>
             <p className="mt-1 text-sm text-paper/50">
               Pick up where you left off.
             </p>

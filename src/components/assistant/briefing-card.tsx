@@ -81,7 +81,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
           <SparkleIcon />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="font-serif text-2xl leading-tight">
+          <h2 className="font-bold tracking-tight text-2xl leading-tight">
             Today&apos;s briefing
           </h2>
           <p className="text-xs text-paper/45">

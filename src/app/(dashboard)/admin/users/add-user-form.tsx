@@ -27,7 +27,7 @@ export default function AddUserForm() {
       transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
       className="rounded-card border border-paper/10 bg-paper/[0.04] p-4 xl:sticky xl:top-4"
     >
-      <h2 className="font-serif text-2xl">Add someone</h2>
+      <h2 className="font-bold tracking-tight text-2xl">Add someone</h2>
       <p className="mt-1 text-sm text-paper/50">They join as a regular user.</p>
 
       <form ref={formRef} action={action} className="mt-6 flex flex-col gap-4">

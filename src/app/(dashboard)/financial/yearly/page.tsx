@@ -175,7 +175,7 @@ export default async function YearlyFinancePage({
 
       {/* Twelve pairs of bars: full width or nothing */}
       <Card>
-        <h3 className="font-serif text-[19px]">Month by month</h3>
+        <h3 className="font-bold tracking-tight text-[19px]">Month by month</h3>
         <p className="mb-4 text-sm text-paper/50">
           Everything logged in {year}.
         </p>
@@ -225,7 +225,7 @@ function MonthPlanTable({
 
   return (
     <Card>
-      <h3 className="font-serif text-[19px]">Monthly plans in {year}</h3>
+      <h3 className="font-bold tracking-tight text-[19px]">Monthly plans in {year}</h3>
       <p className="mb-4 text-sm text-paper/50">
         {planned.length === 0
           ? "No monthly plans yet. Open a month to set one."

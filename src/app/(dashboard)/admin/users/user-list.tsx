@@ -20,7 +20,7 @@ export default function UserList({ users }: { users: Profile[] }) {
             }}
             className="flex items-center gap-4 rounded-inset border border-paper/10 bg-paper/[0.03] p-4"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ember/15 font-serif text-xl text-ember">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ember/15 font-bold tracking-tight text-xl text-ember">
               {(user.full_name || user.email).charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">

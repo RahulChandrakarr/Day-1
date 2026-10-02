@@ -131,7 +131,7 @@ function AboutCard({
           type="button"
           onClick={() => fileInput.current?.click()}
           aria-label="Change photo"
-          className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper/10 font-serif text-3xl"
+          className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper/10 font-bold tracking-tight text-3xl"
         >
           {preview ? <img src={preview} alt="" className="h-full w-full object-cover" /> : initial}
           {uploading && (

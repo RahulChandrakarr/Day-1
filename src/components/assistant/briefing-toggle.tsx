@@ -20,7 +20,7 @@ export default function BriefingToggle() {
         role="switch"
         aria-checked={on}
         onClick={() => setOn((v) => !v)}
-        className="flex min-h-11 items-center gap-3 rounded-inset border border-paper/10 bg-surface px-3.5 py-2 text-left transition active:bg-ink"
+        className="flex min-h-11 items-center gap-3 rounded-inset card px-3.5 py-2 text-left transition active:bg-ink"
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ember/15 text-ember">
           <SparkleIcon />

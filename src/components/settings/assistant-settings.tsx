@@ -140,7 +140,7 @@ function MemoryCard({ name, memories }: { name: string; memories: Memory[] }) {
         Edit or delete anything here.
       </p>
       {memories.length === 0 && !adding && (
-        <p className="rounded-inset border border-dashed border-paper/10 px-4 py-6 text-center text-sm text-paper/45">
+        <p className="card px-4 py-6 text-center text-sm text-paper/45">
           Nothing yet. Try saying &ldquo;{name}, my date of birth is 12 May 1998&rdquo;.
         </p>
       )}

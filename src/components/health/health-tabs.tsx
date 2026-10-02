@@ -15,7 +15,7 @@ export default function HealthTabs() {
 
   return (
     <nav aria-label="Health sections">
-      <ul className="grid grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4 border border-paper/10 bg-surface p-1 sm:inline-grid sm:w-[34rem]">
+      <ul className="grid grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4 card p-1 sm:inline-grid sm:w-[34rem]">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (

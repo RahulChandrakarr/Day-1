@@ -287,7 +287,7 @@ export default function TransactionList({
   return (
     <Card>
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-serif text-2xl">{title}</h3>
+        <h3 className="font-bold tracking-tight text-2xl">{title}</h3>
         {aside ?? (
           <span className="text-sm text-paper/45">
             {items.length} {items.length === 1 ? "entry" : "entries"}
@@ -295,7 +295,7 @@ export default function TransactionList({
         )}
       </div>
       {items.length === 0 ? (
-        <p className="mt-6 rounded-inset border border-dashed border-paper/10 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card py-10 text-center text-sm text-paper/40">
           {empty}
         </p>
       ) : (

@@ -171,7 +171,7 @@ function Headline({
 
   if (ended) {
     return (
-      <p className="font-serif text-2xl leading-snug sm:text-3xl">
+      <p className="font-bold tracking-tight text-2xl leading-snug sm:text-3xl">
         You planned <Figure>{formatMoney(planned)}</Figure> and spent{" "}
         <Figure>{formatMoney(actual)}</Figure> in {periodLabel} —{" "}
         <span className={over ? badText : "text-moss"}>
@@ -186,7 +186,7 @@ function Headline({
     const pace = progress.projected - planned;
     return (
       <div>
-        <p className="font-serif text-2xl leading-snug sm:text-3xl">
+        <p className="font-bold tracking-tight text-2xl leading-snug sm:text-3xl">
           <Figure>{formatMoney(actual)}</Figure> of{" "}
           <Figure>{formatMoney(planned)}</Figure> spent
         </p>
@@ -205,7 +205,7 @@ function Headline({
   }
 
   return (
-    <p className="font-serif text-2xl leading-snug sm:text-3xl">
+    <p className="font-bold tracking-tight text-2xl leading-snug sm:text-3xl">
       Plan ready: <Figure>{formatMoney(planned)}</Figure> to spend in{" "}
       {periodLabel}.
     </p>

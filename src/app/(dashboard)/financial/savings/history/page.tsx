@@ -49,7 +49,7 @@ export default async function SavingsHistoryPage({
 
       <Card>
         <div className="mb-3">
-          <h3 className="font-serif text-[19px]">Saved each month</h3>
+          <h3 className="font-bold tracking-tight text-[19px]">Saved each month</h3>
           <p className="text-sm text-paper/50">
             {formatMoney(Math.max(yearNet, 0))} saved in {year}, against the savings
             target in each month&apos;s plan.

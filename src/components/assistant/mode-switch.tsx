@@ -21,7 +21,7 @@ export default function ModeSwitch({
     <div
       role="radiogroup"
       aria-label="Assistant mode"
-      className={`relative grid shrink-0 grid-cols-2 rounded-xl border border-paper/10 bg-surface p-0.5 text-sm font-semibold ${className}`}
+      className={`relative grid shrink-0 grid-cols-2 rounded-xl card p-0.5 text-sm font-semibold ${className}`}
     >
       <span
         aria-hidden

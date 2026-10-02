@@ -53,12 +53,12 @@ export default function Sheet({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 36 }}
-              className={`pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-paper/10 bg-surface shadow-2xl md:rounded-3xl ${
+              className={`pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:rounded-3xl ${
                 wide ? "md:max-w-2xl" : "md:max-w-lg"
               }`}
             >
               <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
-                <h2 className="min-w-0 flex-1 truncate font-serif text-xl sm:text-2xl">
+                <h2 className="min-w-0 flex-1 truncate font-bold tracking-tight text-xl sm:text-2xl">
                   {title}
                 </h2>
                 <button

@@ -47,7 +47,7 @@ function Card({
 }) {
   return (
     <Shell>
-      <h3 className="font-serif text-[19px]">{title}</h3>
+      <h3 className="font-bold tracking-tight text-[19px]">{title}</h3>
       {subtitle && <p className="text-sm text-paper/50">{subtitle}</p>}
       <div className="mt-3">{children}</div>
     </Shell>

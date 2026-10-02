@@ -112,7 +112,7 @@ export default function PlanDialog({
           variant === "primary"
             ? "h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
             : variant === "icon"
-              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-paper/10 bg-surface text-paper/60 transition hover:text-paper active:bg-ink"
+              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-ink"
               : "h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
         }
       >
@@ -140,7 +140,7 @@ export default function PlanDialog({
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                className="pointer-events-auto flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-paper/10 bg-surface shadow-2xl md:max-w-2xl md:rounded-3xl"
+                className="pointer-events-auto flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:max-w-2xl md:rounded-3xl"
               >
                 <PlanEditor
                   key={session}
@@ -241,7 +241,7 @@ function PlanEditor({
     <>
       <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
         <div className="min-w-0 flex-1">
-          <h2 className="font-serif text-xl sm:text-2xl">Weekly gym plan</h2>
+          <h2 className="font-bold tracking-tight text-xl sm:text-2xl">Weekly gym plan</h2>
           <p className="text-xs text-paper/50">
             Set it once; the tracker shows each day&apos;s exercises.
           </p>

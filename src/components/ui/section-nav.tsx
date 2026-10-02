@@ -51,7 +51,7 @@ export function SectionSidebar({
 
   return (
     <aside
-      className={`sticky top-4 hidden shrink-0 flex-col gap-1 self-start rounded-2xl border border-paper/10 bg-surface p-2 transition-[width] duration-300 xl:flex ${
+      className={`sticky top-4 hidden shrink-0 flex-col gap-1 self-start card p-2 transition-[width] duration-300 xl:flex ${
         collapsed ? "w-14" : "w-48"
       }`}
     >
@@ -137,7 +137,7 @@ export function SectionMenuButton({
         onClick={() => setOpenOn(pathname)}
         aria-label={label}
         aria-expanded={open}
-        className="flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-paper/10 bg-surface pl-3 pr-3.5 text-sm font-semibold transition active:bg-ink xl:hidden"
+        className="flex h-12 shrink-0 items-center gap-2 card pl-3 pr-3.5 text-sm font-semibold transition active:bg-ink xl:hidden"
       >
         <svg {...iconProps}>
           <path d="M4 6h16M4 12h16M4 18h10" />
@@ -168,7 +168,7 @@ export function SectionMenuButton({
               className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-paper/10 bg-surface pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl xl:hidden"
             >
               <div className="flex items-center justify-between px-5 py-4">
-                <h2 className="font-serif text-2xl">{title}</h2>
+                <h2 className="font-bold tracking-tight text-2xl">{title}</h2>
                 <button
                   type="button"
                   onClick={close}

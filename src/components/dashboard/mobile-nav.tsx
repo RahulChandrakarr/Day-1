@@ -55,7 +55,7 @@ export default function MobileNav({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
-                className="font-serif text-2xl"
+                className="font-bold tracking-tight text-2xl"
               >
                 {current}
               </motion.span>
@@ -80,7 +80,7 @@ export default function MobileNav({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-12 w-56 origin-top-right rounded-2xl border border-paper/10 bg-surface p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
+                className="absolute right-0 top-12 w-56 origin-top-right card p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
               >
                 <div className="px-3 py-2">
                   <p className="truncate text-sm font-medium">{name}</p>

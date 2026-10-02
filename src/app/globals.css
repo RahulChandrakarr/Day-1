@@ -4,54 +4,56 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Light theme (matches the Overview design) */
+/* Light: a pale canvas with white cards, after the Plata Card app */
 :root {
-  --ink: #f7f2e9; /* page background */
-  --paper: #2b2117; /* main text */
-  --surface: #fffdf8; /* cards, menus, popovers */
-  --ember: #b0561f;
-  --ember-light: #8f4517; /* hover: deeper, not lighter, on paper */
-  --on-ember: #fbf7ef; /* text on the accent */
-  --moss: #4c7a4f;
+  --ink: #f1f2f7; /* page background */
+  --paper: #0c0c14; /* main text */
+  --surface: #ffffff; /* cards, menus, popovers */
+  --ember: #ff5a1f; /* primary actions */
+  --ember-light: #e8451b; /* hover: deeper */
+  --on-ember: #ffffff;
+  --indigo: #5b3ef4; /* secondary actions, links, icon chips */
+  --moss: #12b76a; /* money in */
   /* Chart palette (validated for CVD + contrast on --surface) */
-  --chart-income: #1baf7a;
-  --chart-expense: #eb6834;
-  --chart-net: #2a78d6;
-  --chart-grid: #e7dfd1;
-  --cat-1: #2a78d6;
-  --cat-2: #eb6834;
-  --cat-3: #1baf7a;
-  --cat-4: #eda100;
-  --cat-5: #e87ba4;
-  --cat-6: #008300;
-  --cat-7: #4a3aa7;
-  --cat-8: #e34948;
+  --chart-income: #12b76a;
+  --chart-expense: #ff5a1f;
+  --chart-net: #5b3ef4;
+  --chart-grid: #e6e7ef;
+  --cat-1: #5b3ef4;
+  --cat-2: #ff5a1f;
+  --cat-3: #12b76a;
+  --cat-4: #f5a524;
+  --cat-5: #ec4899;
+  --cat-6: #06b6d4;
+  --cat-7: #8b5cf6;
+  --cat-8: #ef4444;
   /* Width of the narrow column beside the main one */
   --rail: 22rem;
   color-scheme: light;
 }
 
-/* Dark theme */
+/* Dark: the same app at night, after Plata's Invest screen */
 .dark {
-  --ink: #100f0d;
-  --paper: #f3ede2;
-  --surface: #1a1815;
-  --ember: #e8a15a;
-  --ember-light: #f0b77c;
-  --on-ember: #1a1208;
-  --moss: #8fb07f;
-  --chart-income: #199e70;
-  --chart-expense: #d95926;
-  --chart-net: #3987e5;
-  --chart-grid: #2a2723;
-  --cat-1: #3987e5;
-  --cat-2: #d95926;
-  --cat-3: #199e70;
-  --cat-4: #c98500;
-  --cat-5: #d55181;
-  --cat-6: #008300;
-  --cat-7: #9085e9;
-  --cat-8: #e66767;
+  --ink: #0a0a0b;
+  --paper: #f7f7f8;
+  --surface: #151517;
+  --ember: #ff6a2b;
+  --ember-light: #ff8450;
+  --on-ember: #130b06;
+  --indigo: #8b78ff;
+  --moss: #22c55e;
+  --chart-income: #22c55e;
+  --chart-expense: #ff6a2b;
+  --chart-net: #8b78ff;
+  --chart-grid: #26262a;
+  --cat-1: #8b78ff;
+  --cat-2: #ff6a2b;
+  --cat-3: #22c55e;
+  --cat-4: #fbbf24;
+  --cat-5: #f472b6;
+  --cat-6: #22d3ee;
+  --cat-7: #a78bfa;
+  --cat-8: #f87171;
   color-scheme: dark;
 }
 
@@ -63,6 +65,7 @@
   --color-ember-light: var(--ember-light);
   --color-on-ember: var(--on-ember);
   --color-moss: var(--moss);
+  --color-indigo: var(--indigo);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
   --color-chart-net: var(--chart-net);
@@ -71,10 +74,21 @@
   --color-foreground: var(--paper);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-instrument-serif);
-  /* The card radius the whole app already uses, given a name */
-  --radius-card: 18px;
+  /* Plata's cards are large and soft; the inner chips are smaller */
+  --radius-card: 22px;
   --radius-inset: 14px;
+}
+
+/* One card, everywhere: white on the canvas, no outline, a hairline of shade */
+@utility card {
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(12 12 20 / 0.05), 0 1px 1px rgb(12 12 20 / 0.03);
+}
+
+.dark .card,
+.dark [class~="card"] {
+  box-shadow: none;
 }
 
 body {

@@ -97,7 +97,7 @@ export default async function SavingsPage() {
           <Link key={page.href} href={page.href} className="min-w-0">
             <Card className="flex h-full items-center gap-3 transition hover:border-paper/25">
               <span className="min-w-0 flex-1">
-                <span className="block font-serif text-[19px]">{page.title}</span>
+                <span className="block font-bold tracking-tight text-[19px]">{page.title}</span>
                 <span className="block truncate text-sm text-paper/55">{page.line}</span>
               </span>
               <span aria-hidden className="shrink-0 text-ember">

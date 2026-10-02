@@ -52,7 +52,7 @@ export default function PdfLink({
         disabled={state === "busy"}
         aria-label={text}
         title={text}
-        className={`flex shrink-0 items-center justify-center border border-paper/10 bg-surface transition hover:text-paper active:bg-ink disabled:opacity-60 ${className} ${
+        className={`flex shrink-0 items-center justify-center card transition hover:text-paper active:bg-ink disabled:opacity-60 ${className} ${
           state === "error" ? "text-red-700 dark:text-red-300" : "text-ember"
         }`}
       >
@@ -82,7 +82,7 @@ export default function PdfLink({
       type="button"
       onClick={download}
       disabled={state === "busy"}
-      className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-paper/10 bg-surface px-3 text-[13px] font-semibold transition active:bg-ink ${
+      className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full card px-3 text-[13px] font-semibold transition active:bg-ink ${
         state === "error" ? "text-red-700 dark:text-red-300" : "text-ember"
       }`}
     >

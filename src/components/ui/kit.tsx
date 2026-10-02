@@ -21,9 +21,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`min-w-0 rounded-card border border-paper/10 bg-surface ${
-        container ? "@container" : ""
-      } ${padded ? "p-4" : ""} ${className}`}
+      className={`card min-w-0 ${container ? "@container" : ""} ${padded ? "p-5" : ""} ${className}`}
     >
       {children}
     </section>
@@ -40,7 +38,7 @@ export function CardList({
 }) {
   return (
     <ul
-      className={`overflow-hidden rounded-card border border-paper/10 bg-surface [&>li+li]:border-t [&>li+li]:border-paper/[0.06] ${className}`}
+      className={`card overflow-hidden [&>li+li]:border-t [&>li+li]:border-paper/[0.06] ${className}`}
     >
       {children}
     </ul>
@@ -57,7 +55,7 @@ export function DarkCard({
 }) {
   return (
     <section
-      className={`rounded-card bg-paper px-4 py-3.5 text-ink ${className}`}
+      className={`rounded-card bg-paper px-5 py-4 text-ink ${className}`}
     >
       {children}
     </section>
@@ -77,13 +75,13 @@ export function SectionHead({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <h2 className="min-w-0 truncate font-serif text-2xl">
+      <h2 className="min-w-0 truncate text-[26px] font-bold tracking-[-0.02em]">
         {title}
       </h2>
       {href && link ? (
         <Link
           href={href}
-          className="shrink-0 text-[13px] font-semibold text-ember"
+          className="shrink-0 text-[13px] font-semibold text-indigo"
         >
           {link} →
         </Link>
@@ -109,9 +107,9 @@ export function CardHead({
 }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h3 className="min-w-0 truncate font-serif text-[19px]">{title}</h3>
+      <h3 className="min-w-0 truncate text-[19px] font-bold tracking-[-0.01em]">{title}</h3>
       {href && link ? (
-        <Link href={href} className="shrink-0 text-[13px] font-semibold text-ember">
+        <Link href={href} className="shrink-0 text-[13px] font-semibold text-indigo">
           {link} →
         </Link>
       ) : (
@@ -267,7 +265,7 @@ export function Figure({
     <div className={`min-w-0 py-2.5 ${line}`}>
       <p className="truncate text-xs text-paper/55">{label}</p>
       <p
-        className={`mt-0.5 truncate text-[19px] font-bold tabular-nums ${toneClass(tone)}`}
+        className={`mt-0.5 truncate text-[22px] font-bold tracking-[-0.01em] tabular-nums ${toneClass(tone)}`}
       >
         {value}
       </p>
@@ -291,7 +289,7 @@ export function Figures({
         <div key={item.label} className="min-w-0">
           <dt className="truncate text-xs text-paper/55">{item.label}</dt>
           <dd
-            className={`mt-0.5 truncate text-2xl font-semibold tabular-nums ${toneClass(item.tone)}`}
+            className={`mt-0.5 truncate text-[28px] font-bold tracking-[-0.02em] tabular-nums ${toneClass(item.tone)}`}
           >
             {item.value}
           </dd>
@@ -382,11 +380,11 @@ export function Empty({
   href?: string;
 }) {
   const className =
-    "block rounded-card border border-dashed border-paper/15 px-4 py-8 text-center text-sm text-paper/55";
+    "card block px-4 py-8 text-center text-sm text-paper/45";
   return href ? (
     <Link
       href={href}
-      className={`${className} transition hover:border-ember/50 hover:text-paper`}
+      className={`${className} transition hover:text-paper`}
     >
       {children}
     </Link>
@@ -396,7 +394,7 @@ export function Empty({
 }
 
 export const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/10";
+  "h-12 w-full rounded-inset border border-transparent bg-ink px-4 text-[15px] text-paper outline-none transition placeholder:text-paper/35 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
 export const labelClass = "text-xs font-medium text-paper/55";
 
@@ -421,16 +419,16 @@ export function Field({
 }
 
 export const primaryButtonClass =
-  "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-5 text-[15px] font-semibold text-on-ember shadow-sm transition-colors hover:bg-ember-light disabled:opacity-60";
+  "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ember px-6 text-[15px] font-semibold text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60";
 
 export const quietButtonClass =
-  "flex min-h-11 items-center justify-center rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5 disabled:opacity-50";
+  "card flex min-h-11 items-center justify-center px-5 text-sm font-semibold transition hover:bg-paper/[0.03] disabled:opacity-50";
 
 // Placeholder blocks used by the loading screens
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-card bg-paper/[0.06] ${className}`}
+      className={`animate-pulse rounded-card bg-paper/[0.05] ${className}`}
       aria-hidden
     />
   );
@@ -482,7 +480,7 @@ export function Reminder({
   return (
     <Link
       href={href}
-      className="flex min-h-11 flex-1 items-center gap-3 rounded-inset border border-paper/10 bg-surface px-4 py-3 transition active:bg-ink"
+      className="flex min-h-11 flex-1 items-center gap-3 rounded-inset card px-4 py-3 transition active:bg-ink"
     >
       <span className="text-base">{emoji}</span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>

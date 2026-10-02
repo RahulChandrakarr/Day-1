@@ -64,7 +64,7 @@ export default async function EmiPage() {
         {tiles.map((tile, i) => (
           <div
             key={tile.label}
-            className={`rounded-card border border-paper/10 bg-surface p-4 ${
+            className={`card p-4 ${
               i === 2 ? "col-span-2 sm:col-span-1" : ""
             }`}
           >

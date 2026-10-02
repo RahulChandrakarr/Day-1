@@ -55,7 +55,7 @@ export default function TodayTasks({
         href={href}
         link={`${doneCount}/${items.length}`}
       />
-      <section className="rounded-card border border-paper/10 bg-surface px-4 py-1.5">
+      <section className="card px-4 py-1.5">
         <ItemList
           goals={goals}
           level="day"

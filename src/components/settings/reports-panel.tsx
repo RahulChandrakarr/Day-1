@@ -77,7 +77,7 @@ function ReportCard({
           {report.emoji}
         </span>
         <div className="min-w-0">
-          <h3 className="font-serif text-xl">{report.title}</h3>
+          <h3 className="font-bold tracking-tight text-xl">{report.title}</h3>
           <p className="text-sm text-paper/55">{report.about}</p>
         </div>
       </div>

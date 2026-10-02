@@ -18,7 +18,7 @@ export default function NextBlock({
 
   return (
     <section className="rounded-3xl border border-ember/40 bg-ember/10 p-5 sm:p-6">
-      <h3 className="font-serif text-2xl">Month {blockNumber} complete 🎉</h3>
+      <h3 className="font-bold tracking-tight text-2xl">Month {blockNumber} complete 🎉</h3>
       <p className="mt-1 max-w-xl text-sm text-paper/65">{summary}</p>
       <ul className="mt-3 flex flex-col gap-1 text-sm text-paper/60">
         <li>• Some exercises change, so your body keeps adapting</li>

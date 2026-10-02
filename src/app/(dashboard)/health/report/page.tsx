@@ -31,7 +31,7 @@ export default async function ReportPage({
       </PeriodNav>
 
       {nothingYet ? (
-        <p className="rounded-card border border-dashed border-paper/15 px-6 py-12 text-center text-sm text-paper/50">
+        <p className="card px-6 py-12 text-center text-sm text-paper/50">
           Nothing tracked in {formatMonth(month)} yet. Tick off workouts and
           habits and the report fills in.
         </p>
@@ -274,7 +274,7 @@ function Tile({
 }) {
   const show = !hideDelta && delta !== null && delta !== 0;
   return (
-    <div className="rounded-card border border-paper/10 bg-surface p-4">
+    <div className="card p-4">
       <p className="truncate text-sm text-paper/55">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
         {value}
@@ -384,7 +384,7 @@ function Stat({
 
 function Empty({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-inset border border-dashed border-paper/10 py-6 text-center text-sm text-paper/40">
+    <p className="card py-6 text-center text-sm text-paper/40">
       {children}
     </p>
   );

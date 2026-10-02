@@ -41,7 +41,7 @@ export default function ConversationList({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -6, scale: 0.98 }}
       transition={{ duration: 0.15 }}
-      className="absolute inset-x-0 top-[3.25rem] z-20 max-h-80 origin-top overflow-y-auto rounded-2xl border border-paper/10 bg-surface p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
+      className="absolute inset-x-0 top-[3.25rem] z-20 max-h-80 origin-top overflow-y-auto card p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
     >
       <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wider text-paper/45">
         Past chats

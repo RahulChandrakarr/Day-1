@@ -103,7 +103,7 @@ export default function ChatPanel() {
           >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col justify-end gap-4">
-                <p className="font-serif text-3xl">Hi {name}.</p>
+                <p className="font-bold tracking-tight text-3xl">Hi {name}.</p>
                 <div className="grid grid-cols-2 gap-2">
                   {starters.map((s, i) => (
                     <motion.button
@@ -258,7 +258,7 @@ function Composer({
       }}
       className="pt-2"
     >
-      <div className="flex items-end gap-1.5 rounded-2xl border border-paper/10 bg-surface p-1.5 shadow-sm transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
+      <div className="flex items-end gap-1.5 card p-1.5 shadow-sm transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
         <textarea
           ref={ref}
           rows={1}

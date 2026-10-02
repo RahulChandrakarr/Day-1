@@ -110,7 +110,7 @@ export default function TradeJournal({
 
       {open.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-serif text-2xl">Open</h2>
+          <h2 className="font-bold tracking-tight text-2xl">Open</h2>
           <Rows>
             {open.map((t) => {
               const risk = plannedRisk(t);
@@ -161,7 +161,7 @@ export default function TradeJournal({
       {closed.length > 0 && (
         <>
           <section className="flex flex-col gap-2">
-            <h2 className="font-serif text-2xl">Closed</h2>
+            <h2 className="font-bold tracking-tight text-2xl">Closed</h2>
             <Rows>
               {closed.map((t) => {
                 const pnl = tradePnl(t)!;
@@ -233,7 +233,7 @@ function Breakdown({ trades }: { trades: Trade[] }) {
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-serif text-2xl">What works for you</h2>
+        <h2 className="font-bold tracking-tight text-2xl">What works for you</h2>
         <div className="flex gap-3 text-xs font-medium">
           {(["setup", "kind"] as const).map((option) => (
             <button

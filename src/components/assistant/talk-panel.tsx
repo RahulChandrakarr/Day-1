@@ -150,7 +150,7 @@ export default function TalkPanel() {
             <span className="text-4xl" aria-hidden>
               {persona.emoji}
             </span>
-            <p className="font-serif text-2xl">Talk with {persona.name}</p>
+            <p className="font-bold tracking-tight text-2xl">Talk with {persona.name}</p>
             <p className="max-w-xs text-sm text-paper/55">
               Speak naturally. It waits until you finish, answers out loud, then listens again.
             </p>

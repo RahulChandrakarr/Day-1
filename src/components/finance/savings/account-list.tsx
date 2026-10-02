@@ -28,10 +28,10 @@ export default function AccountList({
 
   return (
     <Card>
-      <h3 className="font-serif text-2xl">Accounts</h3>
+      <h3 className="font-bold tracking-tight text-2xl">Accounts</h3>
 
       {accounts.length === 0 ? (
-        <p className="mt-6 rounded-inset border border-dashed border-paper/10 px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/40">
           No accounts yet. Add your FDs, SIPs, stocks or savings to track them.
         </p>
       ) : (

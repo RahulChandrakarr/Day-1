@@ -180,7 +180,7 @@ export default function VoiceInput({
         <div
           role="radiogroup"
           aria-label="Voice language"
-          className="flex rounded-full border border-paper/10 bg-surface p-0.5 text-xs"
+          className="flex rounded-full card p-0.5 text-xs"
         >
           {LANGUAGES.map((l) => (
             <button

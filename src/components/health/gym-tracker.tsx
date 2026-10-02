@@ -66,7 +66,7 @@ export default function GymTracker({
 
   if (day.rest) {
     return (
-      <p className="rounded-inset border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
+      <p className="card py-8 text-center text-sm text-paper/50">
         😴 Rest day. Recover well.
       </p>
     );
@@ -74,7 +74,7 @@ export default function GymTracker({
 
   if (total === 0) {
     return (
-      <p className="rounded-inset border border-dashed border-paper/10 py-8 text-center text-sm text-paper/50">
+      <p className="card py-8 text-center text-sm text-paper/50">
         Nothing planned for this day.
       </p>
     );

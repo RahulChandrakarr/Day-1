@@ -81,9 +81,9 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
             const text = preview(note.body);
             return (
               <li key={note.id}>
-                <article className="relative flex h-full flex-col rounded-card border border-paper/10 bg-surface p-4 transition hover:border-ember/40">
+                <article className="relative flex h-full flex-col card p-4 transition hover:border-ember/40">
                   <div className="flex items-start gap-2">
-                    <h3 className="min-w-0 flex-1 truncate font-serif text-lg leading-tight">
+                    <h3 className="min-w-0 flex-1 truncate font-bold tracking-tight text-lg leading-tight">
                       <Link
                         href={`/plan/notes/${note.id}`}
                         className="after:absolute after:inset-0 after:rounded-card"

@@ -15,7 +15,7 @@ export default function PlanTabs() {
   const pathname = usePathname();
   return (
     <nav aria-label="Plan views">
-      <ul className="grid grid-cols-5 gap-1 rounded-2xl border border-paper/10 bg-surface p-1 sm:inline-grid sm:w-[30rem]">
+      <ul className="grid grid-cols-5 gap-1 card p-1 sm:inline-grid sm:w-[30rem]">
         {tabs.map((tab) => {
           const active = tab.exact
             ? pathname === tab.href

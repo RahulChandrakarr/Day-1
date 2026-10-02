@@ -122,7 +122,7 @@ export default async function DailyFinancePage({
             <BankAccounts accounts={banks} asOf={asOf} today={today} />
             {spending.length > 0 && (
               <Card>
-                <h3 className="mb-3 font-serif text-[19px]">Spending by category</h3>
+                <h3 className="mb-3 font-bold tracking-tight text-[19px]">Spending by category</h3>
                 <CategoryBars slices={spending} />
               </Card>
             )}

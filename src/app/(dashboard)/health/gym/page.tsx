@@ -105,10 +105,10 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
       {missingPrep && <AddPrep blockId={block?.id ?? null} />}
 
       {!hasPlan ? (
-        <section className="flex flex-col items-center gap-4 rounded-card border border-dashed border-paper/15 px-6 py-12 text-center">
+        <section className="flex flex-col items-center gap-4 card px-6 py-12 text-center">
           <span className="text-4xl">🏋️</span>
           <div>
-            <h3 className="font-serif text-2xl">Build your training plan</h3>
+            <h3 className="font-bold tracking-tight text-2xl">Build your training plan</h3>
             <p className="mt-1 max-w-sm text-sm text-paper/55">
               Add your height, weight and goal, and the app builds a 4-week plan
               for you: weeks 1–3 get harder, week 4 is lighter so you recover.
@@ -127,7 +127,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           aside={
             <Card>
               <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h3 className="font-serif text-[19px]">This week</h3>
+                <h3 className="font-bold tracking-tight text-[19px]">This week</h3>
                 {block && ends && (
                   <span className="text-xs text-paper/45">
                     Block ends {formatShortDate(ends)}
@@ -145,7 +145,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
                   {WEEKDAYS[weekday - 1].label}
                   {block && ` · ${block.name}`}
                 </p>
-                <h3 className="font-serif text-2xl sm:text-3xl">
+                <h3 className="font-bold tracking-tight text-2xl sm:text-3xl">
                   {day.rest ? "Rest day" : day.title || "Workout"}
                 </h3>
               </div>

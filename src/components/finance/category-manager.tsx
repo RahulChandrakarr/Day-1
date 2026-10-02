@@ -62,7 +62,7 @@ export default function CategoryManager({
   return (
     <section
       id="categories"
-      className="scroll-mt-24 rounded-card border border-paper/10 bg-surface p-4"
+      className="scroll-mt-24 card p-4"
     >
       <button
         type="button"
@@ -71,7 +71,7 @@ export default function CategoryManager({
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <h3 className="font-serif text-2xl">Categories</h3>
+          <h3 className="font-bold tracking-tight text-2xl">Categories</h3>
           <p className="mt-0.5 text-sm text-paper/50">
             {categories.length} categories · group your entries
           </p>

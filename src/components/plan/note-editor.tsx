@@ -243,7 +243,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
             : "New note";
 
   return (
-    <article className="flex min-w-0 flex-col rounded-card border border-paper/10 bg-surface">
+    <article className="flex min-w-0 flex-col card">
       <header className="flex items-center gap-2 border-b border-paper/10 px-3 py-2 sm:px-5">
         <button
           type="button"
@@ -298,7 +298,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
             }
           }}
           placeholder="Untitled"
-          className="w-full bg-transparent font-serif text-4xl leading-tight text-paper outline-none placeholder:text-paper/25 sm:text-5xl"
+          className="w-full bg-transparent font-bold tracking-tight text-4xl leading-tight text-paper outline-none placeholder:text-paper/25 sm:text-5xl"
         />
         {error && (
           <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
@@ -358,7 +358,7 @@ function Toolbar({ editor }: { editor: Editor }) {
         <b>B</b>
       </Tool>
       <Tool label="Italic (⌘I)" active={s.italic} onClick={() => editor.chain().focus().toggleItalic().run()}>
-        <i className="font-serif text-base">I</i>
+        <i className="font-bold tracking-tight text-base">I</i>
       </Tool>
       <Tool label="Underline (⌘U)" active={s.underline} onClick={() => editor.chain().focus().toggleUnderline().run()}>
         <span className="underline">U</span>
@@ -415,13 +415,13 @@ function SelectionMenu({ editor }: { editor: Editor }) {
       shouldShow={({ editor, from, to }) =>
         from !== to && !editor.isActive("codeBlock") && editor.isFocused
       }
-      className="z-30 flex items-center gap-0.5 rounded-xl border border-paper/10 bg-surface p-1 shadow-lg"
+      className="z-30 flex items-center gap-0.5 rounded-xl card p-1 shadow-lg"
     >
       <Tool label="Bold" active={s.bold} onClick={() => editor.chain().focus().toggleBold().run()}>
         <b>B</b>
       </Tool>
       <Tool label="Italic" active={s.italic} onClick={() => editor.chain().focus().toggleItalic().run()}>
-        <i className="font-serif text-base">I</i>
+        <i className="font-bold tracking-tight text-base">I</i>
       </Tool>
       <Tool label="Underline" active={s.underline} onClick={() => editor.chain().focus().toggleUnderline().run()}>
         <span className="underline">U</span>
@@ -452,7 +452,7 @@ function SlashMenu({ menu, onHover }: { menu: SlashState; onHover: (index: numbe
       role="listbox"
       aria-label="Blocks"
       style={style}
-      className="fixed z-40 max-h-80 w-64 overflow-y-auto rounded-xl border border-paper/10 bg-surface p-1 shadow-xl"
+      className="fixed z-40 max-h-80 w-64 overflow-y-auto rounded-xl card p-1 shadow-xl"
     >
       {menu.items.length === 0 ? (
         <p className="px-3 py-2 text-sm text-paper/45">No matching block</p>

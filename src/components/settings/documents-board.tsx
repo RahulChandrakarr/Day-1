@@ -83,7 +83,7 @@ export default function DocumentsBoard({
               className={`h-9 shrink-0 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition ${
                 active
                   ? "bg-paper text-ink"
-                  : "border border-paper/10 bg-surface text-paper/65"
+                  : "card text-paper/65"
               }`}
             >
               {f ?? "All"}

@@ -94,7 +94,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                   <div className="flex items-start gap-3">
                     <span className="text-2xl leading-none">{goal.emoji}</span>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-serif text-xl leading-tight">{goal.title}</h3>
+                      <h3 className="font-bold tracking-tight text-xl leading-tight">{goal.title}</h3>
                       <p className="text-xs text-paper/45">
                         {goal.start_month === 1 && goal.end_month === 12
                           ? "All year"

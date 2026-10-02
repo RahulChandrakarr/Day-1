@@ -52,7 +52,7 @@ export default function StatTiles({
         <div
           key={tile.label}
           title={tile.hint ? `${tile.label}: ${tile.value} · ${tile.hint}` : `${tile.label}: ${tile.value}`}
-          className={`min-w-0 rounded-card border border-paper/10 bg-surface p-3 sm:col-span-1 ${phoneSpan(tiles.length, i)}`}
+          className={`min-w-0 card p-3 sm:col-span-1 ${phoneSpan(tiles.length, i)}`}
         >
           <p className="truncate text-[11px] text-paper/55 sm:text-xs">{tile.label}</p>
           <p

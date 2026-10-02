@@ -70,7 +70,7 @@ export default async function PlanMonthPage({
           return (
             <Card key={goal.id}>
               <div className="flex items-baseline justify-between gap-3">
-                <h3 className="min-w-0 truncate font-serif text-xl">
+                <h3 className="min-w-0 truncate font-bold tracking-tight text-xl">
                   {goal.emoji} {goal.title}
                 </h3>
                 {target !== null && (

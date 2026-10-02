@@ -68,7 +68,7 @@ export default async function BodyPage() {
 
       <div className="flex min-w-0 flex-col gap-3">
         <Card>
-          <h3 className="font-serif text-xl sm:text-2xl">Your numbers</h3>
+          <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Your numbers</h3>
           {bmiValue ? (
             <>
               <div className="mt-4 flex items-end gap-3">
@@ -141,14 +141,14 @@ export default async function BodyPage() {
               </p>
             </>
           ) : (
-            <p className="mt-4 rounded-inset border border-dashed border-paper/10 px-4 py-8 text-center text-sm text-paper/50">
+            <p className="mt-4 card px-4 py-8 text-center text-sm text-paper/50">
               Add your height and weight to see BMI, calories and your plan.
             </p>
           )}
         </Card>
 
         <Card>
-          <h3 className="mb-3 font-serif text-[19px]">Weight</h3>
+          <h3 className="mb-3 font-bold tracking-tight text-[19px]">Weight</h3>
           <WeightChart logs={logs} />
           <LogList logs={logs} />
         </Card>

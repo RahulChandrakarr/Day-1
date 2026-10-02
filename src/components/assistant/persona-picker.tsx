@@ -66,7 +66,7 @@ export default function PersonaPicker() {
         onClick={() => setOpen(true)}
         title={`${persona.name} — change persona`}
         aria-label={`Persona: ${persona.name}. Change`}
-        className="flex h-10 min-w-0 max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-xl border border-paper/10 bg-surface pl-1 pr-2 transition hover:bg-paper/5"
+        className="flex h-10 min-w-0 max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-xl card pl-1 pr-2 transition hover:bg-paper/5"
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ember/15 text-lg" aria-hidden>
           {persona.emoji}

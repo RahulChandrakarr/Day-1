@@ -385,8 +385,8 @@ export default function JournalEditor({
             </div>
           </Card>
 
-          <details className="group rounded-card border border-paper/10 bg-surface p-4">
-            <summary className="cursor-pointer list-none font-serif text-xl">
+          <details className="group card p-4">
+            <summary className="cursor-pointer list-none font-bold tracking-tight text-xl">
               Wins, lessons and tomorrow
               <span className="ml-2 text-sm text-paper/40 group-open:hidden">
                 tap to write
@@ -491,9 +491,9 @@ function HabitsCard({
   }
 
   return (
-    <section className="rounded-card border border-paper/10 bg-surface p-4">
+    <section className="card p-4">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h3 className="font-serif text-xl sm:text-2xl">Habits</h3>
+        <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Habits</h3>
         <div className="flex items-baseline gap-3">
           {summary && <span className="text-xs text-paper/50">{summary}</span>}
           <button

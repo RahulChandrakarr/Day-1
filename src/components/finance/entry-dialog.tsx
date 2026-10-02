@@ -243,7 +243,7 @@ export default function EntryDialog({
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                className="pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-paper/10 bg-surface shadow-2xl md:max-w-lg md:rounded-3xl"
+                className="pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:max-w-lg md:rounded-3xl"
               >
                 <EntryForm
                   key={session}
@@ -437,7 +437,7 @@ function EntryForm({
   return (
     <>
       <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
-        <h2 className="flex-1 font-serif text-xl sm:text-2xl">
+        <h2 className="flex-1 font-bold tracking-tight text-xl sm:text-2xl">
           {titleOf(variant)}
         </h2>
         <button
@@ -1336,7 +1336,7 @@ export function Segmented<T extends string>({
       >
         <motion.span
           aria-hidden
-          className="absolute inset-y-0 left-0 rounded-lg border border-paper/10 bg-surface shadow-sm"
+          className="absolute inset-y-0 left-0 rounded-lg card shadow-sm"
           style={{ width: `${100 / options.length}%` }}
           initial={false}
           animate={{ x: `${index * 100}%` }}

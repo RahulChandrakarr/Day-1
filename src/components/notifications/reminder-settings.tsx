@@ -140,7 +140,7 @@ export default function ReminderSettings({
     <Rail
       aside={
           <Card>
-            <h3 className="font-serif text-[19px]">This device</h3>
+            <h3 className="font-bold tracking-tight text-[19px]">This device</h3>
             {permission === "unsupported" ? (
               <p className="mt-2 text-sm text-paper/55">
                 This browser can&apos;t show notifications. On iPhone, add Day One to
@@ -205,7 +205,7 @@ export default function ReminderSettings({
       }
     >
       <Card>
-        <h3 className="font-serif text-[19px]">Reminders</h3>
+        <h3 className="font-bold tracking-tight text-[19px]">Reminders</h3>
         <p className="mt-1 text-sm text-paper/55">
           Times are Indian time. A reminder is skipped when the thing is already
           done.

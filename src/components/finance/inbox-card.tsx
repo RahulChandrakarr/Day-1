@@ -24,7 +24,7 @@ export default function InboxCard({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-serif text-2xl">
+        <h2 className="font-bold tracking-tight text-2xl">
           From your bank
           {items.length > 0 && (
             <span className="ml-2 text-sm font-normal text-paper/45">

@@ -135,7 +135,7 @@ export default function BodyForm({
   return (
     <Card>
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-serif text-xl sm:text-2xl">Your details</h3>
+        <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Your details</h3>
         <AnimatePresence>
           {status === "saved" && (
             <motion.span

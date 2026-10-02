@@ -44,7 +44,7 @@ export default function BankAccounts({
     <Card>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-serif text-2xl">Bank accounts</h3>
+          <h3 className="font-bold tracking-tight text-2xl">Bank accounts</h3>
           {accounts.length > 0 && (
             <p className="mt-0.5 text-sm text-paper/50">
               <span className={total < 0 ? badText : ""}>{signedMoney(total)}</span> in{" "}
@@ -66,7 +66,7 @@ export default function BankAccounts({
       </div>
 
       {accounts.length === 0 ? (
-        <div className="mt-4 flex flex-col items-start gap-3 rounded-inset border border-dashed border-paper/10 p-4">
+        <div className="mt-4 flex flex-col items-start gap-3 card p-4">
           <p className="text-sm text-paper/55">
             Add SBI, Axis, cash… with what&apos;s in each right now. Entries you log
             come out of the account you pick, and Net balance shows the total.
