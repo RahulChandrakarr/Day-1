@@ -1,4 +1,5 @@
 import BankAccounts from "@/components/finance/bank-accounts";
+import InboxCard from "@/components/finance/inbox-card";
 import { Card, Rail, Stack } from "@/components/ui/kit";
 import CategoryManager from "@/components/finance/category-manager";
 import { CategoryBars } from "@/components/finance/charts";
@@ -21,6 +22,8 @@ import {
   getDebts,
   getEmiPayments,
   getEmis,
+  getInbox,
+  getInboxToken,
   getInvestmentEntries,
   getTransactions,
   getTransfers,
@@ -34,8 +37,19 @@ export default async function DailyFinancePage({
 
   // Balances at the end of the day shown, or now for today and later
   const asOf = date < today ? date : today;
-  const [transactions, categories, debts, accounts, investments, emiRows, emiPayments, banks, transfers] =
-    await Promise.all([
+  const [
+    transactions,
+    categories,
+    debts,
+    accounts,
+    investments,
+    emiRows,
+    emiPayments,
+    inbox,
+    inboxToken,
+    banks,
+    transfers,
+  ] = await Promise.all([
       getTransactions({ from: date, to: date }),
       getCategories(),
       getDebts({ from: date, to: date }),
@@ -43,6 +57,8 @@ export default async function DailyFinancePage({
       getInvestmentEntries({ from: date, to: date }),
       getEmis(),
       getEmiPayments({ from: date, to: date }),
+      getInbox(),
+      getInboxToken(),
       getBankAccounts(asOf),
       getTransfers({ from: date, to: date }),
     ]);
@@ -96,6 +112,8 @@ export default async function DailyFinancePage({
             : undefined
         }
       />
+
+      <InboxCard items={inbox} categories={categories} token={inboxToken} />
 
       {/* Entries lead; accounts and spending sit beside them once there's room */}
       <Rail

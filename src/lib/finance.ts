@@ -38,6 +38,8 @@ export type BankAccount = {
   id: string;
   name: string;
   color: number;
+  // Last digits of the account number, for matching forwarded bank messages
+  account_tail: string | null;
   opening_balance: number;
   balance: number; // at the end of the day asked for
 };

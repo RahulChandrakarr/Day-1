@@ -1,0 +1,175 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { acceptInboxItem, ignoreInboxItem } from "@/app/(dashboard)/financial/actions";
+import { formatMoney, formatShortDate, type Category } from "@/lib/finance";
+import type { InboxItem } from "@/lib/finance-queries";
+import { Rows, inputClass } from "@/components/ui/kit";
+
+// Bank messages forwarded from the phone. Each one is a suggestion until it's
+// accepted — the amount and account are read from the message, the category is
+// the one thing the bank can't tell us.
+export default function InboxCard({
+  items,
+  categories,
+  token,
+}: {
+  items: InboxItem[];
+  categories: Category[];
+  token: string | null;
+}) {
+  const [setup, setSetup] = useState(false);
+  if (items.length === 0 && !token) return null;
+
+  return (
+    <section className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-serif text-2xl">
+          From your bank
+          {items.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-paper/45">
+              {items.length} waiting
+            </span>
+          )}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setSetup(!setup)}
+          className="text-[13px] font-medium text-ember"
+        >
+          {setup ? "Hide setup" : "Set up forwarding"}
+        </button>
+      </div>
+
+      {setup && <Setup token={token} />}
+
+      {items.length === 0 ? (
+        <p className="text-sm text-paper/55">
+          Nothing waiting. Messages your bank sends will appear here once forwarding is on.
+        </p>
+      ) : (
+        <Rows>
+          {items.map((item) => (
+            <InboxRow key={item.id} item={item} categories={categories} />
+          ))}
+        </Rows>
+      )}
+    </section>
+  );
+}
+
+function InboxRow({ item, categories }: { item: InboxItem; categories: Category[] }) {
+  const [categoryId, setCategoryId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const readable = item.direction !== null && item.amount !== null;
+  const forKind = categories.filter(
+    (c) => c.type === (item.direction === "credit" ? "income" : "expense"),
+  );
+
+  const run = (action: () => Promise<{ ok: boolean; error?: string }>) =>
+    startTransition(async () => {
+      const result = await action();
+      if (!result.ok) setError(result.error ?? "Couldn't do that.");
+    });
+
+  return (
+    <li className={`flex flex-wrap items-center gap-3 py-3 ${pending ? "opacity-50" : ""}`}>
+      <div className="min-w-0 flex-1">
+        {readable ? (
+          <p className="truncate font-medium">
+            <span className={item.direction === "credit" ? "text-moss" : ""}>
+              {item.direction === "credit" ? "+" : "−"}
+              {formatMoney(item.amount!)}
+            </span>
+            {item.merchant && <span className="text-paper/70"> · {item.merchant}</span>}
+          </p>
+        ) : (
+          <p className="truncate font-medium text-paper/70">Couldn&apos;t read this one</p>
+        )}
+        <p className="truncate text-xs text-paper/45">
+          {item.occurred_on ? formatShortDate(item.occurred_on) : "no date"}
+          {item.sender && ` · ${item.sender}`}
+          {!readable && ` · ${item.body.slice(0, 60)}`}
+        </p>
+        {error && <p className="text-xs text-red-700 dark:text-red-300">{error}</p>}
+      </div>
+
+      {readable && (
+        <select
+          aria-label="Category"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className={`${inputClass} h-9 w-auto min-w-32 text-sm`}
+        >
+          <option value="">No category</option>
+          {forKind.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <div className="flex shrink-0 gap-3 text-sm font-medium">
+        {readable && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => run(() => acceptInboxItem(item.id, categoryId || null))}
+            className="text-ember"
+          >
+            Add it
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => run(() => ignoreInboxItem(item.id))}
+          className="text-paper/50"
+        >
+          Ignore
+        </button>
+      </div>
+    </li>
+  );
+}
+
+// What to put into the phone's automation app
+function Setup({ token }: { token: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const url =
+    typeof window === "undefined" || !token
+      ? ""
+      : `${window.location.origin}/api/inbox/sms?token=${token}`;
+
+  return (
+    <div className="flex flex-col gap-2 rounded-inset border border-paper/10 p-3 text-sm text-paper/70">
+      <p>
+        On Android, install MacroDroid or Tasker and make one rule: when an SMS arrives
+        from your bank, POST it to this address with the message as{" "}
+        <code className="text-paper">body</code> and the sender as{" "}
+        <code className="text-paper">sender</code>.
+      </p>
+      <div className="flex items-center gap-2">
+        <input readOnly value={url} className={`${inputClass} h-9 text-xs`} />
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }}
+          className="shrink-0 text-[13px] font-medium text-ember"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="text-xs text-paper/45">
+        Set the rule to match only your bank&apos;s senders, so one-time passwords and
+        personal messages never leave the phone. Anyone with this address can add
+        messages to your inbox, so keep it to yourself.
+      </p>
+    </div>
+  );
+}

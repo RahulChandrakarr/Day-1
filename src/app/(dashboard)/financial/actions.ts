@@ -1,6 +1,9 @@
 "use server";
 
-import { isValidDate } from "@/lib/finance";
+import {
+  isValidDate,
+  todayISO,
+} from "@/lib/finance";
 import { refreshSpendPin } from "@/lib/push/today";
 import {
   authedClient,
@@ -413,4 +416,65 @@ export async function deleteBudget(id: string) {
   const supabase = await authedClient();
   await supabase.from("finance_budgets").delete().eq("id", id);
   refresh();
+}
+
+// Turning a forwarded bank message into a real entry. Nothing is written until
+// this runs, so a misread message costs a tap, not a wrong number.
+export async function acceptInboxItem(
+  id: string,
+  categoryId: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!uuid.test(id)) return { ok: false, error: "Unknown message." };
+  const supabase = await authedClient();
+  const { data: item, error: readError } = await supabase
+    .from("finance_inbox")
+    .select("direction, amount, merchant, occurred_on, bank_account_id, status")
+    .eq("id", id)
+    .maybeSingle<{
+      direction: "debit" | "credit" | null;
+      amount: number | string | null;
+      merchant: string | null;
+      occurred_on: string | null;
+      bank_account_id: string | null;
+      status: string;
+    }>();
+  if (readError) return { ok: false, error: readError.message };
+  if (!item) return { ok: false, error: "That message is gone." };
+  if (item.status !== "new") return { ok: false, error: "That one was already dealt with." };
+  if (!item.direction || item.amount === null)
+    return { ok: false, error: "This message couldn't be read, so add it by hand." };
+
+  const { data: created, error } = await supabase
+    .from("finance_transactions")
+    .insert({
+      type: item.direction === "debit" ? "expense" : "income",
+      amount: Number(item.amount),
+      description: item.merchant,
+      category_id: categoryId && uuid.test(categoryId) ? categoryId : null,
+      bank_account_id: item.bank_account_id,
+      occurred_on: item.occurred_on ?? todayISO(),
+      period: "daily",
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  await supabase
+    .from("finance_inbox")
+    .update({ status: "accepted", transaction_id: created.id })
+    .eq("id", id);
+  refresh();
+  return { ok: true };
+}
+
+export async function ignoreInboxItem(id: string): Promise<{ ok: boolean; error?: string }> {
+  if (!uuid.test(id)) return { ok: false, error: "Unknown message." };
+  const supabase = await authedClient();
+  const { error } = await supabase
+    .from("finance_inbox")
+    .update({ status: "ignored" })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  refresh();
+  return { ok: true };
 }

@@ -18,7 +18,7 @@ export async function saveBankAccount(
   prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const values = formFields(formData, ["id", "name", "balance", "as_income"]);
+  const values = formFields(formData, ["id", "name", "balance", "as_income", "account_tail"]);
   const fail = (error: string): FormState => ({
     error,
     ok: false,
@@ -33,6 +33,11 @@ export async function saveBankAccount(
   if (!Number.isFinite(balance) || Math.abs(balance) >= 1e12)
     return fail("Enter the amount in the account, e.g. 2500.");
   const target = Math.round(balance * 100) / 100;
+  // Used to match a forwarded bank message to this account
+  const tail = values.account_tail.replace(/\D/g, "");
+  if (tail && (tail.length < 3 || tail.length > 6))
+    return fail("Give the last 4 digits of the account number.");
+  const account_tail = tail || null;
 
   const supabase = await authedClient();
   if (values.id) {
@@ -48,7 +53,11 @@ export async function saveBankAccount(
     const moved = Number(current.balance) - Number(current.opening_balance);
     const { error } = await supabase
       .from("bank_accounts")
-      .update({ name, opening_balance: Math.round((target - moved) * 100) / 100 })
+      .update({
+        name,
+        account_tail,
+        opening_balance: Math.round((target - moved) * 100) / 100,
+      })
       .eq("id", values.id);
     if (error) return fail(duplicate(error, name) ?? error.message);
   } else {
@@ -61,6 +70,7 @@ export async function saveBankAccount(
       .from("bank_accounts")
       .insert({
         name,
+        account_tail,
         opening_balance: asIncome ? 0 : target,
         color: ((count ?? 0) % 8) + 1,
       })

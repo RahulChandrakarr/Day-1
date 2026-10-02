@@ -479,3 +479,39 @@ export async function getTrades(): Promise<Trade[]> {
     costs: maybe(t.costs),
   }));
 }
+
+export type InboxItem = {
+  id: string;
+  sender: string | null;
+  body: string;
+  received_at: string;
+  direction: "debit" | "credit" | null;
+  amount: number | null;
+  merchant: string | null;
+  occurred_on: string | null;
+  bank_account_id: string | null;
+};
+
+// Bank messages forwarded from the phone that are still waiting
+export async function getInbox(): Promise<InboxItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("finance_inbox")
+    .select("id, sender, body, received_at, direction, amount, merchant, occurred_on, bank_account_id")
+    .eq("status", "new")
+    .order("received_at", { ascending: false })
+    .limit(50)
+    .returns<(Omit<InboxItem, "amount"> & { amount: number | string | null })[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((i) => ({ ...i, amount: i.amount === null ? null : Number(i.amount) }));
+}
+
+// The token the phone puts in the forwarding URL
+export async function getInboxToken(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("inbox_token")
+    .maybeSingle<{ inbox_token: string }>();
+  return data?.inbox_token ?? null;
+}

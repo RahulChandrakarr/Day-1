@@ -188,6 +188,23 @@ function AccountForm({
         />
       </label>
       <label className="flex flex-col gap-1.5">
+        <span className={labelClass}>
+          Last 4 digits <span className="text-paper/35">optional</span>
+        </span>
+        <input
+          name="account_tail"
+          inputMode="numeric"
+          maxLength={6}
+          autoComplete="off"
+          defaultValue={values?.account_tail ?? account?.account_tail ?? ""}
+          placeholder="8723"
+          className={inputClass}
+        />
+        <span className="text-xs text-paper/40">
+          Lets a forwarded bank message know which account it belongs to
+        </span>
+      </label>
+      <label className="flex flex-col gap-1.5">
         <span className={labelClass}>In it right now</span>
         <div className="relative">
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
