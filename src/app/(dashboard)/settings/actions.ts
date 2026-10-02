@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { looksLikeJunk, parseBankSms, type ParsedSms } from "@/lib/sms-parse";
+import { todayISO } from "@/lib/finance";
 import type { ReminderKind } from "@/lib/reminders";
 import { clearSpendPin, refreshSpendPin } from "@/lib/push/today";
 import { createClient } from "@/lib/supabase/server";
@@ -211,4 +213,27 @@ export async function deleteMemoryAction(id: string): Promise<Result> {
   const result = await forgetMemory(await createClient(), { id });
   if (result.ok) revalidatePath("/settings/assistant");
   return result.ok ? { ok: true } : result;
+}
+
+// Try a message without saving it, so forwarding can be checked before the
+// phone is set up at all.
+export async function previewBankSms(
+  body: string,
+): Promise<{ junk: boolean; parsed: ParsedSms | null }> {
+  const text = String(body ?? "").slice(0, 1000);
+  if (looksLikeJunk(text)) return { junk: true, parsed: null };
+  return { junk: false, parsed: parseBankSms(text, todayISO()) };
+}
+
+// A new token: the old forwarding address stops working at once
+export async function rotateInboxToken(): Promise<Result & { token?: string }> {
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const id = claims?.claims?.sub;
+  if (!id) return { ok: false, error: "Not signed in." };
+  const token = crypto.randomUUID();
+  const { error } = await supabase.from("profiles").update({ inbox_token: token }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/settings/bank-messages");
+  return { ok: true, token };
 }

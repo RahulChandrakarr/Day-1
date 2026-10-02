@@ -42,6 +42,17 @@ const sections: NavSection[] = [
     ),
   },
   {
+    href: "/settings/bank-messages",
+    label: "Bank messages",
+    hint: "Forward SMS from your phone",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        <path d="M8 9h8M8 13h5" />
+      </svg>
+    ),
+  },
+  {
     href: "/settings/documents",
     label: "Documents",
     hint: "Your saved files",
