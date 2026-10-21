@@ -248,3 +248,86 @@ export function splitAcrossMonths(
     target: Math.round(share * 100) / 100,
   }));
 }
+
+const clip = (text: string, max: number) => {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max - 1).trimEnd()}…`;
+};
+
+// Consecutive days where every plan task was ticked.
+// Today still in progress does not break the run.
+export function planStreak(
+  days: { date: string; total: number; done: number }[],
+  today: string,
+) {
+  const byDate = new Map(days.map((d) => [d.date, d]));
+  const complete = (date: string) => {
+    const row = byDate.get(date);
+    return Boolean(row && row.total > 0 && row.done >= row.total);
+  };
+  let cursor = complete(today) ? today : addDays(today, -1);
+  let count = 0;
+  for (let i = 0; i < 120; i++) {
+    if (!complete(cursor)) break;
+    count++;
+    cursor = addDays(cursor, -1);
+  }
+  return count;
+}
+
+export function planNoteLines(
+  goals: Pick<PlanGoal, "title" | "notes">[],
+  items: Pick<PlanItem, "title" | "notes">[],
+) {
+  const lines: string[] = [];
+  for (const item of items) {
+    if (item.notes.trim()) lines.push(clip(item.notes, 160));
+  }
+  for (const goal of goals) {
+    if (goal.notes.trim()) lines.push(clip(goal.notes, 160));
+  }
+  return lines.slice(0, 2);
+}
+
+// Short nudges when a running plan is missing the next step or its notes.
+export function planGaps(input: {
+  goals: Pick<PlanGoal, "title" | "notes">[];
+  todayCount: number;
+  hasWeekItem: boolean;
+  hasTomorrow: boolean;
+}) {
+  const gaps: string[] = [];
+  if (input.goals.length === 0) return gaps;
+  for (const goal of input.goals) {
+    if (!goal.notes.trim())
+      gaps.push(`${goal.title} has no note. Add what this plan is for.`);
+  }
+  if (input.todayCount === 0)
+    gaps.push("Nothing is planned for today. Add today's task.");
+  if (!input.hasWeekItem)
+    gaps.push("This week has no weekly line. Write what the week is for.");
+  if (!input.hasTomorrow)
+    gaps.push("Tomorrow is empty. Put the next step in now.");
+  return gaps.slice(0, 3);
+}
+
+// Five short questions from whatever plan is running today.
+export function planQuestions(input: {
+  goals: Pick<PlanGoal, "title" | "notes">[];
+  items: Pick<PlanItem, "title" | "notes">[];
+}) {
+  const task = input.items.find((i) => i.title.trim())?.title;
+  const goal = input.goals[0]?.title;
+  const note = planNoteLines(input.goals, input.items)[0];
+  const subject = task ?? goal ?? "today's plan";
+  return [
+    `How is “${clip(subject, 80)}” going?`,
+    note
+      ? `Your note says “${clip(note, 90)}”. Is that still the work?`
+      : "What did you actually do, not only watch or list?",
+    "Where did you get stuck?",
+    "What will you do again tomorrow so it sticks?",
+    "What is missing from this plan that you should add?",
+  ];
+}

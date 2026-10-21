@@ -34,6 +34,7 @@ export async function todayCard(today: string) {
     planTasks: plan.items.map((i) => ({
       id: i.id,
       title: i.title,
+      note: i.notes.slice(0, 180),
       goal: goalName.get(i.goal_id),
       done: i.done,
     })),

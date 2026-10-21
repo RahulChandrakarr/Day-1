@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ItemList from "@/components/plan/item-list";
+import PlanQuestions from "@/components/plan/plan-questions";
 import { SectionHead } from "@/components/ui/kit";
 import type { PlanGoal, PlanItem } from "@/lib/plans";
 
@@ -12,6 +13,11 @@ export default function TodayTasks({
   hideWhenDone = false,
   limit,
   title = "Today's plan",
+  streak = 0,
+  noteLines = [],
+  gaps = [],
+  questions = [],
+  answers = [],
 }: {
   date: string;
   goals: PlanGoal[];
@@ -20,13 +26,20 @@ export default function TodayTasks({
   hideWhenDone?: boolean;
   limit?: number;
   title?: string;
+  streak?: number;
+  noteLines?: string[];
+  gaps?: string[];
+  questions?: string[];
+  answers?: string[];
 }) {
   const pending = items.filter((i) => !i.done);
   const doneCount = items.length - pending.length;
   const href = `/plan?date=${date}`;
 
+  const showReview = noteLines.length > 0 || gaps.length > 0 || questions.length > 0;
+
   // Goals exist but nothing is planned for the day yet
-  if (items.length === 0) {
+  if (items.length === 0 && !showReview) {
     if (goalCount === 0) return null;
     return (
       <Link
@@ -53,9 +66,36 @@ export default function TodayTasks({
       <SectionHead
         title={title}
         href={href}
-        link={`${doneCount}/${items.length}`}
+        link={
+          streak > 0
+            ? `${streak}-day streak`
+            : `${doneCount}/${items.length}`
+        }
       />
       <section className="card px-4 py-1.5">
+        {streak > 0 && (
+          <p className="pt-2 text-[13px] text-moss">
+            {streak} day{streak === 1 ? "" : "s"} checked off. You are showing up.
+          </p>
+        )}
+        {noteLines.length > 0 && (
+          <div className="flex flex-col gap-1 py-2">
+            {noteLines.map((line) => (
+              <p key={line} className="text-[13px] text-paper/60">
+                {line}
+              </p>
+            ))}
+          </div>
+        )}
+        {gaps.length > 0 && (
+          <ul className="flex flex-col gap-1 py-2">
+            {gaps.map((gap) => (
+              <li key={gap} className="text-[13px] text-ember">
+                {gap}
+              </li>
+            ))}
+          </ul>
+        )}
         <ItemList
           goals={goals}
           level="day"
@@ -68,6 +108,9 @@ export default function TodayTasks({
           <Link href={href} className="block pb-1.5 pt-1 text-xs font-semibold text-ember">
             +{hidden} more →
           </Link>
+        )}
+        {questions.length > 0 && (
+          <PlanQuestions date={date} questions={questions} answers={answers} />
         )}
       </section>
     </>

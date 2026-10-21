@@ -19,6 +19,7 @@ export default function ItemList({
   placeholder,
   showGoal = false,
   allowTarget = false,
+  hideAdd = false,
 }: {
   goal?: PlanGoal; // fixed goal for new items
   goals?: PlanGoal[]; // or a picker, for mixed lists (Today, a week day)
@@ -28,6 +29,7 @@ export default function ItemList({
   placeholder: string;
   showGoal?: boolean;
   allowTarget?: boolean;
+  hideAdd?: boolean;
 }) {
   const [, startTransition] = useTransition();
   const [list, apply] = useOptimistic(items, (current: PlanItem[], change: Change) => {
@@ -117,14 +119,16 @@ export default function ItemList({
           })}
         </ul>
       )}
-      <AddRow
-        goal={goal}
-        goals={goals}
-        level={level}
-        period={period}
-        placeholder={placeholder}
-        allowTarget={allowTarget}
-      />
+      {!hideAdd && (
+        <AddRow
+          goal={goal}
+          goals={goals}
+          level={level}
+          period={period}
+          placeholder={placeholder}
+          allowTarget={allowTarget}
+        />
+      )}
     </div>
   );
 }

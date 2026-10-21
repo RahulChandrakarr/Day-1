@@ -17,7 +17,8 @@ import { streak } from "@/lib/health";
 import { getOverview } from "@/lib/overview-query";
 import TransactionList from "@/components/finance/transaction-list";
 import { getBankAccounts, getCategories, getRecentTransactions } from "@/lib/finance-queries";
-import { getPlanDay } from "@/lib/plan-queries";
+import { getPlanCoverage, getPlanDay, getPlanReflection, getPlanStreak } from "@/lib/plan-queries";
+import { planGaps, planNoteLines, planQuestions } from "@/lib/plans";
 import TodayTasks from "@/components/plan/today-tasks";
 import Link from "next/link";
 import {
@@ -51,13 +52,17 @@ export default async function OverviewPage() {
     moods,
     bodyLogs,
   } = await getOverview();
-  const [plan, journal, banks, recent, categories] = await Promise.all([
-    getPlanDay(today),
-    getJournalEntry(today),
-    getBankAccounts(today),
-    getRecentTransactions(today, 5),
-    getCategories(),
-  ]);
+  const [plan, journal, banks, recent, categories, planStreak, coverage, reflection] =
+    await Promise.all([
+      getPlanDay(today),
+      getJournalEntry(today),
+      getBankAccounts(today),
+      getRecentTransactions(today, 5),
+      getCategories(),
+      getPlanStreak(today),
+      getPlanCoverage(today),
+      getPlanReflection(today),
+    ]);
   // To-dos are the journal's priorities for today
   const todos = journal.entry.priorities
     .filter((p) => p.text.trim())
@@ -282,8 +287,18 @@ export default async function OverviewPage() {
           goals={plan.goals}
           items={plan.items}
           goalCount={plan.goalCount}
-          hideWhenDone
-          limit={4}
+          streak={planStreak}
+          noteLines={planNoteLines(plan.goals, plan.items)}
+          gaps={planGaps({
+            goals: plan.goals,
+            todayCount: plan.items.length,
+            hasWeekItem: coverage.hasWeekItem,
+            hasTomorrow: coverage.hasTomorrow,
+          })}
+          questions={
+            plan.goals.length > 0 ? planQuestions({ goals: plan.goals, items: plan.items }) : []
+          }
+          answers={reflection}
         />
 
         <CardGrid layout="triple">

@@ -21,6 +21,7 @@ import {
   weekRange,
   WEEKS,
 } from "@/lib/plans";
+import LoanPlan, { LOAN_PLAN_TITLE } from "@/components/plan/loan-plan";
 import { getPlanYear } from "@/lib/plan-queries";
 
 export default async function PlanMonthPage({
@@ -52,6 +53,8 @@ export default async function PlanMonthPage({
         <PdfLink variant="icon" href={`/api/reports/plan?month=${month}`} label="Month PDF" />
       </PeriodNav>
 
+      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
+
       {goals.length === 0 ? (
         <Empty href="/plan/year">
           {allGoals.length === 0
@@ -60,7 +63,9 @@ export default async function PlanMonthPage({
         </Empty>
       ) : (
         <CardGrid layout="triple">
-          {goals.map((goal) => {
+          {goals
+            .filter((goal) => goal.title !== LOAN_PLAN_TITLE)
+            .map((goal) => {
           const p = goalProgress(goal, items, logs, { month });
           const target = periodTarget(goal, items, { month });
           const monthItems = items.filter(

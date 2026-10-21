@@ -306,6 +306,26 @@ export async function logProgress(input: {
   return { ok: true };
 }
 
+export async function savePlanReflection(
+  date: string,
+  answers: string[],
+): Promise<Result> {
+  if (!isValidDate(date)) return { ok: false, error: "Invalid day." };
+  const cleaned = [0, 1, 2, 3, 4].map((i) => clean(answers[i], 200));
+  const supabase = await authedClient();
+  const { error } = await supabase.from("plan_reflections").upsert(
+    {
+      logged_on: date,
+      answers: cleaned,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,logged_on" },
+  );
+  if (error) return { ok: false, error: error.message };
+  refresh();
+  return { ok: true };
+}
+
 export async function deleteProgress(id: string): Promise<Result> {
   if (!uuid.test(id)) return { ok: false, error: "Unknown entry." };
   const supabase = await authedClient();

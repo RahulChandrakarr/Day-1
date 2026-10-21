@@ -16,6 +16,7 @@ import {
   periodTarget,
   weekOfMonth,
 } from "@/lib/plans";
+import LoanPlan, { LOAN_PLAN_TITLE } from "@/components/plan/loan-plan";
 import { getPlanYear } from "@/lib/plan-queries";
 
 export default async function PlanTodayPage({
@@ -28,6 +29,17 @@ export default async function PlanTodayPage({
   // Only goals running this month
   const goals = allGoals.filter((g) => goalActiveIn(g, month));
   const dayItems = items.filter((i) => i.level === "day" && i.period === date);
+  const loanIds = new Set(
+    allGoals.filter((g) => g.title === LOAN_PLAN_TITLE).map((g) => g.id),
+  );
+  const activeGoalIds = new Set(goals.map((g) => g.id));
+  const monthItems = items.filter(
+    (i) =>
+      i.level === "month" &&
+      i.period === month &&
+      activeGoalIds.has(i.goal_id) &&
+      !loanIds.has(i.goal_id),
+  );
   const done = dayItems.filter((i) => i.done).length;
 
   const week = weekOfMonth(date);
@@ -43,6 +55,8 @@ export default async function PlanTodayPage({
         isCurrent={date === today}
         currentLabel="Today"
       />
+
+      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
 
       {goals.length === 0 ? (
         <Empty href="/plan/year">
@@ -66,6 +80,20 @@ export default async function PlanTodayPage({
           </DarkCard>
 
           <CardGrid>
+            {monthItems.length > 0 && (
+              <Section title="Milestones" href={`/plan/month?month=${month}`} link="Month">
+                <Card>
+                  <ItemList
+                    goals={goals}
+                    level="month"
+                    period={month}
+                    items={monthItems}
+                    placeholder="Add a milestone for this month"
+                    showGoal
+                  />
+                </Card>
+              </Section>
+            )}
             <Section title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week">
               <Card>
                 <ItemList

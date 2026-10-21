@@ -14,6 +14,7 @@ import {
   MONTH_NAMES,
   monthsOfYear,
 } from "@/lib/plans";
+import LoanPlan from "@/components/plan/loan-plan";
 import { getPlanYear } from "@/lib/plan-queries";
 
 export default async function PlanYearPage({ searchParams }: PageProps<"/plan/year">) {
@@ -76,6 +77,8 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
           </div>
         </DarkCard>
       )}
+
+      {(year === 2026 || year === 2027) && <LoanPlan />}
 
       <GoalSheet year={year} label="＋ New goal" />
 
