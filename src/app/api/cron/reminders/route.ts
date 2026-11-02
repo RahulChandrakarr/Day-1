@@ -54,6 +54,14 @@ export async function GET(request: Request) {
   await client.connect();
 
   try {
+    // A write every time this daily job runs, so a quiet week still
+    // counts as database activity. Missing on older databases is fine.
+    try {
+      await client.query("select public.record_heartbeat()");
+    } catch {
+      // Heartbeat is optional; reminders still go out.
+    }
+
     // Due within the last 3 hours and not sent yet today. The window lets a
     // late or infrequent run (Vercel Hobby runs this once a day, at 06:30-07:30
     // India time) still deliver, while an every-15-minutes scheduler is punctual.
