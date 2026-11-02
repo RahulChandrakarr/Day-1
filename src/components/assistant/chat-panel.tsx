@@ -5,13 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { AssistantUIMessage } from "@/lib/ai/types";
 import { useAssistant } from "./chat-provider";
 import ConversationList from "./conversation-list";
-import { HistoryIcon, PlusIcon, SendIcon, StopIcon } from "./icons";
+import { HistoryIcon, PlusIcon, SendIcon, StopIcon, TalkIcon } from "./icons";
 import Markdown from "./markdown";
 import MicButton from "./mic-button";
 import ModeSwitch from "./mode-switch";
 import PersonaPicker from "./persona-picker";
 import SpeakButton from "./speak-button";
-import type { SpeechLang } from "./speech";
 import TalkPanel from "./talk-panel";
 
 const CUSTOM_STARTERS = ["Hi! What can you help me with?", "Let's get started"];
@@ -207,7 +206,7 @@ export default function ChatPanel() {
 
           <Composer
             busy={busy}
-            lang={persona.language}
+            onTalk={() => setMode("talk")}
             onSend={(t) => {
               stickToBottom.current = true;
               send(t);
@@ -222,19 +221,17 @@ export default function ChatPanel() {
 
 function Composer({
   busy,
-  lang,
+  onTalk,
   onSend,
   onStop,
 }: {
   busy: boolean;
-  lang: SpeechLang;
+  onTalk: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
 }) {
   const [value, setValue] = useState("");
   const [micError, setMicError] = useState<string | null>(null);
-  // Text typed before dictation started; spoken words are added after it
-  const beforeDictation = useRef<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -280,24 +277,13 @@ function Composer({
           className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] text-paper outline-none placeholder:text-paper/35"
         />
         <MicButton
-          lang={lang}
-          onText={(spoken, done) => {
-            if (beforeDictation.current === null)
-              beforeDictation.current = value;
-            const base = beforeDictation.current;
-            setValue(
-              `${base}${base && !/\s$/.test(base) ? " " : ""}${spoken}`.slice(
-                0,
-                2000,
-              ),
+          onText={(spoken) => {
+            setValue((typed) =>
+              `${typed}${typed && !/\s$/.test(typed) ? " " : ""}${spoken}`.slice(0, 2000),
             );
             setMicError(null);
-            if (done) beforeDictation.current = null;
           }}
-          onError={(message) => {
-            beforeDictation.current = null;
-            setMicError(message);
-          }}
+          onError={setMicError}
         />
         {busy ? (
           <button
@@ -308,12 +294,21 @@ function Composer({
           >
             <StopIcon />
           </button>
+        ) : !value.trim() ? (
+          <button
+            type="button"
+            onClick={onTalk}
+            aria-label="Talk out loud"
+            title="Talk out loud"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember text-on-ember transition hover:bg-ember-light"
+          >
+            <TalkIcon />
+          </button>
         ) : (
           <button
             type="submit"
-            disabled={!value.trim()}
             aria-label="Send"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember text-on-ember transition hover:bg-ember-light disabled:opacity-40"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember text-on-ember transition hover:bg-ember-light"
           >
             <SendIcon />
           </button>

@@ -24,6 +24,8 @@ type ChatContextValue = ReturnType<typeof useChat<AssistantUIMessage>> & {
   // Called when a reply has finished (used by Talk mode)
   onReplyFinished: (listener: FinishListener) => () => void;
   conversationId: string;
+  // Who the user is talking to: the assistant's own name, or the persona's
+  speakerName: string;
   statusLabel: string | null;
   errorMessage: string | null;
   send: (text: string) => void;
@@ -89,10 +91,12 @@ function savedPersona(personas: Persona[]) {
 
 export default function ChatProvider({
   name,
+  assistantName,
   personas,
   children,
 }: {
   name: string;
+  assistantName: string;
   personas: Persona[];
   children: ReactNode;
 }) {
@@ -186,13 +190,15 @@ export default function ChatProvider({
     };
   }, []);
 
+  const persona = personas.find((p) => p.id === personaId) ?? personas[0];
   const value: ChatContextValue = {
     ...chat,
     regenerate: (options) => chat.regenerate({ ...options, body: { mode, personaId, ...options?.body } }),
     mode,
     setMode,
     personas,
-    persona: personas.find((p) => p.id === personaId) ?? personas[0],
+    persona,
+    speakerName: persona.id === DEFAULT_PERSONA_ID ? assistantName : persona.name,
     choosePersona,
     onReplyFinished,
     conversationId: session.id,

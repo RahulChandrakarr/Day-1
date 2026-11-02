@@ -2,157 +2,129 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { AssistantUIMessage } from "@/lib/ai/types";
-import { useAssistant } from "./chat-provider";
-import {
-  canListen,
-  createListener,
-  speak,
-  speakable,
-  stopSpeaking,
-  type Listener,
-  type SpeechLang,
-} from "./speech";
+import { textOf, useAssistant } from "./chat-provider";
+import { canListen, speakable } from "./speech";
+import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
 
-type Phase = "idle" | "listening" | "thinking" | "speaking";
+const HOLD_TO_END_MS = 700;
+const LAST_TURNS = 4;
 
-function textOf(message: AssistantUIMessage) {
-  return message.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim();
+// A long press, so a phone in a pocket can't hang up by accident.
+function HoldToEnd({ onEnd }: { onEnd: () => void }) {
+  const [holding, setHolding] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function press() {
+    setHolding(true);
+    timer.current = setTimeout(onEnd, HOLD_TO_END_MS);
+  }
+  function release() {
+    setHolding(false);
+    clearTimeout(timer.current);
+  }
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  return (
+    <button
+      type="button"
+      onPointerDown={press}
+      onPointerUp={release}
+      onPointerCancel={release}
+      onPointerLeave={release}
+      onContextMenu={(e) => e.preventDefault()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onEnd();
+        }
+      }}
+      aria-label="End conversation"
+      style={{ touchAction: "none" }}
+      className="relative h-11 select-none overflow-hidden rounded-full border border-paper/15 px-5 text-sm font-semibold text-red-700 dark:text-red-300"
+    >
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 bg-red-500/25"
+        style={{
+          width: holding ? "100%" : "0%",
+          transition: holding ? `width ${HOLD_TO_END_MS}ms linear` : "none",
+        }}
+      />
+      <span className="relative">Hold to end</span>
+    </button>
+  );
 }
 
-const LANGS: { value: SpeechLang; label: string }[] = [
-  { value: "en-IN", label: "EN" },
-  { value: "hi-IN", label: "हिं" },
-];
-
-// Hands-free voice chat: listen until you pause, reply aloud, listen again.
+// A hands-free spoken conversation that carries on until it's ended.
 export default function TalkPanel() {
-  const { messages, send, statusLabel, persona, onReplyFinished } = useAssistant();
+  const { messages, send, persona, speakerName, onReplyFinished } = useAssistant();
   const supported = useSyncExternalStore(() => () => {}, canListen, () => true);
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [heard, setHeard] = useState("");
+  const [phase, setPhase] = useState<TalkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [lang, setLang] = useState<SpeechLang>(persona.language);
-  const [idleNote, setIdleNote] = useState(false);
+  const session = useRef<TalkSession | null>(null);
+  const transcript = useRef<HTMLDivElement>(null);
 
-  const active = useRef(false);
-  const listener = useRef<Listener | null>(null);
-  // Latest values for callbacks that outlive a render
-  const latest = useRef({ send, lang });
+  // useChat's send changes between renders; the session outlives them
+  const latestSend = useRef(send);
   useEffect(() => {
-    latest.current = { send, lang };
+    latestSend.current = send;
   });
-
-  function listen() {
-    if (!active.current) return;
-    setPhase("listening");
-    setHeard("");
-    listener.current = createListener(latest.current.lang, {
-      onText: setHeard,
-      onPause: (text) => {
-        listener.current = null;
-        if (!active.current) return;
-        if (!text) return listen();
-        setPhase("thinking");
-        latest.current.send(text);
-      },
-      onError: (message) => {
-        listener.current = null;
-        setError(message);
-        end();
-      },
-      onIdle: () => {
-        listener.current = null;
-        setIdleNote(true);
-        end();
-      },
-    });
-  }
 
   function start() {
     setError(null);
-    setIdleNote(false);
-    active.current = true;
-    listen();
+    session.current?.end();
+    session.current = createTalkSession(persona.language, {
+      onPhase: setPhase,
+      onError: setError,
+      send: (text) => latestSend.current(text),
+    });
+    session.current.start();
   }
 
-  function end() {
-    active.current = false;
-    listener.current?.abort();
-    listener.current = null;
-    stopSpeaking();
-    setPhase("idle");
-    setHeard("");
-  }
+  useEffect(() => onReplyFinished((reply) => session.current?.replyFinished(reply)), [onReplyFinished]);
 
-  // When a reply finishes: read it aloud, then listen again
-  useEffect(
-    () =>
-      onReplyFinished(async ({ text, isError }) => {
-        if (!active.current) return;
-        const reply = isError || !text ? "Sorry, something went wrong. Please try again." : text;
-        setPhase("speaking");
-        await speak(reply, latest.current.lang);
-        if (isError) end();
-        else if (active.current) listen();
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- subscribe once; listen/end only touch refs and setters
-    [onReplyFinished],
-  );
+  // Replies are spoken as they're written, not after they're finished
+  const last = messages[messages.length - 1];
+  const replyId = last?.role === "assistant" ? last.id : null;
+  const replyText = replyId ? textOf(last) : "";
+  useEffect(() => {
+    if (replyId) session.current?.replyChanged(replyId, replyText);
+  }, [replyId, replyText]);
 
-  // Stop the mic and voice when leaving Talk mode
-  useEffect(
-    () => () => {
-      active.current = false;
-      listener.current?.abort();
-      stopSpeaking();
-    },
-    [],
-  );
+  useEffect(() => {
+    const el = transcript.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
 
-  function tapOrb() {
-    if (phase === "idle") start();
-    else if (phase === "listening") listener.current?.finish();
-    else if (phase === "speaking") {
-      // Interrupt and listen
-      stopSpeaking();
-      listen();
-    }
-  }
+  // Leaving Talk mode ends the conversation
+  useEffect(() => () => session.current?.end(), []);
 
-  function switchLang(next: SpeechLang) {
-    setLang(next);
-    latest.current.lang = next;
-    if (phase === "listening") {
-      listener.current?.abort();
-      listener.current = null;
-      listen();
-    }
-  }
-
-  const turns = messages.slice(-4);
+  const live = phase !== "idle";
   const label =
     phase === "idle"
-      ? idleNote
-        ? "Paused — tap to talk again"
-        : "Tap to start talking"
-      : phase === "listening"
-        ? heard || "Listening…"
-        : phase === "thinking"
-          ? (statusLabel ?? "Thinking…")
-          : "Speaking… tap to interrupt";
+      ? `Tap to talk with ${speakerName}`
+      : phase === "starting"
+        ? "Getting ready…"
+        : phase === "listening"
+          ? "Listening… just talk"
+          : phase === "thinking"
+            ? "Thinking…"
+            : "Speaking… talk or tap to interrupt";
+
+  const turns = messages.slice(-LAST_TURNS);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-4">
+      <div ref={transcript} className="min-h-0 flex-1 overflow-y-auto px-1 py-4">
         {turns.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <span className="text-4xl" aria-hidden>
               {persona.emoji}
             </span>
-            <p className="font-bold tracking-tight text-2xl">Talk with {persona.name}</p>
+            <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
             <p className="max-w-xs text-sm text-paper/55">
-              Speak naturally. It waits until you finish, answers out loud, then listens again.
+              A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
+              today, interrupt whenever you like, and say &ldquo;bye&rdquo; when you&apos;re done.
             </p>
           </div>
         ) : (
@@ -186,7 +158,7 @@ export default function TalkPanel() {
           <>
             <button
               type="button"
-              onClick={tapOrb}
+              onClick={() => (live ? session.current?.tap() : start())}
               aria-label={label}
               className="relative flex h-24 w-24 items-center justify-center rounded-full outline-none focus-visible:ring-4 focus-visible:ring-ember/30"
             >
@@ -205,17 +177,21 @@ export default function TalkPanel() {
                 )}
               </AnimatePresence>
               <motion.span
-                animate={phase === "thinking" ? { rotate: 360 } : { rotate: 0 }}
-                transition={phase === "thinking" ? { duration: 1.6, repeat: Infinity, ease: "linear" } : {}}
+                animate={phase === "thinking" || phase === "starting" ? { rotate: 360 } : { rotate: 0 }}
+                transition={
+                  phase === "thinking" || phase === "starting"
+                    ? { duration: 1.6, repeat: Infinity, ease: "linear" }
+                    : {}
+                }
                 className={`relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-colors ${
                   phase === "listening"
                     ? "bg-red-500 text-white"
-                    : phase === "thinking"
+                    : phase === "thinking" || phase === "starting"
                       ? "bg-[conic-gradient(var(--ember),transparent_70%)] text-ember"
                       : "bg-ember text-on-ember"
                 }`}
               >
-                {phase === "thinking" ? (
+                {phase === "thinking" || phase === "starting" ? (
                   <span className="h-16 w-16 rounded-full bg-surface" />
                 ) : phase === "speaking" ? (
                   <span className="flex items-end gap-1" aria-hidden>
@@ -237,13 +213,7 @@ export default function TalkPanel() {
               </motion.span>
             </button>
 
-            <p
-              role="status"
-              aria-live="polite"
-              className={`min-h-10 max-w-md text-center text-sm ${
-                phase === "listening" && heard ? "text-paper" : "text-paper/55"
-              }`}
-            >
+            <p role="status" aria-live="polite" className="min-h-5 max-w-md text-center text-sm text-paper/55">
               {label}
             </p>
             {error && (
@@ -251,38 +221,14 @@ export default function TalkPanel() {
                 {error}
               </p>
             )}
-
-            <div className="flex items-center gap-2">
-              <div
-                role="radiogroup"
-                aria-label="Voice language"
-                className="flex rounded-full border border-paper/10 p-0.5 text-xs"
-              >
-                {LANGS.map((l) => (
-                  <button
-                    key={l.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={lang === l.value}
-                    onClick={() => switchLang(l.value)}
-                    className={`h-8 min-w-10 rounded-full px-2.5 font-semibold transition ${
-                      lang === l.value ? "bg-paper/10 text-paper" : "text-paper/45"
-                    }`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-              {phase !== "idle" && (
-                <button
-                  type="button"
-                  onClick={end}
-                  className="h-9 rounded-full border border-paper/10 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-500/10 dark:text-red-300"
-                >
-                  End
-                </button>
-              )}
-            </div>
+            {live && (
+              <>
+                <HoldToEnd onEnd={() => session.current?.end()} />
+                <p className="max-w-xs text-center text-xs text-paper/40">
+                  Keep this screen open. Locking your phone stops the microphone.
+                </p>
+              </>
+            )}
           </>
         )}
       </div>

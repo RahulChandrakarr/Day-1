@@ -7,8 +7,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except Next internals, static assets, the service worker
-    // and the reminder job (which runs without a signed-in user)
-    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|api/cron|api/inbox|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Everything except Next internals, static assets, the service worker,
+    // the speech detector's files and the reminder job (which runs without a
+    // signed-in user)
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|vad/|api/cron|api/inbox|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

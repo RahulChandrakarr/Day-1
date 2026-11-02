@@ -8,7 +8,7 @@ import {
   saveMemoryAction,
 } from "@/app/(dashboard)/settings/actions";
 import { handsFree, useHandsFree } from "@/components/assistant/hands-free";
-import { canListen } from "@/components/assistant/speech";
+import { canWake } from "@/components/assistant/speech";
 import { Card, CardGrid, CardHead, Field, inputClass, primaryButtonClass, quietButtonClass } from "@/components/ui/kit";
 import type { Memory } from "@/lib/assistant-memory";
 
@@ -89,7 +89,7 @@ const noop = () => () => {};
 
 function HandsFreeCard({ name }: { name: string }) {
   const on = useHandsFree();
-  const supported = useSyncExternalStore(noop, canListen, () => true);
+  const supported = useSyncExternalStore(noop, canWake, () => true);
 
   return (
     <Card>

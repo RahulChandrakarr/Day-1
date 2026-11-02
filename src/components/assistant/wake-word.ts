@@ -137,3 +137,23 @@ export function isStopPhrase(text: string) {
   if (!t || t.split(" ").length > 4) return false;
   return STOP_PHRASES.some((p) => t === p || t.startsWith(`${p} `));
 }
+
+const normalise = (text: string) =>
+  text.toLowerCase().replace(/[.,!?।]/g, "").replace(/\s+/g, " ").trim();
+
+const GOODBYE =
+  /^(?:(?:ok|okay|thanks|thank you|chalo|चलो|theek hai|ठीक है)\s+)*(?:bye|goodbye|good bye|bye bye|बाय|अलविदा|that's all|thats all|that's it for now|end the call|end call)(?:\s|$)/;
+
+// Ends a live conversation. Plain "no" or "thanks" don't: in a conversation
+// those are usually answers.
+export function isGoodbye(text: string) {
+  const t = normalise(text);
+  return !!t && t.split(" ").length <= 5 && GOODBYE.test(t);
+}
+
+const HUSH = new Set(["stop", "wait", "hold on", "ruko", "ruk", "ruk jao", "bas", "chup", "रुको", "रुक जाओ", "बस", "चुप"]);
+
+// "Stop talking", said over a reply: she stops and carries on listening
+export function isHush(text: string) {
+  return HUSH.has(normalise(text));
+}

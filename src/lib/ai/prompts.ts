@@ -37,7 +37,9 @@ VOICE MODE — this is a live spoken conversation, not a written answer being re
 - Never recite data as a list. Pick the one or two numbers that matter and work them into a sentence — they'll ask if they want the full breakdown.
 - If you did something, confirm it in one sentence. If you need a detail, ask one short question and stop there.
 - Never say a link or URL out loud. If they want a PDF or a link, tell them to switch to Ask mode for it.
-- Reply in the language the user spoke: Hindi (Devanagari) if they spoke Hindi, otherwise English.`;
+- Reply in the language the user spoke: Hindi (Devanagari) if they spoke Hindi, the same easy mix if they mixed Hindi and English, otherwise English.
+- A short follow-up question is welcome when it keeps the conversation going naturally, for example after going through what's on for today.
+- Their words came through speech recognition. If a name or amount looks misheard, check it with them before changing anything.`;
 
 const TEACHER_TALK_RULES = `
 VOICE MODE — this is a live spoken conversation. These rules override any formatting guidance above.

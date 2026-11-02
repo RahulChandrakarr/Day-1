@@ -44,8 +44,12 @@ const Body = z.object({
 // Old turns are context, not the question; a long report from earlier
 // shouldn't be paid for again on every message.
 const HISTORY_CHARS = 1500;
+const HISTORY_TURNS = 12;
+// A spoken conversation has short messages and needs more of them for context
+const TALK_HISTORY_TURNS = 24;
 
 const LIMIT_PER_MINUTE = 8;
+const TALK_LIMIT_PER_MINUTE = 15;
 
 function friendlyError(error: unknown) {
   console.error("[assistant] chat stream error:", error);
@@ -100,13 +104,13 @@ export async function POST(req: Request) {
         .select("role, content, evidence")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: false })
-        .limit(12),
+        .limit(mode === "talk" ? TALK_HISTORY_TURNS : HISTORY_TURNS),
       resolvePersona(supabase, personaId),
       getAssistantName(supabase).catch(() => undefined),
       getMemories(supabase, MEMORY_LIMIT).catch(() => []),
     ]);
 
-  if ((minute.count ?? 0) >= LIMIT_PER_MINUTE)
+  if ((minute.count ?? 0) >= (mode === "talk" ? TALK_LIMIT_PER_MINUTE : LIMIT_PER_MINUTE))
     return jsonError("You're sending messages quickly — wait a moment.", 429);
   if ((day.count ?? 0) >= LIMIT_PER_DAY)
     return jsonError("Daily message limit reached. Try again tomorrow.", 429);

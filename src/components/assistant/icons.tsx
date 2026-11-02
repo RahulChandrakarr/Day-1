@@ -10,6 +10,13 @@ const base = {
   "aria-hidden": true,
 };
 
+// Sound waves: start a spoken conversation
+export const TalkIcon = () => (
+  <svg {...base} strokeWidth={2.2}>
+    <path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4" />
+  </svg>
+);
+
 export const SparkleIcon = ({ size = 18 }: { size?: number }) => (
   <svg {...base} width={size} height={size}>
     <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" />

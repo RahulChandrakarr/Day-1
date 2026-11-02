@@ -1,6 +1,11 @@
 "use client";
 
-// Browser speech: listen until the speaker pauses, and read text aloud.
+import { canUseMic, openMic, type Mic } from "./mic";
+
+// Listening goes through the server's speech model, which handles mixed Hindi
+// and English and knows the names this person uses. Only waiting for the
+// assistant's name uses the browser's own recognition, so that nothing leaves
+// the device until the name is heard.
 
 type SpeechResult = {
   isFinal: boolean;
@@ -33,8 +38,11 @@ function recognitionCtor(): RecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export const canListen = () => recognitionCtor() !== null;
-export const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
+export const canListen = canUseMic;
+/** Can wait for the assistant's name on this device. */
+export const canWake = () => recognitionCtor() !== null;
+export const canSpeak = () =>
+  typeof window !== "undefined" && ("Audio" in window || "speechSynthesis" in window);
 
 export const SPEECH_ERRORS: Record<string, string> = {
   "not-allowed": "Allow microphone access to talk to the assistant.",
@@ -50,103 +58,114 @@ export type Listener = {
   abort: () => void;
 };
 
-const join = (...parts: string[]) =>
+export const join = (...parts: string[]) =>
   parts.map((p) => p.trim()).filter(Boolean).join(" ");
 
-// Listens across the browser's short recognition sessions and hands over the
-// whole utterance once the speaker has been quiet for `pauseMs`.
+export function micErrorMessage(error: unknown) {
+  const name = error instanceof DOMException ? error.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError") return SPEECH_ERRORS["not-allowed"];
+  if (name === "NotFoundError") return SPEECH_ERRORS["audio-capture"];
+  return "Couldn't start the microphone. Try again.";
+}
+
+// What was said in a recording; empty if it was only noise. Throws if the
+// server can't be reached or can't make it out.
+export async function transcribeRecording(wav: Blob) {
+  const response = await fetch("/api/assistant/transcribe", {
+    method: "POST",
+    headers: { "Content-Type": "audio/wav" },
+    body: wav,
+  });
+  if (!response.ok) throw new Error("Couldn't make out what you said. Try again.");
+  const data = (await response.json()) as { text?: string };
+  return data.text?.trim() ?? "";
+}
+
+// One turn: listens until the speaker has been quiet for `pauseMs`, then hands
+// over what they said. If nobody speaks for `idleMs` it gives up.
 export function createListener(
-  lang: SpeechLang,
   handlers: {
-    onText?: (text: string) => void;
+    /** The microphone is on: it's safe to start talking. */
+    onReady?: () => void;
+    /** Recording ended; the words are on their way. */
+    onTranscribing?: () => void;
     onPause: (text: string) => void;
     onError?: (message: string) => void;
     onIdle?: () => void;
   },
   { pauseMs = 1600, idleMs = 25_000 }: { pauseMs?: number; idleMs?: number } = {},
 ): Listener {
-  const Ctor = recognitionCtor();
-  if (!Ctor) {
-    handlers.onError?.("Voice isn't supported in this browser. Try Chrome, Edge or Safari.");
-    return { finish: () => {}, abort: () => {} };
-  }
-
-  let rec: Recognition;
+  let mic: Mic | null = null;
   let stopped = false;
-  let committed = ""; // text from sessions that already ended
-  let sessionFinal = "";
-  let current = "";
-  let pauseTimer: ReturnType<typeof setTimeout> | undefined;
+  let heardSpeech = false;
+  let finishing = false;
+  let aborted = false;
   const idleTimer = setTimeout(() => {
-    if (current) return;
+    if (heardSpeech) return;
     close();
     handlers.onIdle?.();
   }, idleMs);
 
-  // Chrome on Android repeats phrases in continuous mode; one phrase per session there
-  const android = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
-
   function close() {
     stopped = true;
-    clearTimeout(pauseTimer);
     clearTimeout(idleTimer);
-    try {
-      rec.abort();
-    } catch {
-      // already stopped
-    }
+    mic?.close();
+    mic = null;
   }
 
-  function finish() {
-    if (stopped) return;
-    const text = current.trim();
+  function finishEmpty() {
     close();
-    handlers.onPause(text);
+    handlers.onPause("");
   }
 
-  function start() {
-    rec = new Ctor!();
-    rec.lang = lang;
-    rec.continuous = !android;
-    rec.interimResults = true;
-    sessionFinal = "";
-
-    rec.onresult = (event) => {
-      let finals = "";
-      let interim = "";
-      for (let i = 0; i < event.results.length; i++) {
-        const r = event.results[i];
-        if (r.isFinal) finals = join(finals, r[0].transcript);
-        else interim = join(interim, r[0].transcript);
-      }
-      sessionFinal = finals;
-      current = join(committed, finals, interim);
-      handlers.onText?.(current);
-      clearTimeout(pauseTimer);
-      if (current) pauseTimer = setTimeout(finish, pauseMs);
-    };
-    rec.onerror = (event) => {
-      if (event.error === "no-speech" || event.error === "aborted") return;
-      close();
-      handlers.onError?.(SPEECH_ERRORS[event.error] ?? "Voice stopped. Try again.");
-    };
-    rec.onend = () => {
+  openMic(
+    {
+      onSpeechStart: () => {
+        heardSpeech = true;
+      },
+      onMisfire: () => {
+        if (finishing) finishEmpty();
+      },
+      onSpeechEnd: (wav) => {
+        if (stopped) return;
+        close();
+        handlers.onTranscribing?.();
+        transcribeRecording(wav).then(
+          (text) => {
+            if (!aborted) handlers.onPause(text);
+          },
+          (error: Error) => {
+            if (!aborted) handlers.onError?.(error.message);
+          },
+        );
+      },
+    },
+    { endSilenceMs: pauseMs },
+  ).then(
+    (opened) => {
+      if (stopped) return opened.close();
+      mic = opened;
+      handlers.onReady?.();
+    },
+    (error) => {
       if (stopped) return;
-      // Keep what this session heard (unless it only repeats earlier text)
-      if (sessionFinal && !committed.endsWith(sessionFinal)) committed = join(committed, sessionFinal);
-      current = committed;
-      start();
-    };
-    try {
-      rec.start();
-    } catch {
       close();
-      handlers.onError?.("Couldn't start the microphone. Try again.");
-    }
-  }
+      handlers.onError?.(micErrorMessage(error));
+    },
+  );
 
-  start();
-  return { finish, abort: close };
+  return {
+    finish() {
+      if (stopped) return;
+      if (!mic || !heardSpeech) return finishEmpty();
+      finishing = true;
+      mic.flush();
+    },
+    abort() {
+      aborted = true;
+      close();
+    },
+  };
 }
 
 // Waits for the assistant's name without ever switching the microphone off
@@ -300,6 +319,43 @@ export function speakable(markdown: string) {
     .trim();
 }
 
+// Whole sentences: the voice falls or lifts at the end of each one. A sentence
+// ends only at punctuation followed by a space, so "1.23 lakh" stays together.
+// Very short ones ("Sure.") join the next, which also sounds more natural.
+const SENTENCE = /.+?(?:[.!?।]+(?=\s|$)|$)/g;
+const SHORTEST_SENTENCE = 25;
+const LONGEST_TEXT = 1200;
+// Fetch a little ahead so sentences run together, but not a whole long reply
+// that may get interrupted
+const FETCH_AHEAD = 3;
+
+export function sentencesOf(text: string) {
+  const out: string[] = [];
+  let carry = "";
+  for (const match of text.match(SENTENCE) ?? []) {
+    carry = join(carry, match);
+    if (carry.length >= SHORTEST_SENTENCE) {
+      out.push(carry);
+      carry = "";
+    }
+  }
+  if (carry) out.push(carry);
+  return out;
+}
+
+// Splits off the sentences that are complete in text still being written.
+// Returns them with how many characters they used.
+export function completeSentences(text: string) {
+  const end = /[.!?।]+\s/g;
+  let used = 0;
+  let found = end.exec(text);
+  while (found) {
+    used = found.index + found[0].length;
+    found = end.exec(text);
+  }
+  return { sentences: sentencesOf(text.slice(0, used)), used };
+}
+
 function pickVoice(lang: SpeechLang) {
   const voices = window.speechSynthesis.getVoices();
   const base = lang.slice(0, 2);
@@ -320,7 +376,200 @@ function voicesReady() {
   });
 }
 
-let speakToken = 0;
+// The device's own voice: used only when the real one can't be reached or
+// the browser won't play it, so a reply is never lost.
+async function deviceSay(text: string, lang: SpeechLang) {
+  if (!("speechSynthesis" in window)) return;
+  await voicesReady();
+  const voiceLang: SpeechLang = DEVANAGARI.test(text) ? "hi-IN" : lang;
+  const voice = pickVoice(voiceLang);
+  await new Promise<void>((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voiceLang;
+    if (voice) u.voice = voice;
+    u.rate = 1.03;
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
+    window.speechSynthesis.speak(u);
+  });
+}
+
+// An empty WAV. Browsers only let a page play sound freely after a tap has
+// started it, and this one element is what gets started.
+const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+let audioElement: HTMLAudioElement | null = null;
+let audioUnlocked = false;
+
+function sharedAudio() {
+  audioElement ??= new Audio();
+  return audioElement;
+}
+
+/** Call during a tap, so replies can play later without one. */
+export function unlockAudio() {
+  if (audioUnlocked || typeof window === "undefined") return;
+  audioUnlocked = true;
+  const audio = sharedAudio();
+  audio.src = SILENCE;
+  void audio.play().catch(() => {
+    audioUnlocked = false;
+  });
+}
+
+async function fetchVoice(text: string) {
+  try {
+    const response = await fetch("/api/assistant/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text.slice(0, LONGEST_TEXT) }),
+    });
+    if (!response.ok) return null;
+    return URL.createObjectURL(await response.blob());
+  } catch {
+    return null;
+  }
+}
+
+export type Speaker = {
+  /** Add a sentence to what's being said. */
+  say: (text: string) => void;
+  /** No more sentences are coming. */
+  end: () => void;
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+  /** Resolves when everything has been said, or on stop. */
+  finished: Promise<void>;
+};
+
+// Says sentences in order as they arrive, fetching the audio ahead of time.
+export function createSpeaker(
+  lang: SpeechLang,
+  { onStart }: { onStart?: () => void } = {},
+): Speaker {
+  type Line = { text: string; audio?: Promise<string | null> };
+  const lines: Line[] = [];
+  let ended = false;
+  let stopped = false;
+  let paused = false;
+  let started = false;
+  // Saying a line with the device's voice right now. Pausing that voice when
+  // it's idle can leave it stuck, so it's only touched while it's in use.
+  let onDevice = false;
+  let wakeLoop: (() => void) | null = null;
+  let endPlayback: (() => void) | null = null;
+
+  const wake = () => {
+    wakeLoop?.();
+    wakeLoop = null;
+  };
+  const nextEvent = () =>
+    new Promise<void>((resolve) => {
+      wakeLoop = resolve;
+    });
+
+  const fetchAhead = () => {
+    for (const line of lines.slice(0, FETCH_AHEAD)) line.audio ??= fetchVoice(line.text);
+  };
+  const release = (url: string | null | undefined) => {
+    if (url) URL.revokeObjectURL(url);
+  };
+
+  function play(url: string) {
+    const audio = sharedAudio();
+    return new Promise<boolean>((resolve) => {
+      const done = (ok: boolean) => {
+        audio.onended = null;
+        audio.onerror = null;
+        endPlayback = null;
+        resolve(ok);
+      };
+      endPlayback = () => done(true);
+      audio.onended = () => done(true);
+      audio.onerror = () => done(false);
+      audio.src = url;
+      audio.play().catch(() => done(false));
+    });
+  }
+
+  async function run() {
+    while (!stopped) {
+      if (paused) {
+        await nextEvent();
+        continue;
+      }
+      const line = lines[0];
+      if (!line) {
+        if (ended) return;
+        await nextEvent();
+        continue;
+      }
+      fetchAhead();
+      const url = await line.audio;
+      // Paused or stopped while the audio was on its way
+      if (stopped) {
+        release(url);
+        break;
+      }
+      if (paused) {
+        line.audio = Promise.resolve(url ?? null);
+        continue;
+      }
+      lines.shift();
+      fetchAhead();
+      if (!started) {
+        started = true;
+        onStart?.();
+      }
+      const played = url ? await play(url) : false;
+      release(url);
+      if (!played && !stopped) {
+        onDevice = true;
+        await deviceSay(line.text, lang);
+        onDevice = false;
+      }
+    }
+    for (const line of lines) void line.audio?.then(release);
+  }
+
+  const finished = run();
+
+  return {
+    say(text) {
+      const line = text.trim();
+      if (!line || stopped) return;
+      lines.push({ text: line });
+      wake();
+    },
+    end() {
+      ended = true;
+      wake();
+    },
+    pause() {
+      paused = true;
+      if (audioElement && endPlayback) audioElement.pause();
+      if (onDevice) window.speechSynthesis.pause();
+    },
+    resume() {
+      paused = false;
+      if (audioElement && endPlayback) void audioElement.play().catch(() => endPlayback?.());
+      if (onDevice) window.speechSynthesis.resume();
+      wake();
+    },
+    stop() {
+      stopped = true;
+      ended = true;
+      if (audioElement && endPlayback) audioElement.pause();
+      endPlayback?.();
+      if (onDevice) {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.cancel();
+      }
+      wake();
+    },
+    finished,
+  };
+}
 
 // Which message is being read aloud, for the speaker buttons.
 let speakingKey: string | null = null;
@@ -337,47 +586,27 @@ export const speakingStore = {
   get: () => speakingKey,
 };
 
+let current: Speaker | null = null;
+
 // Reads text aloud; resolves when finished or stopped.
 export async function speak(text: string, lang: SpeechLang, key: string | null = null) {
   if (!canSpeak()) return;
-  const token = ++speakToken;
+  unlockAudio();
+  stopSpeaking();
   setSpeakingKey(key);
-  try {
-    await speakChunks(text, lang, token);
-  } finally {
-    if (token === speakToken) setSpeakingKey(null);
-  }
-}
-
-async function speakChunks(text: string, lang: SpeechLang, token: number) {
-  window.speechSynthesis.cancel();
-  await voicesReady();
-  if (token !== speakToken) return;
-  const voiceLang: SpeechLang = DEVANAGARI.test(text) ? "hi-IN" : lang;
-  const voice = pickVoice(voiceLang);
-  // Whole sentences: short utterances avoid Chrome's cut-off, and keeping the
-  // trailing punctuation lets the voice fall or lift at the end of each one.
-  // A sentence ends only at punctuation followed by a space, so "1.23 lakh"
-  // and "12.5 percent" aren't split into two utterances mid-number.
-  const chunks = speakable(text).match(/.+?(?:[.!?।]+(?=\s|$)|$)/g) ?? [];
-  for (const chunk of chunks) {
-    if (token !== speakToken) return;
-    const line = chunk.trim();
-    if (!line) continue;
-    await new Promise<void>((resolve) => {
-      const u = new SpeechSynthesisUtterance(line);
-      u.lang = voiceLang;
-      if (voice) u.voice = voice;
-      u.rate = 1.03;
-      u.onend = () => resolve();
-      u.onerror = () => resolve();
-      window.speechSynthesis.speak(u);
-    });
+  const speaker = createSpeaker(lang);
+  current = speaker;
+  for (const sentence of sentencesOf(speakable(text))) speaker.say(sentence);
+  speaker.end();
+  await speaker.finished;
+  if (current === speaker) {
+    current = null;
+    setSpeakingKey(null);
   }
 }
 
 export function stopSpeaking() {
-  speakToken++;
+  current?.stop();
+  current = null;
   setSpeakingKey(null);
-  if (canSpeak()) window.speechSynthesis.cancel();
 }

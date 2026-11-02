@@ -17,11 +17,13 @@ import { handsFree, useHandsFree } from "@/components/assistant/hands-free";
 import { SendIcon, SparkleIcon } from "@/components/assistant/icons";
 import {
   canListen,
+  canWake,
   createListener,
   createWakeListener,
   speak,
   SPEECH_ERRORS,
   stopSpeaking,
+  unlockAudio,
   type Listener,
   type SpeechLang,
 } from "@/components/assistant/speech";
@@ -205,9 +207,8 @@ export default function QuickAssistant({ name }: { name: string }) {
     if (!canListen()) return setPhase("typing");
     setPhase("listening");
     listener.current = createListener(
-      lang,
       {
-        onText: setHeard,
+        onTranscribing: () => setPhase("thinking"),
         onPause: (text) => {
           listener.current = null;
           if (convo.current && isStopPhrase(text)) return endConvo("Okay!");
@@ -254,13 +255,14 @@ export default function QuickAssistant({ name }: { name: string }) {
     }
     if (phase === "listening") return listener.current?.finish();
     if (phase === "thinking") return;
+    unlockAudio();
     listen();
   }
 
   // Hands-free: wait for her name while nothing else is going on. Only
   // what's said after the name ever reaches the AI.
   const waiting =
-    onClient && handsFreeOn && visible && !hidden && phase === "idle" && !!matchName && canListen();
+    onClient && handsFreeOn && visible && !hidden && phase === "idle" && !!matchName && canWake();
   const wakeRef = useRef(wake);
   useEffect(() => {
     wakeRef.current = wake;
@@ -483,7 +485,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                     </Link>
                   )}
                 </div>
-                {canListen() && (
+                {canWake() && (
                   <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 border-t border-paper/10 pt-2 text-xs text-paper/60">
                     <span>Hands-free: say “{name}”</span>
                     <input
