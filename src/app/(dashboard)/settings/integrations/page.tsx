@@ -46,7 +46,7 @@ async function splitwiseConnection(userId: string): Promise<SplitwiseConnection>
 }
 
 // Outside services, each linked by the person themselves. A new integration
-// is one more card in the grid.
+// is one more row in the list.
 export default async function IntegrationsPage() {
   const { profile } = await requireProfile();
   const [splitwise, sync] = await Promise.all([
@@ -60,7 +60,7 @@ export default async function IntegrationsPage() {
         Link services you already use, so their numbers show up in Day One. Each person
         links their own accounts.
       </p>
-      <div className="grid items-start gap-3 xl:grid-cols-2">
+      <div className="flex flex-col gap-3">
         <SplitwiseCard connection={splitwise} />
         <GrowwCard
           configured={growwConfigured()}
