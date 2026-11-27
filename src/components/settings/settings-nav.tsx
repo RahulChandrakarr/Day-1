@@ -7,7 +7,8 @@ import {
   type NavSection,
 } from "@/components/ui/section-nav";
 
-const sections: NavSection[] = [
+// Also listed in the phone's Me menu (dashboard/me-menu.tsx)
+export const settingsSections: NavSection[] = [
   {
     href: "/settings/notifications",
     label: "Notifications",
@@ -98,11 +99,11 @@ const sections: NavSection[] = [
 ];
 
 export function SettingsSidebar() {
-  return <SectionSidebar sections={sections} label="Settings sections" />;
+  return <SectionSidebar sections={settingsSections} label="Settings sections" />;
 }
 
 export function SettingsMenuButton() {
   return (
-    <SectionMenuButton sections={sections} label="Settings sections" title="Settings" />
+    <SectionMenuButton sections={settingsSections} label="Settings sections" title="Settings" />
   );
 }

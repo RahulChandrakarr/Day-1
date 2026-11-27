@@ -32,9 +32,7 @@ import {
 import TodoList from "@/components/dashboard/todo-list";
 import BriefingToggle from "@/components/assistant/briefing-toggle";
 import { getJournalEntry } from "@/lib/journal-queries";
-import Avatar from "@/components/dashboard/avatar";
 import { requireProfile } from "@/lib/auth";
-import { avatarUrl as avatarUrlFor } from "@/lib/profile-queries";
 
 export const metadata: Metadata = {
   title: "Overview · Day One",
@@ -79,7 +77,6 @@ export default async function OverviewPage() {
     moods,
     bodyLogs,
   } = overview;
-  const avatarUrl = avatarUrlFor(profile.avatar_path);
   const name = profile.full_name || profile.email.split("@")[0];
 
   // To-dos are the journal's priorities for today
@@ -263,19 +260,11 @@ export default async function OverviewPage() {
       {/* The day's summary spans the page; everything else sits in columns
           that fill a wide screen instead of one tall stack */}
       <Stack>
-        {/* Phones have no top bar: the way to Profile and Settings is here */}
-        <div className="flex items-center justify-between gap-3 md:hidden">
-          <p className="min-w-0 truncate text-[26px] font-bold tracking-tight">
-            Hi {name.split(" ")[0]}
-          </p>
-          <Link
-            href="/settings/profile"
-            aria-label="Your profile and settings"
-            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-glass-edge bg-glass text-sm font-semibold shadow-[0_6px_16px_-8px_rgb(120_90_70/0.45)] backdrop-blur-md"
-          >
-            <Avatar url={avatarUrl} name={name} />
-          </Link>
-        </div>
+        {/* Phones have no top bar. Profile and Settings sit behind Me, the
+            photo at the end of the tab bar */}
+        <p className="truncate text-[26px] font-bold tracking-tight md:hidden">
+          Hi {name.split(" ")[0]}
+        </p>
 
         {/* Today so far: ring, one insight, what's done */}
         <DarkCard className="flex items-center gap-3">

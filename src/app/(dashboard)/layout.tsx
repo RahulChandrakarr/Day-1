@@ -18,6 +18,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   // picked. Everything else here follows the frame instead of holding it up,
   // so opening the app shows the frame and the page's placeholder straight away.
   const { profile } = await requireProfile();
+  const photo = avatarUrl(profile.avatar_path);
 
   return (
     // The Add menu and the app's one add-entry form live here, so the Add
@@ -38,9 +39,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <NavProgress />
         </Suspense>
-        <Sidebar profile={profile} alerts={alerts} avatarUrl={avatarUrl(profile.avatar_path)} />
+        <Sidebar profile={profile} alerts={alerts} avatarUrl={photo} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <MobileNav alerts={alerts} />
+          <MobileNav profile={profile} avatarUrl={photo} alerts={alerts} />
           <main className="flex w-full min-w-0 flex-1 flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] sm:px-5 md:px-6 md:py-6 md:pb-8 xl:px-8">
             {children}
           </main>

@@ -27,7 +27,8 @@ export function useTapped(pathname: string) {
   return [tapped, setTapped] as const;
 }
 
-// The small dot on a tab that wants attention. The list of those tabs comes
+// The small dot on a tab that wants attention. A tab that stands for several
+// sections (the phone's Me tab) passes all their addresses. The list of those tabs comes
 // from the server after the frame of the page has already been sent, so the
 // frame never waits for it; until it lands there is simply no dot.
 export function AlertDot({
@@ -36,7 +37,7 @@ export function AlertDot({
   className,
 }: {
   alerts: Promise<string[]>;
-  href: string;
+  href: string | string[];
   className: string;
 }) {
   return (
@@ -52,8 +53,12 @@ function Dot({
   className,
 }: {
   alerts: Promise<string[]>;
-  href: string;
+  href: string | string[];
   className: string;
 }) {
-  return use(alerts).includes(href) ? <span aria-label="Reminder" className={className} /> : null;
+  const wanted = use(alerts);
+  const hrefs = typeof href === "string" ? [href] : href;
+  return hrefs.some((h) => wanted.includes(h)) ? (
+    <span aria-label="Reminder" className={className} />
+  ) : null;
 }
