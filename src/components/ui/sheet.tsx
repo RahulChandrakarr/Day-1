@@ -2,8 +2,10 @@
 
 import { useEffect, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Portal from "./portal";
 
-// Bottom sheet on phones, centred dialog on wider screens.
+// Bottom sheet on phones, centred dialog on wider screens. It opens at the top
+// level of the page (Portal), so it covers the window wherever its button is.
 export default function Sheet({
   open,
   onClose,
@@ -32,6 +34,7 @@ export default function Sheet({
   }, [open, onClose]);
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <>
@@ -84,5 +87,6 @@ export default function Sheet({
         </>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }

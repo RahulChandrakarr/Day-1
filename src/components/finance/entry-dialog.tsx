@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Portal from "@/components/ui/portal";
 import {
   addTransaction,
   type FormState,
@@ -222,6 +223,9 @@ export default function EntryDialog({
         {compact ? "Add" : "Add entry"}
       </motion.button>
 
+      {/* At the top level of the page, so it covers the window even when the
+          button sits in the floating bar on phones */}
+      <Portal>
       <AnimatePresence>
         {open && (
           <>
@@ -265,6 +269,7 @@ export default function EntryDialog({
           </>
         )}
       </AnimatePresence>
+      </Portal>
     </>
   );
 }

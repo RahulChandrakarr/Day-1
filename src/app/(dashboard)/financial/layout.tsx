@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import PageShell from "@/components/dashboard/page-shell";
+import { ThumbDock, ThumbDockSpacer } from "@/components/ui/thumb-dock";
 import AddEntry from "@/components/finance/add-entry";
 import FinancePdf from "@/components/finance/finance-pdf";
 import {
@@ -30,12 +31,16 @@ export default function FinancialLayout({
               <Suspense fallback={null}>
                 <FinancePdf />
               </Suspense>
-              <Suspense fallback={<div className="h-12" />}>
-                <AddEntry />
-              </Suspense>
+              {/* On phones this floats just above the tab bar, under the thumb */}
+              <ThumbDock>
+                <Suspense fallback={<div className="h-12" />}>
+                  <AddEntry />
+                </Suspense>
+              </ThumbDock>
             </div>
           </div>
           {children}
+          <ThumbDockSpacer />
         </div>
       </div>
     </PageShell>
