@@ -64,6 +64,13 @@ export const EQUIPMENTS: { value: Equipment; label: string; hint: string }[] = [
   { value: "bodyweight", label: "Bodyweight", hint: "No equipment" },
 ];
 
+// Whether a change in weight is progress depends on the goal: down when losing
+// fat, up when building muscle. For the other goals it is neither (null).
+export function weightChangeIsGood(goal: Goal | null | undefined, change: number) {
+  if (change === 0 || (goal !== "lose" && goal !== "build")) return null;
+  return goal === "lose" ? change < 0 : change > 0;
+}
+
 // ---------------------------------------------------------------------------
 // Body metrics
 // ---------------------------------------------------------------------------

@@ -63,11 +63,12 @@ export async function loadHealthReport(month: string) {
     bodyLogs: earlierLogs,
     previousWeight: null,
   });
-  const changes = compareMonths(report, previous);
+  const goal = profile?.goal ?? null;
+  const changes = compareMonths(report, previous, goal);
   const nothingYet =
     report.gym.doneSessions === 0 &&
     report.habits.every((h) => h.tracked === 0) &&
     report.body.entries === 0;
 
-  return { today, previousMonth, habits, report, previous, changes, nothingYet };
+  return { today, previousMonth, habits, report, previous, changes, nothingYet, goal };
 }

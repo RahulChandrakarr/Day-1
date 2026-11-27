@@ -1,8 +1,8 @@
 // Builds a month's training / habit / body summary so two months can be compared.
 
 import { addDays, daysInMonth, monthRange } from "@/lib/finance";
-import { bmi } from "@/lib/fitness";
-import type { BodyLog } from "@/lib/fitness";
+import { bmi, weightChangeIsGood } from "@/lib/fitness";
+import type { BodyLog, Goal } from "@/lib/fitness";
 import { isoWeekday, type HabitCheckin, type PlanDay } from "@/lib/health";
 import type { Habit } from "@/lib/journal";
 
@@ -205,8 +205,13 @@ export type Change = {
   good: boolean;
 };
 
-// What went up and what slipped, compared with last month
-export function compareMonths(now: MonthReport, before: MonthReport): Change[] {
+// What went up and what slipped, compared with last month. Weight only counts
+// when the goal says which way it should go.
+export function compareMonths(
+  now: MonthReport,
+  before: MonthReport,
+  goal: Goal | null,
+): Change[] {
   const changes: Change[] = [];
   const pct = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -255,13 +260,15 @@ export function compareMonths(now: MonthReport, before: MonthReport): Change[] {
     }
   }
 
-  if (now.body.change !== null && Math.abs(now.body.change) >= 0.3) {
+  const weightGood =
+    now.body.change === null ? null : weightChangeIsGood(goal, now.body.change);
+  if (now.body.change !== null && weightGood !== null && Math.abs(now.body.change) >= 0.3) {
     const losing = now.body.change < 0;
     changes.push({
       label: "Weight",
       detail: `${losing ? "" : "+"}${now.body.change.toFixed(1)} kg this month`,
       direction: losing ? "down" : "up",
-      good: losing,
+      good: weightGood,
     });
   }
 

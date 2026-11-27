@@ -1,9 +1,11 @@
 import PeriodNav from "@/components/finance/period-nav";
-import { Card as Shell, CardGrid, CardHead, Stack } from "@/components/ui/kit";
+import { Card as Shell, CardGrid, CardHead, Empty, Stack } from "@/components/ui/kit";
 import PdfLink from "@/components/settings/pdf-link";
 import { addMonths, formatMonth, parseMonthParam } from "@/lib/finance";
+import { weightChangeIsGood } from "@/lib/fitness";
 import { reasonLabel } from "@/lib/health";
 import { loadHealthReport } from "@/lib/health-report";
+import type { Change } from "@/lib/reports";
 import type { ReactNode } from "react";
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
@@ -12,10 +14,12 @@ export default async function ReportPage({
   searchParams,
 }: PageProps<"/health/report">) {
   const month = parseMonthParam((await searchParams).month);
-  const { today, previousMonth, habits, report, previous, changes, nothingYet } =
+  const { today, previousMonth, habits, report, previous, changes, nothingYet, goal } =
     await loadHealthReport(month);
-  const growth = changes.filter((c) => c.good);
-  const lows = changes.filter((c) => !c.good);
+  // What went well first, then what slipped
+  const changed = [...changes.filter((c) => c.good), ...changes.filter((c) => !c.good)];
+  const weightGood =
+    report.body.change === null ? null : weightChangeIsGood(goal, report.body.change);
 
   return (
     <Stack>
@@ -31,10 +35,10 @@ export default async function ReportPage({
       </PeriodNav>
 
       {nothingYet ? (
-        <p className="card px-6 py-12 text-center text-sm text-paper/65">
+        <Empty>
           Nothing tracked in {formatMonth(month)} yet. Tick off workouts and
           habits and the report fills in.
-        </p>
+        </Empty>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -56,13 +60,15 @@ export default async function ReportPage({
               label="Weight"
               value={report.body.end ? `${report.body.end.toFixed(1)} kg` : "—"}
               hint={
-                report.body.change !== null
-                  ? `${report.body.change > 0 ? "+" : ""}${report.body.change.toFixed(1)} kg this month`
+                report.body.end
+                  ? `${report.body.entries} weigh-in${report.body.entries === 1 ? "" : "s"}`
                   : "No weigh-in yet"
               }
-              delta={report.body.change !== null ? -report.body.change : null}
-              suffix=""
-              hideDelta
+              delta={
+                report.body.change !== null ? Number(report.body.change.toFixed(1)) : null
+              }
+              suffix=" kg this month"
+              good={weightGood}
             />
             <Tile
               label="Mood"
@@ -78,63 +84,43 @@ export default async function ReportPage({
           </div>
 
           <CardGrid layout="triple">
-            {(growth.length > 0 || lows.length > 0) && (
-              <>
-                <Card title="Growth 📈">
-                  {growth.length ? (
-                    <ChangeList items={growth} tone="good" />
-                  ) : (
-                    <Empty>Nothing clearly up on last month yet.</Empty>
-                  )}
-                </Card>
-                <Card title="Slipping 📉">
-                  {lows.length ? (
-                    <ChangeList items={lows} tone="bad" />
-                  ) : (
-                    <Empty>Nothing went backwards. Good month.</Empty>
-                  )}
-                </Card>
-              </>
+            {changed.length > 0 && (
+              <Card title="What changed">
+                <ChangeList items={changed} />
+              </Card>
             )}
 
             <Card title="Gym">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Bar
                   label="Sessions started"
                   value={report.gym.doneSessions}
                   total={report.gym.plannedSessions}
                   compare={`${previous.gym.doneSessions} last month`}
                 />
-                <div className="mt-3">
-                  <Bar
-                    label="Exercises ticked"
-                    value={report.gym.doneExercises}
-                    total={report.gym.plannedExercises}
-                    compare={`${previous.gym.doneExercises} last month`}
-                  />
-                </div>
-                <p className="mt-3 text-sm text-paper/70">
-                  {report.gym.fullSessions} workout
-                  {report.gym.fullSessions === 1 ? "" : "s"} finished completely
-                  {report.gym.restDays > 0 &&
-                    ` · ${report.gym.restDays} rest days`}
-                  .
-                </p>
+                <Bar
+                  label="Exercises ticked"
+                  value={report.gym.doneExercises}
+                  total={report.gym.plannedExercises}
+                  compare={`${previous.gym.doneExercises} last month`}
+                />
               </div>
-              <div>
-                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/60">
-                  Where the work went
-                </p>
-                {report.gym.byMuscle.length ? (
-                  <ul className="flex flex-col gap-2">
+              <p className="mt-3 text-sm text-paper/70">
+                {report.gym.fullSessions} workout
+                {report.gym.fullSessions === 1 ? "" : "s"} finished completely
+                {report.gym.restDays > 0 && ` · ${report.gym.restDays} rest days`}.
+              </p>
+              {report.gym.byMuscle.length > 0 && (
+                <details className="group mt-2">
+                  <summary className="flex min-h-10 cursor-pointer items-center text-sm text-paper/70 transition hover:text-paper">
+                    Show muscles
+                  </summary>
+                  <ul className="mt-1 flex flex-col gap-2">
                     {report.gym.byMuscle.slice(0, 6).map((m) => (
                       <li key={m.muscle}>
                         <div className="flex justify-between text-sm">
                           <span className="truncate">{m.muscle}</span>
-                          <span className="tabular-nums text-paper/70">
-                            {m.count}
-                          </span>
+                          <span className="tabular-nums text-paper/70">{m.count}</span>
                         </div>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-paper/10">
                           <div
@@ -147,12 +133,9 @@ export default async function ReportPage({
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <Empty>No exercises ticked off this month.</Empty>
-                )}
-              </div>
-            </div>
-          </Card>
+                </details>
+              )}
+            </Card>
 
           {report.habits.length > 0 && (
             <Card title="Habits">
@@ -219,13 +202,7 @@ export default async function ReportPage({
                       ? `${report.body.change > 0 ? "+" : ""}${report.body.change.toFixed(1)} kg`
                       : "—"
                   }
-                  tone={
-                    report.body.change === null
-                      ? undefined
-                      : report.body.change <= 0
-                        ? "good"
-                        : "warn"
-                  }
+                  tone={weightGood === null ? undefined : weightGood ? "good" : "warn"}
                 />
                 <Stat
                   label="BMI"
@@ -238,7 +215,9 @@ export default async function ReportPage({
                 />
               </dl>
             ) : (
-              <Empty>No weigh-ins this month. Add one on the Body tab.</Empty>
+              <p className="py-4 text-center text-sm text-paper/55">
+                No weigh-ins this month. Add one on the Body tab.
+              </p>
             )}
             </Card>
           </CardGrid>
@@ -263,16 +242,18 @@ function Tile({
   hint,
   delta,
   suffix,
-  hideDelta,
+  good,
 }: {
   label: string;
   value: string;
   hint: string;
   delta: number | null;
   suffix: string;
-  hideDelta?: boolean;
+  // Whether the change is progress; up counts as progress unless said
+  good?: boolean | null;
 }) {
-  const show = !hideDelta && delta !== null && delta !== 0;
+  const show = delta !== null && delta !== 0;
+  const progress = good === undefined ? (delta ?? 0) > 0 : good;
   return (
     <div className="card p-4">
       <p className="truncate text-sm text-paper/70">{label}</p>
@@ -283,7 +264,11 @@ function Tile({
       {show && (
         <p
           className={`mt-1 text-xs font-medium ${
-            delta! > 0 ? "text-moss" : "text-red-700 dark:text-red-300"
+            progress === null
+              ? "text-paper/60"
+              : progress
+                ? "text-moss"
+                : "text-red-700 dark:text-red-300"
           }`}
         >
           {delta! > 0 ? "▲ +" : "▼ "}
@@ -295,25 +280,15 @@ function Tile({
   );
 }
 
-function ChangeList({
-  items,
-  tone,
-}: {
-  items: { label: string; detail: string; direction: string }[];
-  tone: "good" | "bad";
-}) {
+function ChangeList({ items }: { items: Change[] }) {
   return (
     <ul className="flex flex-col gap-2">
       {items.map((item) => (
         <li key={item.label} className="flex items-start gap-2 text-sm">
           <span
-            className={
-              tone === "good"
-                ? "text-moss"
-                : "text-red-700 dark:text-red-300"
-            }
+            className={item.good ? "text-moss" : "text-red-700 dark:text-red-300"}
           >
-            {item.direction === "up" ? "▲" : "▼"}
+            {item.direction === "up" ? "▲" : item.direction === "down" ? "▼" : "="}
           </span>
           <span className="min-w-0">
             <span className="font-medium">{item.label}</span>
@@ -379,13 +354,5 @@ function Stat({
       </dd>
       {hint && <dd className="truncate text-xs text-paper/55">{hint}</dd>}
     </div>
-  );
-}
-
-function Empty({ children }: { children: ReactNode }) {
-  return (
-    <p className="card py-6 text-center text-sm text-paper/55">
-      {children}
-    </p>
   );
 }

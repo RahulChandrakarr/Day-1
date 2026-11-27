@@ -143,7 +143,12 @@ export default function HabitRow({
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               className={`min-w-5 text-center text-base font-bold ${
-                habit.daily_limit === null || count <= habit.daily_limit
+                // Under the max is good for a habit you quit; at or over the
+                // goal is good for one you build
+                habit.daily_limit === null ||
+                (habit.kind === "quit"
+                  ? count <= habit.daily_limit
+                  : count >= habit.daily_limit)
                   ? "text-moss"
                   : "text-[#b3372e] dark:text-red-300"
               }`}

@@ -14,10 +14,10 @@ import {
   type PlanDay,
 } from "@/lib/health";
 
-const SECTIONS: { phase: Phase; label: string; hint: string }[] = [
-  { phase: "warmup", label: "Warm-up", hint: "Loosen up and raise your heart rate" },
-  { phase: "main", label: "Training", hint: "The main work" },
-  { phase: "cooldown", label: "Cool-down", hint: "Stretch so your muscles can relax" },
+const SECTIONS: { phase: Phase; label: string }[] = [
+  { phase: "warmup", label: "Warm-up" },
+  { phase: "main", label: "Training" },
+  { phase: "cooldown", label: "Cool-down" },
 ];
 
 // tone: colour of the working muscles in the drawing
@@ -66,7 +66,7 @@ export default function GymTracker({
 
   if (day.rest) {
     return (
-      <p className="card py-8 text-center text-sm text-paper/65">
+      <p className="py-8 text-center text-sm text-paper/65">
         😴 Rest day. Recover well.
       </p>
     );
@@ -74,7 +74,7 @@ export default function GymTracker({
 
   if (total === 0) {
     return (
-      <p className="card py-8 text-center text-sm text-paper/65">
+      <p className="py-8 text-center text-sm text-paper/65">
         Nothing planned for this day.
       </p>
     );
@@ -111,17 +111,11 @@ export default function GymTracker({
       {groups.map((g) => (
         <section key={g.phase} className="flex flex-col gap-2">
           {headed && (
-            <header className="flex items-end justify-between gap-3 px-1">
-              <div className="min-w-0">
-                <h3 className={`text-xs font-semibold uppercase tracking-wider ${ACCENT[g.phase].heading}`}>
-                  {g.label}
-                </h3>
-                <p className="text-xs text-paper/55">{g.hint}</p>
-              </div>
-              <span className="shrink-0 text-xs text-paper/55 tabular-nums">
-                {g.exercises.filter((e) => done.includes(e.id)).length}/{g.exercises.length}
-              </span>
-            </header>
+            <h3
+              className={`px-1 text-xs font-semibold uppercase tracking-wider ${ACCENT[g.phase].heading}`}
+            >
+              {g.label}
+            </h3>
           )}
           <ul className="flex flex-col gap-2">
             {g.exercises.map((e, i) => (

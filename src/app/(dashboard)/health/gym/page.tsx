@@ -38,7 +38,8 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
   const blockWeekNow = block ? blockWeek(block.start_date, date, block.weeks) : null;
   const ends = block ? blockEnd(block.start_date, block.weeks) : null;
   const finished = Boolean(block && ends && today > ends);
-  // Plans from before warm-ups existed get a one-tap way to add them
+  // Plans from before warm-ups existed get a one-tap way to add them. Only one
+  // banner shows at a time, and a finished block's comes first.
   const missingPrep =
     !finished &&
     week.some((d) => !d.rest && d.exercises.length > 0) &&
@@ -77,10 +78,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
   return (
     <Stack>
       {finished && block && (
-        <NextBlock
-          blockNumber={block.number}
-          summary={`Your ${block.weeks}-week block ran to ${formatShortDate(ends!)}. Build the next month and keep the progress going.`}
-        />
+        <NextBlock blockNumber={block.number} />
       )}
 
       <PeriodNav
@@ -140,15 +138,9 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
         >
           <Card>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wider text-paper/60">
-                  {WEEKDAYS[weekday - 1].label}
-                  {block && ` · ${block.name}`}
-                </p>
-                <h3 className="font-bold tracking-tight text-2xl sm:text-3xl">
-                  {day.rest ? "Rest day" : day.title || "Workout"}
-                </h3>
-              </div>
+              <h3 className="min-w-0 font-bold tracking-tight text-2xl sm:text-3xl">
+                {day.rest ? "Rest day" : day.title || "Workout"}
+              </h3>
               {blockWeekNow && (
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
@@ -164,7 +156,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             </div>
 
             {blockWeekNow && !day.rest && (
-              <p className="mb-4 rounded-2xl border border-paper/10 bg-inset px-3 py-2 text-sm text-paper/72">
+              <p className="-mt-2 mb-4 text-sm text-paper/65">
                 {blockWeekNow.advice}
               </p>
             )}

@@ -1,5 +1,5 @@
 import BodyForm from "@/components/health/body-form";
-import { LogList, WeightChart } from "@/components/health/body-stats";
+import { LogList, LogWeight, WeightChart } from "@/components/health/body-stats";
 import { todayISO } from "@/lib/finance";
 import {
   bmi,
@@ -58,100 +58,94 @@ export default async function BodyPage() {
     t === "good" ? "text-moss" : t === "bad" ? "text-red-700 dark:text-red-300" : t === "warn" ? "text-chart-expense" : "";
 
   return (
-    <CardGrid>
-      <BodyForm
-        profile={profile}
-        latest={latest}
-        date={today}
-        hasBlock={Boolean(block)}
-      />
+    <CardGrid align="start">
+      <Card>
+        <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Your numbers</h3>
+        {bmiValue ? (
+          <>
+            <div className="mt-4 flex items-end gap-3">
+              <span className="text-4xl font-semibold tracking-tight tabular-nums">
+                {bmiValue.toFixed(1)}
+              </span>
+              <span className="pb-1 text-sm text-paper/70">
+                BMI ·{" "}
+                <span className={tone(band?.tone)}>{band?.label}</span>
+              </span>
+            </div>
+            <Scale value={bmiValue} />
+            <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+              {ideal && (
+                <Stat
+                  label="Healthy weight"
+                  value={`${kg(ideal.min)} – ${kg(ideal.max)}`}
+                  hint={
+                    weight && weight > ideal.max
+                      ? `${kg(weight - ideal.max)} above the range`
+                      : weight && weight < ideal.min
+                        ? `${kg(ideal.min - weight)} below the range`
+                        : "You're in the range"
+                  }
+                />
+              )}
+              {fat !== null && profile && (
+                <Stat
+                  label="Body fat (estimate)"
+                  value={`${fat.toFixed(1)}%`}
+                  hint={bodyFatBand(fat, profile.sex)}
+                />
+              )}
+              {restingRate && (
+                <Stat label="Resting burn" value={`${Math.round(restingRate)} kcal`} />
+              )}
+              {maintenance && (
+                <Stat label="Daily burn" value={`${Math.round(maintenance)} kcal`} />
+              )}
+            </dl>
+
+            {targets && (
+              <div className="mt-5 rounded-2xl border border-paper/10 bg-inset p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-paper/65">
+                  Daily target for your goal
+                </p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums">
+                  {targets.calories} kcal
+                </p>
+                <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+                  <Stat label="Protein" value={`${targets.protein} g`} />
+                  <Stat label="Carbs" value={`${targets.carbs} g`} />
+                  <Stat label="Fat" value={`${targets.fat} g`} />
+                </div>
+              </div>
+            )}
+
+            <p className="mt-4 text-xs text-paper/55">
+              Estimates, not medical advice; BMI can&apos;t tell muscle from fat.
+            </p>
+          </>
+        ) : (
+          <p className="py-8 text-center text-sm text-paper/65">
+            Add your height and weight to see BMI, calories and your plan.
+          </p>
+        )}
+      </Card>
 
       <div className="flex min-w-0 flex-col gap-3">
         <Card>
-          <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Your numbers</h3>
-          {bmiValue ? (
-            <>
-              <div className="mt-4 flex items-end gap-3">
-                <span className="text-4xl font-semibold tracking-tight tabular-nums">
-                  {bmiValue.toFixed(1)}
-                </span>
-                <span className="pb-1 text-sm text-paper/70">
-                  BMI ·{" "}
-                  <span className={tone(band?.tone)}>{band?.label}</span>
-                </span>
-              </div>
-              <Scale value={bmiValue} />
-              <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
-                {ideal && (
-                  <Stat
-                    label="Healthy weight"
-                    value={`${kg(ideal.min)} – ${kg(ideal.max)}`}
-                    hint={
-                      weight && weight > ideal.max
-                        ? `${kg(weight - ideal.max)} above the range`
-                        : weight && weight < ideal.min
-                          ? `${kg(ideal.min - weight)} below the range`
-                          : "You're in the range"
-                    }
-                  />
-                )}
-                {fat !== null && profile && (
-                  <Stat
-                    label="Body fat (estimate)"
-                    value={`${fat.toFixed(1)}%`}
-                    hint={bodyFatBand(fat, profile.sex)}
-                  />
-                )}
-                {restingRate && (
-                  <Stat
-                    label="Resting burn"
-                    value={`${Math.round(restingRate)} kcal`}
-                    hint="What your body uses at rest"
-                  />
-                )}
-                {maintenance && (
-                  <Stat
-                    label="Daily burn"
-                    value={`${Math.round(maintenance)} kcal`}
-                    hint="With your activity level"
-                  />
-                )}
-              </dl>
-
-              {targets && (
-                <div className="mt-5 rounded-2xl border border-paper/10 bg-inset p-4">
-                  <p className="text-xs font-medium uppercase tracking-wider text-paper/65">
-                    Daily target for your goal
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums">
-                    {targets.calories} kcal
-                  </p>
-                  <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
-                    <Stat label="Protein" value={`${targets.protein} g`} />
-                    <Stat label="Carbs" value={`${targets.carbs} g`} />
-                    <Stat label="Fat" value={`${targets.fat} g`} />
-                  </div>
-                </div>
-              )}
-
-              <p className="mt-4 text-xs text-paper/55">
-                BMI doesn&apos;t know muscle from fat, and these are estimates, not
-                medical advice. For South Asians, health risk rises from about
-                BMI 23.
-              </p>
-            </>
-          ) : (
-            <p className="mt-4 card px-4 py-8 text-center text-sm text-paper/65">
-              Add your height and weight to see BMI, calories and your plan.
-            </p>
-          )}
-        </Card>
-
-        <Card>
           <h3 className="mb-3 font-bold tracking-tight text-[19px]">Weight</h3>
-          <WeightChart logs={logs} />
+          {profile && <LogWeight profile={profile} latest={latest} date={today} />}
+          <WeightChart logs={logs} goal={profile?.goal ?? null} />
           <LogList logs={logs} />
         </Card>
+
+        <BodyForm
+          // A weight logged above has to reach the form too, or saving the
+          // form would put the old weight back
+          key={latest ? `${latest.logged_on}:${latest.weight_kg}` : "none"}
+          profile={profile}
+          latest={latest}
+          date={today}
+          hasBlock={Boolean(block)}
+        />
       </div>
     </CardGrid>
   );

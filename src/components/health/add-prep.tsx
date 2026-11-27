@@ -11,34 +11,32 @@ export default function AddPrep({ blockId }: { blockId: string | null }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <section className="flex flex-col gap-3 card border-ember/30 bg-ember/10 p-4 sm:flex-row sm:items-center sm:gap-4">
-      <div className="min-w-0 flex-1">
-        <h3 className="font-medium">Add a warm-up and a cool-down</h3>
-        <p className="mt-0.5 text-sm text-paper/72">
-          3 quick moves to loosen up before each workout, and 3 stretches after it so
-          your muscles can relax.
+    <section className="card border-ember/30 bg-ember/10 px-4 py-2.5">
+      <div className="flex items-center gap-3">
+        <p className="min-w-0 flex-1 text-sm font-medium">
+          Add a warm-up and a cool-down
         </p>
-        {error && (
-          <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
-            {error}
-          </p>
-        )}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              setError(null);
+              const result = await addWarmupsAndStretches(blockId);
+              if (result.ok) router.refresh();
+              else setError(result.error);
+            })
+          }
+          className="h-10 shrink-0 rounded-full bg-ember px-4 text-sm font-semibold text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60"
+        >
+          {pending ? "Adding…" : "Add to my plan"}
+        </button>
       </div>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            setError(null);
-            const result = await addWarmupsAndStretches(blockId);
-            if (result.ok) router.refresh();
-            else setError(result.error);
-          })
-        }
-        className="h-11 shrink-0 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60"
-      >
-        {pending ? "Adding…" : "Add to my plan"}
-      </button>
+      {error && (
+        <p role="alert" className="mt-1 text-sm text-red-700 dark:text-red-300">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

@@ -15,7 +15,7 @@ export default function HealthTabs() {
 
   return (
     <nav aria-label="Health sections">
-      <ul className="grid grid-cols-2 gap-1 rounded-2xl sm:grid-cols-4 card p-1 sm:inline-grid sm:w-[34rem]">
+      <ul className="grid grid-cols-4 gap-1 rounded-2xl card p-1 sm:inline-grid sm:w-[34rem]">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (
@@ -23,7 +23,7 @@ export default function HealthTabs() {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-10 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors ${
+                className={`flex h-10 items-center justify-center gap-1 rounded-xl text-[13px] font-semibold sm:gap-1.5 sm:text-sm transition-colors ${
                   active
                     ? "bg-ember text-on-ember shadow-sm"
                     : "text-paper/70 hover:text-paper"

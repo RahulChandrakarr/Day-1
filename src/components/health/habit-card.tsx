@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Sheet from "@/components/ui/sheet";
 import { deleteHabit, updateHabit } from "@/app/(dashboard)/daily/actions";
 import { saveHabitCheckin } from "@/app/(dashboard)/health/actions";
 import { addDays, formatShortDate } from "@/lib/finance";
@@ -13,6 +14,9 @@ import {
   type Reason,
 } from "@/lib/health";
 import type { Habit } from "@/lib/journal";
+
+const fieldClass =
+  "h-11 min-w-0 rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 
 const weekdayNarrow = new Intl.DateTimeFormat("en-IN", {
   weekday: "narrow",
@@ -27,13 +31,15 @@ type Draft = {
   note: string;
 };
 
-// One habit: did it / didn't today, how it felt or why not, streak and last 7 days.
+// One habit: did it / didn't today, how it felt or why not, streak and last 7
+// days. Its settings and Remove sit behind the ⋯ button.
 export default function HabitCard({
   habit,
   date,
   checkin,
   history,
   streak,
+  missedNote = null,
   compact = false,
 }: {
   habit: Habit;
@@ -41,6 +47,7 @@ export default function HabitCard({
   checkin: HabitCheckin | null;
   history: HabitCheckin[]; // last 7 days for this habit
   streak: number;
+  missedNote?: string | null; // the most common reason for missing it
   compact?: boolean;
 }) {
   const [draft, setDraft] = useState<Draft>({
@@ -50,7 +57,7 @@ export default function HabitCard({
     reason: checkin?.reason ?? null,
     note: checkin?.note ?? "",
   });
-  const [editing, setEditing] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState({
     kind: habit.kind,
     count_label: habit.count_label ?? "",
@@ -63,6 +70,14 @@ export default function HabitCard({
   const [removing, startRemove] = useTransition();
   const noteTimer = useRef<number | null>(null);
   const latest = useRef(draft);
+
+  function saveCount() {
+    void updateHabit(habit.id, {
+      count_label: settings.count_label,
+      daily_limit:
+        settings.daily_limit === "" ? null : Number(settings.daily_limit),
+    });
+  }
 
   function persist(next: Draft) {
     setError(false);
@@ -126,7 +141,7 @@ export default function HabitCard({
             : ""
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <h4 className={`truncate font-medium ${compact ? "" : "text-lg"}`}>
             {habit.name}
@@ -136,29 +151,40 @@ export default function HabitCard({
           </p>
         </div>
         {!compact && (
-          <ul className="flex shrink-0 gap-1" aria-label="Last 7 days">
-            {days.map((d) => {
-              const c = byDate.get(d);
-              return (
-                <li
-                  key={d}
-                  title={`${formatShortDate(d)}: ${c ? (c.done ? "done" : "missed") : "no check-in"}`}
-                  className="flex flex-col items-center gap-0.5"
-                >
-                  <span
-                    className={`h-3 w-3 rounded-full ${
-                      c ? (c.done ? "bg-moss" : "bg-chart-expense") : "bg-paper/10"
-                    } ${d === date ? "ring-2 ring-ember/50 ring-offset-1 ring-offset-surface" : ""}`}
-                  />
-                  <span className="text-[9px] text-paper/50">
-                    {weekdayNarrow.format(new Date(`${d}T00:00:00Z`))}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <button
+            type="button"
+            onClick={() => setMenu(true)}
+            aria-label={`${habit.name}: settings`}
+            className="-mr-2 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl leading-none text-paper/55 transition hover:bg-paper/5 hover:text-paper"
+          >
+            ⋯
+          </button>
         )}
       </div>
+
+      {!compact && (
+        <ul className="mt-3 flex justify-between gap-1" aria-label="Last 7 days">
+          {days.map((d) => {
+            const c = byDate.get(d);
+            return (
+              <li
+                key={d}
+                title={`${formatShortDate(d)}: ${c ? (c.done ? "done" : "missed") : "no check-in"}`}
+                className="flex flex-1 flex-col items-center gap-1"
+              >
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    c ? (c.done ? "bg-moss" : "bg-chart-expense") : "bg-paper/10"
+                  } ${d === date ? "ring-2 ring-ember/50 ring-offset-1 ring-offset-surface" : ""}`}
+                />
+                <span className="text-[11px] text-paper/55">
+                  {weekdayNarrow.format(new Date(`${d}T00:00:00Z`))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {habit.count_label && (
         <div className="mt-3 flex items-center gap-2">
@@ -304,7 +330,7 @@ export default function HabitCard({
                 <button
                   type="button"
                   onClick={() => setDetails(true)}
-                  className="text-xs text-paper/60 transition hover:text-paper"
+                  className="min-h-10 text-left text-xs text-paper/60 transition hover:text-paper"
                 >
                   {summary ?? (draft.done ? "+ How did it feel?" : "+ Why not?")}
                 </button>
@@ -314,57 +340,54 @@ export default function HabitCard({
         )}
       </AnimatePresence>
 
-      <AnimatePresence initial={false}>
-        {editing && !compact && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-paper/10 bg-inset p-3">
-              <div className="flex rounded-full border border-paper/10 bg-inset p-0.5 text-xs">
-                {(
-                  [
-                    ["build", "Build it"],
-                    ["quit", "Quit / cut down"],
-                  ] as const
-                ).map(([value, text]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={settings.kind === value}
-                    onClick={() => {
-                      setSettings((c) => ({ ...c, kind: value }));
-                      void updateHabit(habit.id, { kind: value });
-                    }}
-                    className={`h-7 rounded-full px-3 font-medium transition ${
-                      settings.kind === value
-                        ? "bg-paper/10 text-paper"
-                        : "text-paper/60 hover:text-paper"
-                    }`}
-                  >
-                    {text}
-                  </button>
-                ))}
-              </div>
+      {missedNote && (
+        <p className="mt-2 text-xs text-paper/60">{missedNote}</p>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-red-700 dark:text-red-300">
+          Couldn&apos;t save. Tap again to retry.
+        </p>
+      )}
+
+      {!compact && (
+        <Sheet open={menu} onClose={() => setMenu(false)} title={habit.name}>
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-1 rounded-full border border-paper/10 bg-inset p-1 text-sm">
+              {(
+                [
+                  ["build", "Build it"],
+                  ["quit", "Quit / cut down"],
+                ] as const
+              ).map(([value, text]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={settings.kind === value}
+                  onClick={() => {
+                    setSettings((c) => ({ ...c, kind: value }));
+                    void updateHabit(habit.id, { kind: value });
+                  }}
+                  className={`h-10 rounded-full px-3 font-medium transition ${
+                    settings.kind === value
+                      ? "bg-paper/10 text-paper"
+                      : "text-paper/60 hover:text-paper"
+                  }`}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
               <input
                 value={settings.count_label}
                 maxLength={20}
                 onChange={(e) =>
                   setSettings((c) => ({ ...c, count_label: e.target.value }))
                 }
-                onBlur={() =>
-                  void updateHabit(habit.id, {
-                    count_label: settings.count_label,
-                    daily_limit:
-                      settings.daily_limit === ""
-                        ? null
-                        : Number(settings.daily_limit),
-                  })
-                }
+                onBlur={saveCount}
                 placeholder="Count something? e.g. cigarettes"
-                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
+                aria-label="What to count"
+                className={`${fieldClass} flex-1`}
               />
               {settings.count_label.trim() && (
                 <input
@@ -376,40 +399,13 @@ export default function HabitCard({
                       daily_limit: e.target.value.replace(/\D/g, "").slice(0, 4),
                     }))
                   }
-                  onBlur={() =>
-                    void updateHabit(habit.id, {
-                      count_label: settings.count_label,
-                      daily_limit:
-                        settings.daily_limit === ""
-                          ? null
-                          : Number(settings.daily_limit),
-                    })
-                  }
+                  onBlur={saveCount}
                   placeholder={settings.kind === "quit" ? "Daily max" : "Daily goal"}
                   aria-label={settings.kind === "quit" ? "Daily maximum" : "Daily goal"}
-                  className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
+                  className={`${fieldClass} w-28`}
                 />
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {(error || !compact) && (
-        <div className="mt-2 flex items-center justify-end gap-2 text-xs">
-          <span className="mr-auto text-red-700 dark:text-red-300">
-            {error && "Couldn't save. Tap again to retry."}
-          </span>
-          {!compact && (
-            <button
-              type="button"
-              onClick={() => setEditing((v) => !v)}
-              className="rounded-lg px-2 py-1 text-paper/55 transition hover:bg-paper/5 hover:text-paper"
-            >
-              {editing ? "Done" : "Settings"}
-            </button>
-          )}
-          {!compact && (
             <button
               type="button"
               disabled={removing}
@@ -418,15 +414,17 @@ export default function HabitCard({
                   confirm(
                     `Remove "${habit.name}"? Its check-ins are deleted too.`,
                   )
-                )
+                ) {
+                  setMenu(false);
                   startRemove(() => deleteHabit(habit.id));
+                }
               }}
-              className="rounded-lg px-2 py-1 text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+              className="mt-2 flex h-11 items-center justify-center rounded-full border border-paper/10 text-sm font-semibold text-red-700 transition hover:bg-red-500/10 dark:text-red-300"
             >
-              Remove
+              Remove habit
             </button>
-          )}
-        </div>
+          </div>
+        </Sheet>
       )}
     </motion.div>
   );
@@ -446,7 +444,7 @@ function Pill({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`h-8 rounded-full border px-3 text-sm transition ${
+      className={`h-10 rounded-full border px-3.5 text-sm transition ${
         selected
           ? "border-paper/40 bg-paper/10 text-paper"
           : "border-paper/10 text-paper/75 hover:bg-paper/5"

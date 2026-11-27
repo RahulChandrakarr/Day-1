@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { saveGymPlan } from "@/app/(dashboard)/health/actions";
 import { PencilIcon } from "@/components/ui/kit";
+import Portal from "@/components/ui/portal";
 import { WEEKDAYS, type Exercise, type Phase, type PlanDay } from "@/lib/health";
 
 type DraftExercise = {
@@ -119,6 +120,9 @@ export default function PlanDialog({
         {variant === "icon" ? <PencilIcon /> : label}
       </button>
 
+      {/* At the top level of the page, so it covers the window even while the
+          page's blocks are still easing into place */}
+      <Portal>
       <AnimatePresence>
         {open && (
           <>
@@ -154,6 +158,7 @@ export default function PlanDialog({
           </>
         )}
       </AnimatePresence>
+      </Portal>
     </>
   );
 }
@@ -323,7 +328,7 @@ function PlanEditor({
                   key={t}
                   type="button"
                   onClick={() => updateDay({ title: t })}
-                  className="rounded-full border border-paper/10 px-2.5 py-0.5 text-xs text-paper/70 transition hover:bg-paper/5 hover:text-paper"
+                  className="h-9 rounded-full border border-paper/10 px-3 text-xs text-paper/70 transition hover:bg-paper/5 hover:text-paper"
                 >
                   {t}
                 </button>
@@ -406,7 +411,7 @@ function PlanEditor({
                           role="radio"
                           aria-checked={e.phase === p.value}
                           onClick={() => updateExercise(e.key, { phase: p.value })}
-                          className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                          className={`h-9 rounded-full border px-3 text-xs transition ${
                             e.phase === p.value
                               ? p.active
                               : "border-paper/10 text-paper/70 hover:bg-paper/5 hover:text-paper"
@@ -453,7 +458,7 @@ function PlanEditor({
               key={w.value}
               type="button"
               onClick={() => copyTo(w.value)}
-              className="rounded-full border border-paper/10 px-2.5 py-1 text-xs text-paper/72 transition hover:bg-paper/5 hover:text-paper"
+              className="h-9 rounded-full border border-paper/10 px-3 text-xs text-paper/72 transition hover:bg-paper/5 hover:text-paper"
             >
               {w.short}
             </button>

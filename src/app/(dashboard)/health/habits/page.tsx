@@ -24,8 +24,6 @@ export default async function HabitsPage({
     getHabitCheckins(addDays(date, -60), date),
   ]);
 
-  const doneToday = checkins.filter((c) => c.check_date === date && c.done).length;
-
   return (
     <Stack>
       <PeriodNav
@@ -36,13 +34,6 @@ export default async function HabitsPage({
         isCurrent={date === today}
         currentLabel="Today"
       />
-
-      {habits.length > 0 && (
-        <p className="text-sm text-paper/70">
-          {doneToday} of {habits.length} habit{habits.length === 1 ? "" : "s"} done{" "}
-          {date === today ? "today" : "this day"}.
-        </p>
-      )}
 
       {habits.length === 0 ? (
         <section className="card px-6 py-10 text-center">
@@ -63,25 +54,19 @@ export default async function HabitsPage({
               counts.set(c.reason!, (counts.get(c.reason!) ?? 0) + 1);
             const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
             return (
-              <div key={habit.id} className="flex flex-col gap-1">
-                <HabitCard
-                  key={`${habit.id}-${date}`}
-                  habit={habit}
-                  date={date}
-                  checkin={own.find((c) => c.check_date === date) ?? null}
-                  history={own.filter((c) => c.check_date >= addDays(date, -6))}
-                  streak={streak(own, date)}
-                />
-                {top && top[1] >= 2 && (
-                  <p className="px-3 text-xs text-paper/60">
-                    Most often missed because of{" "}
-                    <span className="text-paper/78">
-                      {reasonLabel(top[0]).toLowerCase()}
-                    </span>{" "}
-                    ({top[1]}× in 60 days)
-                  </p>
-                )}
-              </div>
+              <HabitCard
+                key={`${habit.id}-${date}`}
+                habit={habit}
+                date={date}
+                checkin={own.find((c) => c.check_date === date) ?? null}
+                history={own.filter((c) => c.check_date >= addDays(date, -6))}
+                streak={streak(own, date)}
+                missedNote={
+                  top && top[1] >= 2
+                    ? `Most often missed: ${reasonLabel(top[0]).toLowerCase()} (${top[1]}× in 60 days)`
+                    : null
+                }
+              />
             );
           })}
         </CardGrid>

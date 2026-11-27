@@ -17,7 +17,7 @@ import {
   type Goal,
   type Sex,
 } from "@/lib/fitness";
-import { Card } from "@/components/ui/kit";
+import { primaryButtonClass, quietButtonClass } from "@/components/ui/kit";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
@@ -119,6 +119,11 @@ export default function BodyForm({
   }
 
   function build() {
+    if (
+      hasBlock &&
+      !confirm("Replace the plan you're on with a new 4-week plan?")
+    )
+      return;
     setError(null);
     startBuilding(async () => {
       const saved = await saveBodyProfile(payload());
@@ -132,10 +137,11 @@ export default function BodyForm({
     });
   }
 
+  // Set once and rarely changed, so it stays folded until there's nothing yet
   return (
-    <Card>
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Your details</h3>
+    <details open={!profile} className="card group p-5">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+        <h3 className="font-bold tracking-tight text-[19px]">Edit your details</h3>
         <AnimatePresence>
           {status === "saved" && (
             <motion.span
@@ -149,7 +155,10 @@ export default function BodyForm({
             </motion.span>
           )}
         </AnimatePresence>
-      </div>
+        <span aria-hidden className="ml-auto text-paper/50 transition-transform group-open:rotate-180">
+          ⌄
+        </span>
+      </summary>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
@@ -161,7 +170,7 @@ export default function BodyForm({
                 type="button"
                 aria-pressed={draft.sex === s}
                 onClick={() => set({ sex: s })}
-                className={`h-9 rounded-lg text-sm font-medium capitalize transition ${
+                className={`h-10 rounded-lg text-sm font-medium capitalize transition ${
                   draft.sex === s
                     ? "bg-surface text-paper shadow-sm"
                     : "text-paper/65 hover:text-paper"
@@ -205,8 +214,8 @@ export default function BodyForm({
         </Field>
       </div>
 
-      <details className="group mt-4">
-        <summary className="cursor-pointer text-sm text-paper/70 transition hover:text-paper">
+      <details className="mt-4">
+        <summary className="flex min-h-10 cursor-pointer items-center text-sm text-paper/70 transition hover:text-paper">
           Tape measurements (for the body fat estimate)
         </summary>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -246,9 +255,6 @@ export default function BodyForm({
             </Field>
           )}
         </div>
-        <p className="mt-2 text-xs text-paper/55">
-          Waist at the navel, neck just below the Adam&apos;s apple, relaxed.
-        </p>
       </details>
 
       <div className="mt-6 flex flex-col gap-4">
@@ -318,7 +324,7 @@ export default function BodyForm({
           type="button"
           onClick={save}
           disabled={pending || building}
-          className="h-12 rounded-xl border border-paper/15 px-5 text-sm font-medium transition hover:bg-paper/5 disabled:opacity-60"
+          className={`${primaryButtonClass} sm:flex-1`}
         >
           {pending ? "Saving…" : "Save"}
         </button>
@@ -326,7 +332,7 @@ export default function BodyForm({
           type="button"
           onClick={build}
           disabled={pending || building}
-          className="h-12 flex-1 rounded-xl bg-ember px-5 font-medium text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60"
+          className={`${quietButtonClass} min-h-12 sm:flex-1`}
         >
           {building
             ? "Building…"
@@ -335,11 +341,7 @@ export default function BodyForm({
               : "Build my 4-week plan"}
         </button>
       </div>
-      <p className="mt-2 text-xs text-paper/55">
-        The plan is built from your goal, level, days a week and session length,
-        with weeks 1–3 getting harder and week 4 lighter to recover.
-      </p>
-    </Card>
+    </details>
   );
 }
 
@@ -371,7 +373,7 @@ function Choice<T extends string>({
 }: {
   label: string;
   value: T;
-  options: readonly { value: T; label: string; hint: string }[];
+  options: readonly { value: T; label: string; hint: string }[]; // hint shows on hover
   onChange: (value: T) => void;
 }) {
   return (
@@ -385,7 +387,7 @@ function Choice<T extends string>({
             aria-pressed={value === o.value}
             title={o.hint}
             onClick={() => onChange(o.value)}
-            className={`flex h-9 items-center rounded-full border px-3 text-sm transition ${
+            className={`flex h-10 items-center rounded-full border px-3.5 text-sm transition ${
               value === o.value
                 ? "border-paper/40 bg-paper/10 text-paper"
                 : "border-paper/10 text-paper/75 hover:bg-paper/5"
@@ -395,9 +397,6 @@ function Choice<T extends string>({
           </button>
         ))}
       </div>
-      <span className="text-xs text-paper/55">
-        {options.find((o) => o.value === value)?.hint}
-      </span>
     </div>
   );
 }
