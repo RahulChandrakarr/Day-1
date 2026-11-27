@@ -21,7 +21,6 @@ export default function StatTiles({
   extra = [],
   netHint,
   incomeHint,
-  expenseHint,
   balance = null,
 }: {
   totals: Totals;
@@ -29,14 +28,13 @@ export default function StatTiles({
   netHint?: string;
   // What the plan expected, when the period has one
   incomeHint?: string;
-  expenseHint?: string;
   // What is in the bank accounts, when the user has added any
   balance?: { total: number; hint: string } | null;
 }) {
   const net = balance?.total ?? totals.net;
   const tiles: Tile[] = [
     { label: "Income", value: formatMoney(totals.income), hint: incomeHint, tone: "good" },
-    { label: "Expenses", value: formatMoney(totals.expense), hint: expenseHint },
+    { label: "Expenses", value: formatMoney(totals.expense) },
     {
       label: "Net balance",
       value: `${net < 0 ? "−" : ""}${formatMoney(Math.abs(net))}`,

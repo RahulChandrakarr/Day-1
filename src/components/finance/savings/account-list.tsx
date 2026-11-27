@@ -28,7 +28,7 @@ export default function AccountList({
 
   return (
     <Card>
-      <h3 className="font-bold tracking-tight text-2xl">Accounts</h3>
+      <h3 className="text-[19px] font-bold tracking-[-0.01em]">Accounts</h3>
 
       {accounts.length === 0 ? (
         <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/55">
@@ -169,7 +169,7 @@ function AccountCard({
                 <li className="py-3 text-sm text-paper/55">No entries yet.</li>
               )}
             </ul>
-            <div className="flex justify-end px-4 pb-3">
+            <div className="flex justify-end px-4 pb-4 pt-1">
               <button
                 type="button"
                 disabled={pending}
@@ -177,7 +177,7 @@ function AccountCard({
                   if (confirm(`Delete ${account.name} and all its entries?`))
                     startTransition(() => deleteAccount(account.id));
                 }}
-                className="rounded-lg px-2 py-1 text-xs text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="flex h-10 items-center rounded-full border border-paper/15 px-4 text-sm font-medium text-paper/78 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
               >
                 Delete account
               </button>
@@ -231,7 +231,7 @@ function EntryRow({ entry }: { entry: InvestmentEntry }) {
             startTransition(() => deleteInvestmentEntry(entry.id));
         }}
         aria-label="Delete entry"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
       >
         ×
       </button>

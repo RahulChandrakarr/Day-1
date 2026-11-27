@@ -7,22 +7,25 @@ import {
   getHoldings,
   getInvestmentEntries,
   getMonthBudgets,
+  getTrades,
 } from "@/lib/finance-queries";
 import { accountSummaries, netSaved } from "@/lib/investments";
 import { holdingSummaries } from "@/lib/portfolio";
+import { tradeStats } from "@/lib/trades";
 import { allocationSlices, combinedTotals, returnsHint, signedMoney } from "@/lib/savings";
 
-// Where everything put away is summed up. The detail lives on the three pages
-// underneath: stocks, funds and FDs, and the month-by-month history.
+// Where everything put away is summed up. The detail lives on the pages
+// underneath: stocks, funds and FDs, trades, and the month-by-month history.
 export default async function SavingsPage() {
   const today = todayISO();
   const month = today.slice(0, 7);
 
-  const [accounts, entries, monthBudgets, holdings] = await Promise.all([
+  const [accounts, entries, monthBudgets, holdings, trades] = await Promise.all([
     getAccounts(),
     getInvestmentEntries(),
     getMonthBudgets(Number(today.slice(0, 4))),
     getHoldings(),
+    getTrades(),
   ]);
   const summaries = accountSummaries(accounts, entries);
   const stocks = holdingSummaries(holdings);
@@ -31,6 +34,7 @@ export default async function SavingsPage() {
   const monthTarget =
     monthBudgets.find((b) => b.period_key === month)?.savings_target ?? null;
   const accountWorth = summaries.reduce((sum, a) => sum + a.current, 0);
+  const trading = tradeStats(trades);
 
   const pages = [
     {
@@ -46,6 +50,15 @@ export default async function SavingsPage() {
       line: accounts.length
         ? `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"} · ${formatMoney(accountWorth)}`
         : "Add a fund, FD or anything else you save into",
+    },
+    {
+      href: "/financial/savings/trades",
+      title: "Trades",
+      line: trading.closed
+        ? `${trading.closed} closed · ${signedMoney(Math.round(trading.net), formatMoney)} net`
+        : trading.open
+          ? `${trading.open} open · none closed yet`
+          : "Log a trade to start the journal",
     },
     {
       href: "/financial/savings/history",
@@ -92,7 +105,7 @@ export default async function SavingsPage() {
         ]}
       />
 
-      <CardGrid layout="triple">
+      <CardGrid>
         {pages.map((page) => (
           <Link key={page.href} href={page.href} className="min-w-0">
             <Card className="flex h-full items-center gap-3 transition hover:border-paper/25">

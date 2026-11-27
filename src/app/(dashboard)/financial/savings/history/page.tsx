@@ -51,8 +51,8 @@ export default async function SavingsHistoryPage({
         <div className="mb-3">
           <h3 className="font-bold tracking-tight text-[19px]">Saved each month</h3>
           <p className="text-sm text-paper/65">
-            {formatMoney(Math.max(yearNet, 0))} saved in {year}, against the savings
-            target in each month&apos;s plan.
+            {formatMoney(Math.abs(yearNet))} {yearNet < 0 ? "taken out" : "saved"} in{" "}
+            {year}, against the savings target in each month&apos;s plan.
           </p>
         </div>
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">

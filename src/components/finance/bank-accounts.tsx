@@ -38,18 +38,16 @@ export default function BankAccounts({
 }) {
   const [editing, setEditing] = useState<BankAccount | "new" | null>(null);
   const [moving, setMoving] = useState(false);
-  const total = accounts.reduce((sum, a) => sum + a.balance, 0);
 
   return (
     <Card>
       <div className="flex items-start justify-between gap-3">
+        {/* The total is the Net balance tile; only say which day it is for */}
         <div className="min-w-0">
-          <h3 className="font-bold tracking-tight text-2xl">Bank accounts</h3>
-          {accounts.length > 0 && (
+          <h3 className="text-[19px] font-bold tracking-[-0.01em]">Bank accounts</h3>
+          {accounts.length > 0 && asOf !== today && (
             <p className="mt-0.5 text-sm text-paper/65">
-              <span className={total < 0 ? badText : ""}>{signedMoney(total)}</span> in{" "}
-              {accounts.length} {accounts.length === 1 ? "account" : "accounts"}
-              {asOf !== today && ` at the end of ${formatShortDate(asOf)}`}
+              At the end of {formatShortDate(asOf)}
             </p>
           )}
         </div>
@@ -145,7 +143,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
     >
       {children}
     </button>

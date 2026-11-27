@@ -185,7 +185,15 @@ export function IncomeExpenseChart({ data }: { data: Bucket[] }) {
                     fill="transparent"
                     tabIndex={0}
                     aria-label={`${d.title}: income ${formatMoney(d.income)}, expenses ${formatMoney(d.expense)}`}
-                    onMouseEnter={() => setActive(i)}
+                    // A mouse shows it on hover; a tap shows or hides it.
+                    // Not onClick: focus lands first and would undo it.
+                    onPointerEnter={(e) => {
+                      if (e.pointerType === "mouse") setActive(i);
+                    }}
+                    onPointerDown={(e) => {
+                      if (e.pointerType !== "mouse")
+                        setActive((a) => (a === i ? null : i));
+                    }}
                     onFocus={() => setActive(i)}
                     onBlur={() => setActive(null)}
                     className="outline-none"

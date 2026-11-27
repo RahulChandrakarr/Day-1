@@ -1,7 +1,6 @@
 import BankAccounts from "@/components/finance/bank-accounts";
 import InboxCard from "@/components/finance/inbox-card";
 import { Card, Rail, Stack } from "@/components/ui/kit";
-import CategoryManager from "@/components/finance/category-manager";
 import { CategoryBars } from "@/components/finance/charts";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
@@ -108,7 +107,7 @@ export default async function DailyFinancePage({
         }
         netHint={
           dayDebts.some((d) => d.in_balance) || daySavings.length
-            ? "Cash left after spending, saving and borrow entries you added"
+            ? "After saving and borrowing"
             : undefined
         }
       />
@@ -138,11 +137,9 @@ export default async function DailyFinancePage({
           savings={daySavings}
           emis={dayEmis}
           transfers={transfers}
-          empty="Nothing logged for this day yet. Tap Add entry above."
+          empty="Nothing logged yet. Tap + to add the first one."
         />
       </Rail>
-
-      <CategoryManager categories={categories} />
     </Stack>
   );
 }

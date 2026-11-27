@@ -1,10 +1,10 @@
 import Link from "next/link";
 import BudgetCard from "@/components/finance/budget/budget-card";
-import CategoryManager from "@/components/finance/category-manager";
 import { BucketTable, IncomeExpenseChart } from "@/components/finance/charts";
+import Fold from "@/components/finance/fold";
 import PeriodNav from "@/components/finance/period-nav";
 import StatTiles from "@/components/finance/stat-tiles";
-import { Card, CardGrid, Stack } from "@/components/ui/kit";
+import { Card, Stack } from "@/components/ui/kit";
 import TransactionList from "@/components/finance/transaction-list";
 import {
   budgetReport,
@@ -70,6 +70,7 @@ export default async function YearlyFinancePage({
     getBankAccounts(to < today ? to : today),
   ]);
   const yearlyEntries = transactions.filter((t) => t.period === "yearly");
+  const totals = totalsOf(transactions);
   const buckets = monthBuckets(year, transactions);
   const report = budget
     ? budgetReport(
@@ -112,13 +113,13 @@ export default async function YearlyFinancePage({
       />
 
       <StatTiles
-        totals={totalsOf(transactions)}
+        totals={totals}
         balance={
           banks.length
             ? {
                 total: banks.reduce((sum, a) => sum + a.balance, 0),
                 hint: flowHint(
-                  totalsOf(transactions).net,
+                  totals.net,
                   year === thisYear ? "this year" : "that year",
                 ),
               }
@@ -129,7 +130,6 @@ export default async function YearlyFinancePage({
             ? `of ${formatMoney(report.income.expected)} expected`
             : undefined
         }
-        expenseHint={report ? `of ${formatMoney(report.planned)} planned` : undefined}
         extra={savingsTile}
       />
 
@@ -160,25 +160,18 @@ export default async function YearlyFinancePage({
         thisMonth={today.slice(0, 7)}
       />
 
-      <CardGrid>
-        <TransactionList
-          categories={categories}
-          bankAccounts={banks}
-          title="Yearly entries"
-          transactions={yearlyEntries}
-          showDate
-          empty="No yearly entries this year."
-        />
-
-        <CategoryManager categories={categories} />
-      </CardGrid>
+      <TransactionList
+        categories={categories}
+        bankAccounts={banks}
+        title="Yearly entries"
+        transactions={yearlyEntries}
+        showDate
+        empty="No yearly entries this year."
+      />
 
       {/* Twelve pairs of bars: full width or nothing */}
       <Card>
-        <h3 className="font-bold tracking-tight text-[19px]">Month by month</h3>
-        <p className="mb-4 text-sm text-paper/65">
-          Everything logged in {year}.
-        </p>
+        <h3 className="mb-4 font-bold tracking-tight text-[19px]">Month by month</h3>
         <IncomeExpenseChart data={buckets} />
         <div className="mt-4">
           <BucketTable data={buckets} heading="Month" />
@@ -224,14 +217,17 @@ function MonthPlanTable({
   const spentInPlanned = planned.reduce((s, r) => s + r.bucket.expense, 0);
 
   return (
-    <Card>
-      <h3 className="font-bold tracking-tight text-[19px]">Monthly plans in {year}</h3>
-      <p className="mb-4 text-sm text-paper/65">
+    <Fold
+      title="Month by month plan"
+      aside={`${planned.length} of 12 planned`}
+      className="card px-5 py-1"
+    >
+      <p className="mb-4 pt-1 text-sm text-paper/65">
         {planned.length === 0
           ? "No monthly plans yet. Open a month to set one."
-          : `${planned.length} of 12 months planned · ${formatMoney(spentInPlanned)} spent against ${formatMoney(plannedTotal)} planned.`}
+          : `${formatMoney(spentInPlanned)} spent against ${formatMoney(plannedTotal)} planned in those months.`}
       </p>
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
         <table className="w-full min-w-[34rem] text-sm">
           <thead>
             <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/60">
@@ -302,9 +298,6 @@ function MonthPlanTable({
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-paper/55">
-        Saved is money put into savings &amp; investments that month, against the plan&apos;s savings target.
-      </p>
-    </Card>
+    </Fold>
   );
 }

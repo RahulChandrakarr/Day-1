@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { formatMoney, type BudgetReport, type BudgetRow } from "@/lib/finance";
+import Fold from "../fold";
 
 const badText = "text-red-700 dark:text-red-300";
 
@@ -15,6 +16,14 @@ export default function BudgetReportView({
 }) {
   const { planned, actual, progress, ended } = report;
   const diff = planned - actual;
+  // Only what needs a look stays in view: categories over or close to plan
+  const watch = report.rows.filter((row) => row.actual >= row.planned * 0.9);
+  const more =
+    report.rows.length > 0 ||
+    report.repay.length > 0 ||
+    report.collect.length > 0 ||
+    report.unplanned.length > 0 ||
+    Boolean(report.savings.target);
 
   return (
     <div className="flex flex-col gap-4">
@@ -28,73 +37,93 @@ export default function BudgetReportView({
         />
       )}
 
-      <PlanTotals report={report} />
-
-      {report.rows.length > 0 && (
+      {watch.length > 0 && (
         <div>
           <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-paper/65">
-            By category
+            Over or close to plan
           </h4>
           <ul className="flex flex-col gap-4">
-            {report.rows.map((row, i) => (
+            {watch.map((row, i) => (
               <CategoryRow key={row.id} row={row} index={i} />
             ))}
           </ul>
         </div>
       )}
 
-      {report.repay.length > 0 && (
-        <PersonSection
-          title="Money to return"
-          done="returned"
-          rows={report.repay}
-        />
-      )}
+      {more && (
+        <Fold title="Show full plan" small>
+          <div className="flex flex-col gap-4 pt-2">
+            <PlanTotals report={report} />
 
-      {report.collect.length > 0 && (
-        <PersonSection
-          title="Money to collect"
-          done="received"
-          rows={report.collect}
-        />
-      )}
+            {report.rows.length > 0 && (
+              <div>
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-paper/65">
+                  By category
+                </h4>
+                <ul className="flex flex-col gap-4">
+                  {report.rows.map((row, i) => (
+                    <CategoryRow key={row.id} row={row} index={i} />
+                  ))}
+                </ul>
+              </div>
+            )}
 
-      {report.unplanned.length > 0 && (
-        <div>
-          <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/65">
-            Not in the plan
-          </h4>
-          <p className="mb-3 text-sm text-paper/60">
-            {formatMoney(report.unplanned.reduce((s, r) => s + r.actual, 0))}{" "}
-            spent in categories you didn&apos;t plan for.
-          </p>
-          <ul className="flex flex-col divide-y divide-paper/5">
-            {report.unplanned.map((row) => (
-              <li
-                key={row.id}
-                className="flex items-center justify-between gap-3 py-2 text-sm"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: `var(--cat-${row.color})` }}
-                  />
-                  <span className="min-w-0 truncate">{row.name}</span>
-                </span>
-                <span className="font-medium tabular-nums">
-                  {formatMoney(row.actual)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            {report.repay.length > 0 && (
+              <PersonSection
+                title="Money to return"
+                done="returned"
+                rows={report.repay}
+              />
+            )}
+
+            {report.collect.length > 0 && (
+              <PersonSection
+                title="Money to collect"
+                done="received"
+                rows={report.collect}
+              />
+            )}
+
+            {report.unplanned.length > 0 && (
+              <div>
+                <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/65">
+                  Not in the plan
+                </h4>
+                <p className="mb-3 text-sm text-paper/60">
+                  {formatMoney(report.unplanned.reduce((s, r) => s + r.actual, 0))}{" "}
+                  spent in categories you didn&apos;t plan for.
+                </p>
+                <ul className="flex flex-col divide-y divide-paper/5">
+                  {report.unplanned.map((row) => (
+                    <li
+                      key={row.id}
+                      className="flex items-center justify-between gap-3 py-2 text-sm"
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ background: `var(--cat-${row.color})` }}
+                        />
+                        <span className="min-w-0 truncate">{row.name}</span>
+                      </span>
+                      <span className="font-medium tabular-nums">
+                        {formatMoney(row.actual)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </Fold>
       )}
     </div>
   );
 }
 
 // What the plan adds up to: everything going out, and what is left of the
-// expected income once it is all covered.
+// expected income once it is all covered. Planned spending, the savings
+// target and expected income are left out: the headline and tiles show them.
 function PlanTotals({ report }: { report: BudgetReport }) {
   const repay = report.repay.reduce((sum, r) => sum + r.planned, 0);
   const collect = report.collect.reduce((sum, r) => sum + r.planned, 0);
@@ -111,13 +140,10 @@ function PlanTotals({ report }: { report: BudgetReport }) {
         Plan totals
       </h4>
       <ul className="flex flex-col divide-y divide-paper/5 text-sm">
-        <TotalRow label="Planned spending" amount={report.planned} />
         {repay > 0 && <TotalRow label="Money to return" amount={repay} />}
-        {savings > 0 && <TotalRow label="Into savings" amount={savings} />}
         <TotalRow label="Total going out" amount={out} strong />
         {left !== null && (
           <>
-            <TotalRow label="Expected income" amount={expected ?? 0} />
             {collect > 0 && <TotalRow label="Money to collect" amount={collect} />}
             <TotalRow
               label={left < 0 ? "Short by" : savings > 0 ? "Left over" : "Left to save"}

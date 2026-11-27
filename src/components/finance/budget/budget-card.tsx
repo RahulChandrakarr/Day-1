@@ -51,7 +51,7 @@ export default function BudgetCard({
     <Card>
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-bold tracking-tight text-2xl">
+          <h3 className="text-[19px] font-bold tracking-[-0.01em]">
             {editing
               ? budget
                 ? `Edit plan for ${periodLabel}`
@@ -75,7 +75,7 @@ export default function BudgetCard({
               onClick={() => setMode("edit")}
               aria-label="Edit plan"
               title="Edit plan"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
             >
               <PencilIcon />
             </button>
@@ -88,7 +88,7 @@ export default function BudgetCard({
               }}
               aria-label={deleting ? "Deleting plan" : "Delete plan"}
               title="Delete plan"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-paper/60 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-paper/60 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
             >
               <TrashIcon />
             </button>
@@ -127,7 +127,7 @@ export default function BudgetCard({
                 <button
                   type="button"
                   onClick={() => setMode("new")}
-                  className="h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
+                  className="h-11 rounded-xl border border-paper/15 px-5 text-sm font-medium transition hover:bg-paper/5"
                 >
                   Create plan
                 </button>

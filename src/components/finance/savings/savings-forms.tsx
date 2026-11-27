@@ -28,14 +28,14 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <h3 className="font-bold tracking-tight text-2xl">New account</h3>
+          <h3 className="text-[19px] font-bold tracking-[-0.01em]">New account</h3>
           <p className="mt-0.5 text-sm text-paper/65">
             FD, mutual fund, stocks, PPF, gold…
           </p>
         </div>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/10 text-lg text-paper/72"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-paper/10 text-lg text-paper/72"
         >
           +
         </motion.span>

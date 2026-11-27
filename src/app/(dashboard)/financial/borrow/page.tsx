@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import PeopleList, {
   type PersonPlan,
@@ -7,7 +6,6 @@ import { personBalances } from "@/lib/debts";
 import {
   budgetReport,
   formatMoney,
-  formatMonth,
   formatMonthShort,
   monthRange,
   todayISO,
@@ -66,7 +64,6 @@ export default async function BorrowPage() {
     {
       label: "Net",
       value: `${owed - owe < 0 ? "−" : ""}${formatMoney(Math.abs(owed - owe))}`,
-      hint: owed >= owe ? "More coming back than going out" : "You owe more than you're owed",
     },
   ];
 
@@ -89,19 +86,10 @@ export default async function BorrowPage() {
             <p className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl xl:text-3xl">
               {tile.value}
             </p>
-            <p className="mt-1 text-xs text-paper/60">{tile.hint}</p>
+            {tile.hint && <p className="mt-1 text-xs text-paper/60">{tile.hint}</p>}
           </div>
         ))}
       </div>
-
-      <p className="-mt-2 text-sm text-paper/60">
-        Log borrowing with Add entry above. It isn&apos;t counted as income or
-        expenses. Plan what to return or collect in the{" "}
-        <Link href="/financial/monthly" className="text-ember hover:underline">
-          {formatMonth(month)} plan
-        </Link>
-        .
-      </p>
 
       <PeopleList
         people={balances}

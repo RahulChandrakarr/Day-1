@@ -139,7 +139,7 @@ export default async function TrackingPage({
               key={v.id}
               href={`?view=${v.id}`}
               aria-current={view === v.id ? "page" : undefined}
-              className={`h-9 rounded-lg px-4 text-sm leading-9 transition ${
+              className={`h-10 rounded-lg px-4 text-sm leading-10 transition ${
                 view === v.id
                   ? "bg-paper/10 font-medium text-paper"
                   : "text-paper/70 hover:text-paper"
@@ -176,7 +176,7 @@ export default async function TrackingPage({
 
       <Card
         title="Income vs expenses"
-        subtitle={`${unit} by ${unit.toLowerCase()} · hover a column for details`}
+        subtitle={`${unit} by ${unit.toLowerCase()} · tap a column for details`}
       >
         <IncomeExpenseChart data={buckets} />
         <div className="mt-4">
@@ -203,6 +203,7 @@ export default async function TrackingPage({
           title="Biggest expenses"
           transactions={biggest}
           showDate
+          readOnly
           empty="No expenses in this range."
         />
       </CardGrid>

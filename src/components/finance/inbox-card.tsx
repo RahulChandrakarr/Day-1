@@ -19,18 +19,18 @@ export default function InboxCard({
   token: string | null;
 }) {
   const [setup, setSetup] = useState(false);
-  if (items.length === 0 && !token) return null;
+  // Only takes room when there is something to deal with; forwarding itself
+  // is set up in Settings → Bank messages
+  if (items.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-bold tracking-tight text-2xl">
           From your bank
-          {items.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-paper/60">
-              {items.length} waiting
-            </span>
-          )}
+          <span className="ml-2 text-sm font-normal text-paper/60">
+            {items.length} waiting
+          </span>
         </h2>
         <button
           type="button"
@@ -43,17 +43,11 @@ export default function InboxCard({
 
       {setup && <Setup token={token} />}
 
-      {items.length === 0 ? (
-        <p className="text-sm text-paper/70">
-          Nothing waiting. Messages your bank sends will appear here once forwarding is on.
-        </p>
-      ) : (
-        <Rows>
-          {items.map((item) => (
-            <InboxRow key={item.id} item={item} categories={categories} />
-          ))}
-        </Rows>
-      )}
+      <Rows>
+        {items.map((item) => (
+          <InboxRow key={item.id} item={item} categories={categories} />
+        ))}
+      </Rows>
     </section>
   );
 }
@@ -74,50 +68,58 @@ function InboxRow({ item, categories }: { item: InboxItem; categories: Category[
     });
 
   return (
-    <li className={`flex flex-wrap items-center gap-3 py-3 ${pending ? "opacity-50" : ""}`}>
-      <div className="min-w-0 flex-1">
-        {readable ? (
-          <p className="truncate font-medium">
-            <span className={item.direction === "credit" ? "text-moss" : ""}>
-              {item.direction === "credit" ? "+" : "−"}
-              {formatMoney(item.amount!)}
-            </span>
-            {item.merchant && <span className="text-paper/78"> · {item.merchant}</span>}
+    // Phones: the message and its category on one line, the buttons under
+    // them; one line once there is room
+    <li
+      className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 ${
+        pending ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="min-w-0 flex-1">
+          {readable ? (
+            <p className="truncate font-medium">
+              <span className={item.direction === "credit" ? "text-moss" : ""}>
+                {item.direction === "credit" ? "+" : "−"}
+                {formatMoney(item.amount!)}
+              </span>
+              {item.merchant && <span className="text-paper/78"> · {item.merchant}</span>}
+            </p>
+          ) : (
+            <p className="truncate font-medium text-paper/78">Couldn&apos;t read this one</p>
+          )}
+          <p className="truncate text-xs text-paper/60">
+            {item.occurred_on ? formatShortDate(item.occurred_on) : "no date"}
+            {item.sender && ` · ${item.sender}`}
+            {!readable && ` · ${item.body.slice(0, 60)}`}
           </p>
-        ) : (
-          <p className="truncate font-medium text-paper/78">Couldn&apos;t read this one</p>
+          {error && <p className="text-xs text-red-700 dark:text-red-300">{error}</p>}
+        </div>
+
+        {readable && (
+          <select
+            aria-label="Category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="h-10 w-36 shrink-0 rounded-inset border border-transparent bg-inset px-3 text-sm text-paper outline-none transition focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
+          >
+            <option value="">No category</option>
+            {forKind.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         )}
-        <p className="truncate text-xs text-paper/60">
-          {item.occurred_on ? formatShortDate(item.occurred_on) : "no date"}
-          {item.sender && ` · ${item.sender}`}
-          {!readable && ` · ${item.body.slice(0, 60)}`}
-        </p>
-        {error && <p className="text-xs text-red-700 dark:text-red-300">{error}</p>}
       </div>
 
-      {readable && (
-        <select
-          aria-label="Category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className={`${inputClass} h-9 w-auto min-w-32 text-sm`}
-        >
-          <option value="">No category</option>
-          {forKind.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      )}
-
-      <div className="flex shrink-0 gap-3 text-sm font-medium">
+      <div className="flex shrink-0 gap-2 text-sm font-semibold">
         {readable && (
           <button
             type="button"
             disabled={pending}
             onClick={() => run(() => acceptInboxItem(item.id, categoryId || null))}
-            className="text-ember"
+            className="h-10 flex-1 rounded-full bg-ember/15 px-4 text-ember transition hover:bg-ember/25 sm:flex-none"
           >
             Add it
           </button>
@@ -126,7 +128,7 @@ function InboxRow({ item, categories }: { item: InboxItem; categories: Category[
           type="button"
           disabled={pending}
           onClick={() => run(() => ignoreInboxItem(item.id))}
-          className="text-paper/65"
+          className="h-10 flex-1 rounded-full border border-paper/15 px-4 text-paper/70 transition hover:bg-paper/5 sm:flex-none"
         >
           Ignore
         </button>

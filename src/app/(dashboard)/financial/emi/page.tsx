@@ -79,14 +79,6 @@ export default async function EmiPage() {
         ))}
       </div>
 
-      <p className="-mt-2 text-sm text-paper/60">
-        Log each installment here. It isn’t counted as daily spending unless you
-        also add it as an expense.
-        {month && dueThisMonth.length > 0
-          ? ` ${dueThisMonth.length === 1 ? "One EMI" : `${dueThisMonth.length} EMIs`} still due this month.`
-          : ""}
-      </p>
-
       <EmiList emis={summaries} />
     </Stack>
   );

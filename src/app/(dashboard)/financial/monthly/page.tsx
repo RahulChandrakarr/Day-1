@@ -95,7 +95,6 @@ export default async function MonthlyFinancePage({
     report?.income.expected !== null && report?.income.expected !== undefined
       ? `of ${formatMoney(report.income.expected)} expected`
       : undefined;
-  const expenseHint = report ? `of ${formatMoney(report.planned)} planned` : undefined;
 
   return (
     <Stack>
@@ -119,15 +118,7 @@ export default async function MonthlyFinancePage({
             : null
         }
         incomeHint={incomeHint}
-        expenseHint={expenseHint}
-        extra={[
-          ...savingsTile,
-          {
-            label: "Monthly bills",
-            value: `${monthlyEntries.filter((t) => t.type === "expense").length}`,
-            hint: "Recurring expenses logged",
-          },
-        ]}
+        extra={savingsTile}
       />
 
       <BudgetCard
@@ -149,7 +140,7 @@ export default async function MonthlyFinancePage({
         }))}
       />
 
-      <CardGrid>
+      <CardGrid align="start">
         <TransactionList
           categories={categories}
           bankAccounts={banks}
@@ -164,10 +155,7 @@ export default async function MonthlyFinancePage({
 
       {/* The chart needs the whole width: a month is up to 31 pairs of bars */}
       <Card>
-        <h3 className="font-bold tracking-tight text-[19px]">Day by day</h3>
-        <p className="mb-4 text-sm text-paper/65">
-          Everything logged in {formatMonth(month)}.
-        </p>
+        <h3 className="mb-4 font-bold tracking-tight text-[19px]">Day by day</h3>
         <IncomeExpenseChart data={dayBuckets(month, transactions)} />
         <div className="mt-4">
           <BucketTable data={dayBuckets(month, transactions)} heading="Day" />

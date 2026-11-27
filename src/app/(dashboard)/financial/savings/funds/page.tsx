@@ -1,11 +1,10 @@
 import AccountList from "@/components/finance/savings/account-list";
-import AllocationCard from "@/components/finance/savings/allocation-card";
 import { AddAccountForm } from "@/components/finance/savings/savings-forms";
 import { FigureGrid, Rail, Stack } from "@/components/ui/kit";
 import { formatMoney, formatMonthShort, todayISO } from "@/lib/finance";
 import { getAccounts, getInvestmentEntries, getMonthBudgets } from "@/lib/finance-queries";
 import { accountSummaries, netSaved } from "@/lib/investments";
-import { allocationSlices, returnsHint, signedMoney } from "@/lib/savings";
+import { returnsHint, signedMoney } from "@/lib/savings";
 
 // Everything saved by hand: mutual funds and SIPs, fixed deposits, gold. Groww's
 // API can't see any of it, so these are kept up to date here.
@@ -53,14 +52,7 @@ export default async function FundsPage() {
         ]}
       />
 
-      <Rail
-        aside={
-          <>
-            <AllocationCard slices={allocationSlices(summaries, 0)} />
-            <AddAccountForm startOpen={accounts.length === 0} />
-          </>
-        }
-      >
+      <Rail aside={<AddAccountForm startOpen={accounts.length === 0} />}>
         <AccountList accounts={summaries} />
       </Rail>
     </Stack>

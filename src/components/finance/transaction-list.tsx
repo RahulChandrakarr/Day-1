@@ -48,16 +48,18 @@ const trashIcon = (
 );
 
 const deleteButtonClass =
-  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300";
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300";
 
 function Row({
   tx,
   showDate,
   onEdit,
+  readOnly,
 }: {
   tx: Transaction;
   showDate: boolean;
   onEdit?: () => void;
+  readOnly: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const title = tx.description || tx.category?.name || "Untitled";
@@ -99,18 +101,20 @@ function Row({
         {formatMoney(tx.amount)}
       </p>
       </Tappable>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          if (confirm(`Delete "${title}"?`))
-            startTransition(() => deleteTransaction(tx.id));
-        }}
-        aria-label={`Delete ${title}`}
-        className={deleteButtonClass}
-      >
-        {trashIcon}
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (confirm(`Delete "${title}"?`))
+              startTransition(() => deleteTransaction(tx.id));
+          }}
+          aria-label={`Delete ${title}`}
+          className={deleteButtonClass}
+        >
+          {trashIcon}
+        </button>
+      )}
     </motion.li>
   );
 }
@@ -149,6 +153,7 @@ function ActivityRow({
   showDate,
   occurredOn,
   onDelete,
+  readOnly,
 }: {
   title: string;
   subtitle: string;
@@ -159,6 +164,7 @@ function ActivityRow({
   showDate: boolean;
   occurredOn: string;
   onDelete: () => Promise<void>;
+  readOnly: boolean;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -194,17 +200,19 @@ function ActivityRow({
         {incoming === null ? "" : incoming ? "+" : "−"}
         {formatMoney(amount)}
       </p>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          if (confirm(`Delete "${title}"?`)) startTransition(onDelete);
-        }}
-        aria-label={`Delete ${title}`}
-        className={deleteButtonClass}
-      >
-        {trashIcon}
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (confirm(`Delete "${title}"?`)) startTransition(onDelete);
+          }}
+          aria-label={`Delete ${title}`}
+          className={deleteButtonClass}
+        >
+          {trashIcon}
+        </button>
+      )}
     </motion.li>
   );
 }
@@ -228,6 +236,7 @@ export default function TransactionList({
   categories,
   bankAccounts = [],
   aside,
+  readOnly = false,
 }: {
   title: string;
   transactions: Transaction[];
@@ -241,8 +250,11 @@ export default function TransactionList({
   categories?: Category[];
   bankAccounts?: BankOption[];
   aside?: ReactNode; // replaces the entry count in the header
+  // A list to look at, such as a summary: no editing or deleting
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const editCategories = readOnly ? undefined : categories;
   const items: Item[] = [
     ...transactions.map((tx) => ({
       type: "tx" as const,
@@ -287,7 +299,7 @@ export default function TransactionList({
   return (
     <Card>
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-bold tracking-tight text-2xl">{title}</h3>
+        <h3 className="text-[19px] font-bold tracking-[-0.01em]">{title}</h3>
         {aside ?? (
           <span className="text-sm text-paper/60">
             {items.length} {items.length === 1 ? "entry" : "entries"}
@@ -307,7 +319,8 @@ export default function TransactionList({
                   key={item.key}
                   tx={item.tx}
                   showDate={showDate}
-                  onEdit={categories ? () => setEditing(item.tx) : undefined}
+                  onEdit={editCategories ? () => setEditing(item.tx) : undefined}
+                  readOnly={readOnly}
                 />
               ) : item.type === "debt" ? (
                 <ActivityRow
@@ -328,6 +341,7 @@ export default function TransactionList({
                   }
                   showDate={showDate}
                   occurredOn={item.on}
+                  readOnly={readOnly}
                   onDelete={() => deleteDebt(item.debt.id)}
                 />
               ) : item.type === "transfer" ? (
@@ -343,6 +357,7 @@ export default function TransactionList({
                   incoming={null}
                   showDate={showDate}
                   occurredOn={item.on}
+                  readOnly={readOnly}
                   onDelete={() => deleteTransfer(item.transfer.id)}
                 />
               ) : item.type === "emi" ? (
@@ -356,6 +371,7 @@ export default function TransactionList({
                   incoming={false}
                   showDate={showDate}
                   occurredOn={item.on}
+                  readOnly={readOnly}
                   onDelete={() => deleteEmiPayment(item.payment.id)}
                 />
               ) : (
@@ -369,6 +385,7 @@ export default function TransactionList({
                   incoming={item.entry.kind === "withdrawal"}
                   showDate={showDate}
                   occurredOn={item.on}
+                  readOnly={readOnly}
                   onDelete={() => deleteInvestmentEntry(item.entry.id)}
                 />
               ),
@@ -377,13 +394,13 @@ export default function TransactionList({
         </ul>
       )}
 
-      {categories && (
+      {editCategories && (
         <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit entry">
           {editing && (
             <EditEntry
               key={editing.id}
               tx={editing}
-              categories={categories}
+              categories={editCategories}
               bankAccounts={bankAccounts}
               onDone={() => setEditing(null)}
             />

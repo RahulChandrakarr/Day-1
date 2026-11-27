@@ -9,11 +9,26 @@ import { dueDayLabel, type EmiPayment, type EmiSummary } from "@/lib/emis";
 import { formatMoney, formatShortDate } from "@/lib/finance";
 import { Card } from "@/components/ui/kit";
 
+// Payments shown before "Show all"
+const RECENT = 3;
+
+// Real buttons rather than text links, tall enough for a thumb
+const quietButton =
+  "flex h-10 items-center rounded-full border border-paper/15 px-4 text-sm font-medium text-paper/78 transition disabled:opacity-50";
+
 function monthsLabel(emi: EmiSummary) {
   if (emi.tenure)
     return `${emi.monthsDone} of ${emi.tenure} month${emi.tenure === 1 ? "" : "s"}`;
   if (emi.monthsDone === 0) return "Not started";
   return `${emi.monthsDone} month${emi.monthsDone === 1 ? "" : "s"} done`;
+}
+
+function dueLabel(emi: EmiSummary) {
+  if (!emi.nextDueOn) return null;
+  const on = formatShortDate(emi.nextDueOn);
+  if (emi.overdue) return `Overdue · was due ${on}`;
+  if (emi.paidThisMonth) return `Paid this month · next ${on}`;
+  return `Due ${on}`;
 }
 
 export default function EmiList({ emis }: { emis: EmiSummary[] }) {
@@ -23,7 +38,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold tracking-tight text-2xl">Your EMIs</h3>
+        <h3 className="text-[19px] font-bold tracking-[-0.01em]">Your EMIs</h3>
         <AddEmiButton />
       </div>
       {emis.length === 0 ? (
@@ -32,23 +47,19 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
         </p>
       ) : (
         <>
+          {/* The total is in the tile above; the bar only shows the split */}
           {totalDue > 0 && (
-            <div className="mt-4">
-              <div className="flex h-3 overflow-hidden rounded-full bg-paper/10">
-                {running.map((e, i) => (
-                  <motion.div
-                    key={e.id}
-                    title={`${e.name}: ${formatMoney(e.remaining)} left`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(e.remaining / totalDue) * 100}%` }}
-                    transition={{ delay: 0.05 * i, duration: 0.6 }}
-                    style={{ background: `var(--cat-${e.color})` }}
-                  />
-                ))}
-              </div>
-              <p className="mt-1.5 text-xs text-paper/60">
-                {formatMoney(totalDue)} still to pay
-              </p>
+            <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-paper/10">
+              {running.map((e, i) => (
+                <motion.div
+                  key={e.id}
+                  title={`${e.name}: ${formatMoney(e.remaining)} left`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(e.remaining / totalDue) * 100}%` }}
+                  transition={{ delay: 0.05 * i, duration: 0.6 }}
+                  style={{ background: `var(--cat-${e.color})` }}
+                />
+              ))}
             </div>
           )}
           <ul className="mt-3 grid items-start gap-2 lg:grid-cols-2 2xl:grid-cols-3">
@@ -65,11 +76,14 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
 }
 
 function EmiCard({ emi }: { emi: EmiSummary }) {
-  const [expanded, setExpanded] = useState(emi.remaining > 0);
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [pending, startTransition] = useTransition();
   const progress = emi.total_amount > 0 ? emi.paid / emi.total_amount : 0;
   const done = emi.remaining <= 0;
+  const due = dueLabel(emi);
+  const payments = showAll ? emi.payments : emi.payments.slice(0, RECENT);
 
   return (
     <motion.li
@@ -86,25 +100,25 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         <span
-          className="h-10 w-1.5 shrink-0 rounded-full"
+          className="h-12 w-1.5 shrink-0 rounded-full"
           style={{ background: `var(--cat-${emi.color})` }}
         />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{emi.name}</span>
           <span className="block truncate text-xs text-paper/60">
-            {emi.lender ? `${emi.lender} · ` : ""}
-            {formatMoney(emi.monthly_amount)} / month
-            {` · ${monthsLabel(emi)}`}
-            {done
-              ? " · paid off"
-              : emi.overdue
-                ? " · overdue"
-                : emi.paidThisMonth
-                  ? " · paid this month"
-                  : emi.nextDueOn
-                    ? ` · due ${formatShortDate(emi.nextDueOn)}`
-                    : ""}
+            {formatMoney(emi.monthly_amount)} / month · {monthsLabel(emi)}
+            {emi.lender ? ` · ${emi.lender}` : ""}
           </span>
+          {/* Its own line, so a long name or lender can't push it out of view */}
+          {due && (
+            <span
+              className={`block text-xs ${
+                emi.overdue ? "text-red-700 dark:text-red-300" : "text-paper/60"
+              }`}
+            >
+              {due}
+            </span>
+          )}
         </span>
         <span className="shrink-0 text-right">
           <span className="block font-semibold tabular-nums">
@@ -131,24 +145,15 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                   style={{ width: `${Math.min(progress, 1) * 100}%` }}
                 />
               </div>
+              {/* What's paid is already in the row above */}
               <p className="mt-1.5 text-xs text-paper/60">
-                {formatMoney(emi.paid)} of {formatMoney(emi.total_amount)}
+                {formatMoney(emi.total_amount)} in all
                 {emi.monthsLeft > 0
                   ? ` · ${emi.monthsLeft} ${emi.monthsLeft === 1 ? "month" : "months"} left`
                   : ""}
               </p>
             </div>
             <dl className="grid grid-cols-2 gap-3 px-4 pt-3 text-xs">
-              <div>
-                <dt className="text-paper/60">Monthly</dt>
-                <dd className="font-medium tabular-nums">
-                  {formatMoney(emi.monthly_amount)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-paper/60">Months done</dt>
-                <dd className="font-medium tabular-nums">{monthsLabel(emi)}</dd>
-              </div>
               <div>
                 <dt className="text-paper/60">Due</dt>
                 <dd className="font-medium">{dueDayLabel(emi.due_day)}</dd>
@@ -160,18 +165,28 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
             </dl>
             {!done && <PayForm emi={emi} />}
             <ul className="px-4 py-2">
-              {emi.payments.map((payment) => (
+              {payments.map((payment) => (
                 <PaymentRow key={payment.id} payment={payment} />
               ))}
               {emi.payments.length === 0 && (
                 <li className="py-3 text-sm text-paper/55">No payments yet.</li>
               )}
             </ul>
-            <div className="flex justify-end gap-1 px-4 pb-3">
+            {emi.payments.length > RECENT && (
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                aria-expanded={showAll}
+                className="mx-4 flex min-h-10 items-center text-sm font-medium text-ember"
+              >
+                {showAll ? "Show fewer" : `Show all (${emi.payments.length})`}
+              </button>
+            )}
+            <div className="flex justify-end gap-2 px-4 pb-4 pt-2">
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded-lg px-2 py-1 text-xs text-paper/65 transition hover:bg-paper/10 hover:text-paper"
+                className={`${quietButton} hover:bg-paper/5 hover:text-paper`}
               >
                 Edit
               </button>
@@ -182,7 +197,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                   if (confirm(`Delete ${emi.name} and all its payments?`))
                     startTransition(() => deleteEmi(emi.id));
                 }}
-                className="rounded-lg px-2 py-1 text-xs text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className={`${quietButton} hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300`}
               >
                 Delete EMI
               </button>
@@ -225,7 +240,7 @@ function PaymentRow({ payment }: { payment: EmiPayment }) {
             startTransition(() => deleteEmiPayment(payment.id));
         }}
         aria-label="Delete payment"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
       >
         ×
       </button>

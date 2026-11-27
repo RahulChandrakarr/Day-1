@@ -44,7 +44,7 @@ export default async function SplitwiseBalances() {
   return (
     <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 className="font-bold tracking-tight text-2xl">From Splitwise</h3>
+        <h3 className="text-[19px] font-bold tracking-[-0.01em]">From Splitwise</h3>
         <span className="text-sm text-paper/70">
           as of {formatFetchedAt(fetchedAt)} ·{" "}
           <a
@@ -140,7 +140,7 @@ function BalanceLine({ balance }: { balance: Balance }) {
 function Problem({ text, relink = false }: { text: string; relink?: boolean }) {
   return (
     <Card>
-      <h3 className="font-bold tracking-tight text-2xl">From Splitwise</h3>
+      <h3 className="text-[19px] font-bold tracking-[-0.01em]">From Splitwise</h3>
       <p role="alert" className="mt-2 text-sm text-[#b3372e] dark:text-red-300">
         {text}
       </p>
