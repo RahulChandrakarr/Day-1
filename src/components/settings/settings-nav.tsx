@@ -31,6 +31,17 @@ const sections: NavSection[] = [
     ),
   },
   {
+    href: "/settings/appearance",
+    label: "Appearance",
+    hint: "Light or dark, background",
+    icon: (
+      <svg {...iconProps}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
     href: "/settings/assistant",
     label: "Assistant",
     hint: "Name, hands-free, memory",

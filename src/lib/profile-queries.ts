@@ -20,6 +20,14 @@ export const getAvatarUrl = cache(async (path: string | null) => {
   return data?.signedUrl ?? null;
 });
 
+// Short-lived link to their own background photo (Settings -> Appearance)
+export const getBackgroundUrl = cache(async (path: string | null) => {
+  if (!path) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.storage.from("backgrounds").createSignedUrl(path, 6 * 60 * 60);
+  return data?.signedUrl ?? null;
+});
+
 export async function getDocuments() {
   const supabase = await createClient();
   const { data, error } = await supabase

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import type { BackgroundChoice } from "@/lib/backgrounds";
 import { createClient } from "@/lib/supabase/server";
 
 export type Profile = {
@@ -8,6 +9,8 @@ export type Profile = {
   full_name: string | null;
   role: "admin" | "user";
   avatar_path: string | null;
+  background: BackgroundChoice;
+  background_path: string | null;
   created_at: string;
 };
 

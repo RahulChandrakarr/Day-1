@@ -12,7 +12,6 @@ import {
   useAnimationControls,
   type Variants,
 } from "framer-motion";
-import { ThemeToggle } from "@/components/theme";
 import Logo from "@/components/ui/logo";
 import { login, type LoginState } from "./actions";
 
@@ -66,8 +65,6 @@ export default function LoginForm() {
 
   return (
     <main className="relative isolate flex min-h-dvh flex-1 items-center justify-center overflow-hidden px-4 py-10 text-paper">
-      <ThemeToggle className="absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-10 h-10 w-10 justify-center rounded-full border border-glass-edge bg-glass backdrop-blur-md hover:bg-glass-strong" />
-
       {/* Drifting light, kept behind the glass card so the card frosts it */}
       <motion.div
         aria-hidden

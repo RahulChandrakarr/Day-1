@@ -5,7 +5,6 @@ import Avatar from "./avatar";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
-import { ThemeToggle } from "@/components/theme";
 import Logo from "@/components/ui/logo";
 import type { Profile } from "@/lib/auth";
 import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
@@ -94,21 +93,22 @@ export default function Sidebar({
         </nav>
   
         <div className="flex flex-col gap-2 border-t border-paper/10 pt-4">
-          <div className="flex items-center justify-center gap-3 px-1 lg:justify-start lg:px-2">
+          {/* Light/dark lives in Settings -> Appearance now; this opens Profile */}
+          <Link
+            href="/settings/profile"
+            title="Your profile"
+            className="flex items-center justify-center gap-3 rounded-xl px-1 py-1.5 transition hover:bg-paper/5 lg:justify-start lg:px-2"
+          >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper/10 text-sm font-medium">
               <Avatar url={avatarUrl} name={name} />
             </span>
-            <div className="hidden min-w-0 lg:block">
-              <p className="truncate text-sm font-medium">{name}</p>
-              <p className="truncate text-xs capitalize text-paper/55">
+            <span className="hidden min-w-0 lg:block">
+              <span className="block truncate text-sm font-medium">{name}</span>
+              <span className="block truncate text-xs capitalize text-paper/55">
                 {profile.role}
-              </p>
-            </div>
-          </div>
-          <ThemeToggle
-            className="h-10 w-full justify-center rounded-xl px-3 text-sm hover:bg-paper/5 lg:justify-start"
-            labelClassName="hidden lg:block"
-          />
+              </span>
+            </span>
+          </Link>
           <form action={logout}>
             <button
               title="Sign out"
