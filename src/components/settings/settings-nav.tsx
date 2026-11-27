@@ -44,7 +44,7 @@ const sections: NavSection[] = [
   {
     href: "/settings/assistant",
     label: "Assistant",
-    hint: "Name, hands-free, memory",
+    hint: "Name, memory",
     icon: (
       <svg {...iconProps}>
         <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" />

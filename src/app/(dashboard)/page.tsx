@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import PageShell from "@/components/dashboard/page-shell";
-import AddEntry from "@/components/finance/add-entry";
 import GymChecklist from "@/components/health/gym-checklist";
 import HabitRow from "@/components/health/habit-row";
 import {
@@ -32,10 +31,8 @@ import {
 } from "@/components/ui/kit";
 import TodoList from "@/components/dashboard/todo-list";
 import BriefingToggle from "@/components/assistant/briefing-toggle";
-import { AddNoteButton, AddTodoButton } from "@/components/dashboard/quick-add";
 import { getJournalEntry } from "@/lib/journal-queries";
 import Avatar from "@/components/dashboard/avatar";
-import { ThumbDock, ThumbDockSpacer } from "@/components/ui/thumb-dock";
 import { requireProfile } from "@/lib/auth";
 import { getAvatarUrl } from "@/lib/profile-queries";
 
@@ -267,17 +264,6 @@ export default async function OverviewPage() {
           </Link>
         </div>
 
-        {/* On phones these float just above the tab bar, under the thumb */}
-        <ThumbDock className="md:max-w-md">
-          <div className="grid grid-cols-3 gap-2">
-            <Suspense fallback={<div className="h-12 rounded-2xl bg-ember/60" />}>
-              <AddEntry compact />
-            </Suspense>
-            <AddTodoButton date={today} />
-            <AddNoteButton />
-          </div>
-        </ThumbDock>
-
         {/* Today so far: ring, one insight, what's done */}
         <DarkCard className="flex items-center gap-3">
           <div
@@ -487,7 +473,6 @@ export default async function OverviewPage() {
             </Section>
           )}
         </CardGrid>
-        <ThumbDockSpacer />
       </Stack>
     </PageShell>
   );

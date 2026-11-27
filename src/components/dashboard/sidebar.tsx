@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 import Logo from "@/components/ui/logo";
 import type { Profile } from "@/lib/auth";
+import { useAddHub } from "./add-hub";
 import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
 
 // Desktop and tablet: icon rail at md, full sidebar at lg.
@@ -20,6 +21,7 @@ export default function Sidebar({
   alerts?: string[];
 }) {
   const pathname = usePathname();
+  const { openMenu } = useAddHub();
   const name = profile.full_name || profile.email.split("@")[0];
 
   const links = [
@@ -41,8 +43,30 @@ export default function Sidebar({
         >
           <Logo className="h-10 w-auto" priority />
         </Link>
-  
-        <nav className="mt-10 flex flex-1 flex-col gap-1">
+
+        {/* Opens the Add menu: money, to-do, note, health */}
+        <button
+          type="button"
+          onClick={openMenu}
+          title="Add something"
+          className="mt-8 flex h-11 items-center justify-center gap-2 rounded-2xl bg-ember px-3 text-sm font-semibold text-on-ember shadow-[0_10px_24px_-10px_var(--ember)] transition-colors hover:bg-ember-light lg:justify-start lg:px-4"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            aria-hidden
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span className="hidden lg:block">Add</span>
+        </button>
+
+        <nav className="mt-4 flex flex-1 flex-col gap-1">
           {links.map((item, i) => {
             const active = isActive(pathname, item.href);
             const isAdminLink = item.href.startsWith("/admin");

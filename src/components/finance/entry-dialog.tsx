@@ -13,6 +13,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Portal from "@/components/ui/portal";
+import { useAddHub } from "@/components/dashboard/add-hub";
 import {
   addTransaction,
   type FormState,
@@ -155,6 +156,9 @@ function addParam(): Variant | null {
   return (VARIANTS.find((v) => v.value === value)?.value ?? "entry") as Variant;
 }
 
+// The one add-entry form in the app, rendered by the dashboard layout. It has
+// no button of its own: the Add menu and the "Add entry" button on the Money
+// pages ask the hub (add-hub.tsx) to open it.
 export default function EntryDialog({
   categories,
   usage,
@@ -165,9 +169,7 @@ export default function EntryDialog({
   habits,
   habitCheckins,
   workout,
-  compact = false,
 }: {
-  compact?: boolean;
   categories: Category[];
   usage: Record<string, number>;
   people: EntryPerson[];
@@ -178,12 +180,20 @@ export default function EntryDialog({
   habitCheckins: HabitCheckin[];
   workout: { exercises: Exercise[]; doneIds: string[]; title: string } | null;
 }) {
-  // ?add=1 comes from the home-screen shortcut and the notification button
-  const [open, setOpen] = useState(() => addParam() !== null);
-  const [session, setSession] = useState(0);
+  const { entry, closeEntry } = useAddHub();
+  const { open } = entry;
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const startVariant = addParam() ?? variantForPath(pathname);
+  // The Add menu names a tab; otherwise ?add=… does (home-screen shortcuts,
+  // the notification button); otherwise it's the tab for the page you're on
+  const startVariant: Variant =
+    entry.start === "entry"
+      ? "entry"
+      : entry.start === "health"
+        ? workout
+          ? "workout"
+          : "habit"
+        : (addParam() ?? variantForPath(pathname));
 
   // On a past day in Daily, entries default to that day
   const dateParam = searchParams.get("date");
@@ -194,7 +204,7 @@ export default function EntryDialog({
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeEntry();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -202,30 +212,12 @@ export default function EntryDialog({
       document.body.style.overflow = overflow;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, closeEntry]);
 
   return (
-    <>
-      <motion.button
-        type="button"
-        whileTap={{ scale: 0.98 }}
-        onClick={() => {
-          setSession((n) => n + 1);
-          setOpen(true);
-        }}
-        className={
-          compact
-            ? "flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-ember px-2 text-[15px] font-semibold text-on-ember shadow-sm transition-colors hover:bg-ember-light"
-            : "flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-ember px-6 font-medium text-on-ember shadow-sm transition-colors hover:bg-ember-light md:w-auto md:self-start"
-        }
-      >
-        <span className="text-xl leading-none">+</span>
-        {compact ? "Add" : "Add entry"}
-      </motion.button>
-
-      {/* At the top level of the page, so it covers the window even when the
-          button sits in the floating bar on phones */}
-      <Portal>
+    // At the top level of the page, so it covers the window wherever the
+    // button that opened it sits
+    <Portal>
       <AnimatePresence>
         {open && (
           <>
@@ -234,7 +226,7 @@ export default function EntryDialog({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
+              onClick={closeEntry}
               className="fixed inset-0 z-50 bg-[rgb(8_14_30/0.35)] backdrop-blur-[3px]"
             />
             <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6">
@@ -250,7 +242,7 @@ export default function EntryDialog({
                 className="pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] card glass-strong shadow-2xl md:max-w-lg md:rounded-[28px]"
               >
                 <EntryForm
-                  key={session}
+                  key={entry.session}
                   startVariant={startVariant}
                   accounts={accounts}
                   emis={emis}
@@ -262,15 +254,14 @@ export default function EntryDialog({
                   habitCheckins={habitCheckins}
                   workout={workout}
                   defaultDate={defaultDate}
-                  onClose={() => setOpen(false)}
+                  onClose={closeEntry}
                 />
               </motion.div>
             </div>
           </>
         )}
       </AnimatePresence>
-      </Portal>
-    </>
+    </Portal>
   );
 }
 

@@ -1,14 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   deleteMemoryAction,
   renameAssistantAction,
   saveMemoryAction,
 } from "@/app/(dashboard)/settings/actions";
-import { handsFree, useHandsFree } from "@/components/assistant/hands-free";
-import { canWake } from "@/components/assistant/speech";
 import { Card, CardGrid, CardHead, Field, inputClass, primaryButtonClass, quietButtonClass } from "@/components/ui/kit";
 import type { Memory } from "@/lib/assistant-memory";
 
@@ -36,7 +34,6 @@ export default function AssistantSettings({
   return (
     <CardGrid>
       <NameCard name={name} />
-      <HandsFreeCard name={name} />
       <MemoryCard name={name} memories={memories} />
     </CardGrid>
   );
@@ -63,7 +60,7 @@ function NameCard({ name }: { name: string }) {
           });
         }}
       >
-        <Field label="What you call your assistant" hint="Also the word that wakes her when hands-free is on">
+        <Field label="What you call your assistant">
           <input
             value={draft}
             maxLength={20}
@@ -81,50 +78,6 @@ function NameCard({ name }: { name: string }) {
           {pending ? "Saving…" : "Save name"}
         </button>
       </form>
-    </Card>
-  );
-}
-
-const noop = () => () => {};
-
-function HandsFreeCard({ name }: { name: string }) {
-  const on = useHandsFree();
-  const supported = useSyncExternalStore(noop, canWake, () => true);
-
-  return (
-    <Card>
-      <CardHead title="Hands-free" />
-      <label className="flex cursor-pointer items-start justify-between gap-4">
-        <span className="flex flex-col gap-1">
-          <span className="font-medium">Wake her by name</span>
-          <span className="text-sm text-paper/70">
-            Say &ldquo;{name}&rdquo; and she answers &ldquo;Yes? What&apos;s going on?&rdquo;, or say
-            &ldquo;{name}, add ₹120 for groceries&rdquo; to do it straight away. Say &ldquo;thanks&rdquo;
-            or &ldquo;bye&rdquo; when you&apos;re done.
-          </span>
-        </span>
-        <input
-          type="checkbox"
-          role="switch"
-          checked={on}
-          disabled={!supported}
-          onChange={(e) => handsFree.set(e.target.checked)}
-          className="mt-1 h-5 w-5 shrink-0 accent-ember"
-        />
-      </label>
-      <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-xs text-paper/65">
-        {!supported && (
-          <li className="text-red-700 dark:text-red-300">
-            This browser can&apos;t listen. Chrome or Edge work best.
-          </li>
-        )}
-        <li>Works while the app is open on screen, not from a locked phone or another app.</li>
-        <li>This device only. The microphone stays on while she waits, which uses more battery.</li>
-        <li>
-          Listening for her name is free; only what you say after it goes to the AI. Your browser&apos;s
-          speech service hears what&apos;s said while she waits.
-        </li>
-      </ul>
     </Card>
   );
 }

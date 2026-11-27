@@ -21,8 +21,9 @@ import {
 import { getHabits } from "@/lib/journal-queries";
 import EntryDialog from "./entry-dialog";
 
-// "+ Add entry" button with everything the add sheet can log.
-export default async function AddEntry({ compact = false }: { compact?: boolean }) {
+// The app's one add-entry form, with everything it can log loaded for it.
+// Rendered once by the dashboard layout; buttons open it through the Add hub.
+export default async function AddEntry() {
   const today = todayISO();
   const [categories, usage, people, debts, accounts, emis, payments, habits, habitCheckins, gym, banks] =
     await Promise.all([
@@ -50,7 +51,6 @@ export default async function AddEntry({ compact = false }: { compact?: boolean 
 
   return (
     <EntryDialog
-      compact={compact}
       categories={categories}
       usage={usage}
       people={personBalances(people, debts).map(({ id, name, owe, owed }) => ({
