@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable @next/next/no-img-element -- their own photo comes as a signed Storage URL that changes */
+/* eslint-disable @next/next/no-img-element -- their own photo is served by /api/media to the signed-in person only, which the image optimizer can't fetch */
 
 import Image from "next/image";
 import { useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";

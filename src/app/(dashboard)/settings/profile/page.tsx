@@ -6,7 +6,7 @@ import ProfileForm from "@/components/settings/profile-form";
 import { Card, CardHead } from "@/components/ui/kit";
 import { requireProfile } from "@/lib/auth";
 import { getBodyProfile } from "@/lib/health-queries";
-import { getAvatarUrl } from "@/lib/profile-queries";
+import { avatarUrl } from "@/lib/profile-queries";
 
 export const metadata: Metadata = {
   title: "Profile · Day One",
@@ -17,10 +17,7 @@ const row =
 
 export default async function ProfilePage() {
   const { profile } = await requireProfile();
-  const [avatarUrl, body] = await Promise.all([
-    getAvatarUrl(profile.avatar_path),
-    getBodyProfile(),
-  ]);
+  const body = await getBodyProfile();
 
   return (
     <div className="flex flex-col gap-3">
@@ -29,7 +26,7 @@ export default async function ProfilePage() {
         email={profile.email}
         fullName={profile.full_name ?? ""}
         avatarPath={profile.avatar_path}
-        avatarUrl={avatarUrl}
+        avatarUrl={avatarUrl(profile.avatar_path)}
         body={body}
       />
 

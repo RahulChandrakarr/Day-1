@@ -34,7 +34,7 @@ import BriefingToggle from "@/components/assistant/briefing-toggle";
 import { getJournalEntry } from "@/lib/journal-queries";
 import Avatar from "@/components/dashboard/avatar";
 import { requireProfile } from "@/lib/auth";
-import { getAvatarUrl } from "@/lib/profile-queries";
+import { avatarUrl as avatarUrlFor } from "@/lib/profile-queries";
 
 export const metadata: Metadata = {
   title: "Overview · Day One",
@@ -42,6 +42,32 @@ export const metadata: Metadata = {
 
 export default async function OverviewPage() {
   const today = todayISO();
+  // Everything the page needs is asked for at once, so the wait is the slowest
+  // single lookup rather than one after another. The profile was already
+  // looked up by the layout (cached), so that one costs nothing.
+  const [
+    overview,
+    { profile },
+    plan,
+    journal,
+    banks,
+    recent,
+    categories,
+    planStreak,
+    coverage,
+    reflection,
+  ] = await Promise.all([
+    getOverview(),
+    requireProfile(),
+    getPlanDay(today),
+    getJournalEntry(today),
+    getBankAccounts(today),
+    getRecentTransactions(today, 5),
+    getCategories(),
+    getPlanStreak(today),
+    getPlanCoverage(today),
+    getPlanReflection(today),
+  ]);
   const {
     transactions,
     journalToday,
@@ -52,23 +78,10 @@ export default async function OverviewPage() {
     habitCheckins,
     moods,
     bodyLogs,
-  } = await getOverview();
-  // Both already looked up by the layout; cached, so no second fetch
-  const { profile } = await requireProfile();
-  const avatarUrl = await getAvatarUrl(profile.avatar_path);
+  } = overview;
+  const avatarUrl = avatarUrlFor(profile.avatar_path);
   const name = profile.full_name || profile.email.split("@")[0];
 
-  const [plan, journal, banks, recent, categories, planStreak, coverage, reflection] =
-    await Promise.all([
-      getPlanDay(today),
-      getJournalEntry(today),
-      getBankAccounts(today),
-      getRecentTransactions(today, 5),
-      getCategories(),
-      getPlanStreak(today),
-      getPlanCoverage(today),
-      getPlanReflection(today),
-    ]);
   // To-dos are the journal's priorities for today
   const todos = journal.entry.priorities
     .filter((p) => p.text.trim())

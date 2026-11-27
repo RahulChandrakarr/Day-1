@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- previews and signed Storage URLs */
+/* eslint-disable @next/next/no-img-element -- previews, and photos served by /api/media to the signed-in person only */
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";

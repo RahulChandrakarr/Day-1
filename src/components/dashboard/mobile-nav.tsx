@@ -5,22 +5,30 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAddHub } from "./add-hub";
 import { isActive, navItems, type NavItem } from "./nav";
+import { AlertDot, useTapped } from "./nav-state";
 
 // Phones: no top bar, so each page starts at the top of the screen. The six
 // sections sit in a floating bar at the bottom, three either side of a raised
 // Add button that opens the Add menu (money, to-do, note, health). The profile
 // photo on the Home page leads to Profile and the rest of Settings.
-export default function MobileNav({ alerts = [] }: { alerts?: string[] }) {
+export default function MobileNav({
+  alerts,
+}: {
+  // Tabs that want attention; it arrives after the bar itself (see AlertDot)
+  alerts: Promise<string[]>;
+}) {
   const pathname = usePathname();
+  const [tapped, tap] = useTapped(pathname);
   const { openMenu } = useAddHub();
   const half = Math.ceil(navItems.length / 2);
 
   const tab = (item: NavItem) => {
-    const active = isActive(pathname, item.href);
+    const active = tapped ? item.href === tapped : isActive(pathname, item.href);
     return (
       <li key={item.href}>
         <Link
           href={item.href}
+          onNavigate={() => tap(item.href)}
           aria-current={active ? "page" : undefined}
           className={`relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10.5px] transition-colors ${
             active ? "font-semibold text-ember" : "text-paper/70"
@@ -40,9 +48,10 @@ export default function MobileNav({ alerts = [] }: { alerts?: string[] }) {
             className="relative"
           >
             {item.icon}
-            {alerts.includes(item.href) && !active && (
-              <span
-                aria-label="Reminder"
+            {!active && (
+              <AlertDot
+                alerts={alerts}
+                href={item.href}
                 className="absolute -right-1.5 -top-1 h-2.5 w-2.5 rounded-full border-2 border-ink bg-ember"
               />
             )}

@@ -1,5 +1,4 @@
 import "server-only";
-import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type DocumentRow = {
@@ -12,21 +11,17 @@ export type DocumentRow = {
   created_at: string;
 };
 
-// Short-lived link to the private profile photo.
-export const getAvatarUrl = cache(async (path: string | null) => {
-  if (!path) return null;
-  const supabase = await createClient();
-  const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60);
-  return data?.signedUrl ?? null;
-});
+// Where the browser fetches the profile photo from: /api/media, which checks
+// who is asking. The address only changes when the photo does, so the device
+// keeps its copy instead of downloading the photo again on every visit.
+export const avatarUrl = (path: string | null) => mediaUrl("avatars", path);
 
-// Short-lived link to their own background photo (Settings -> Appearance)
-export const getBackgroundUrl = cache(async (path: string | null) => {
-  if (!path) return null;
-  const supabase = await createClient();
-  const { data } = await supabase.storage.from("backgrounds").createSignedUrl(path, 6 * 60 * 60);
-  return data?.signedUrl ?? null;
-});
+// The same, for their own background photo (Settings -> Appearance)
+export const backgroundUrl = (path: string | null) => mediaUrl("backgrounds", path);
+
+function mediaUrl(bucket: "avatars" | "backgrounds", path: string | null) {
+  return path ? `/api/media/${bucket}?p=${encodeURIComponent(path)}` : null;
+}
 
 export async function getDocuments() {
   const supabase = await createClient();

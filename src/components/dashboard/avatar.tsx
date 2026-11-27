@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element -- signed Storage URLs change hourly */
+/* eslint-disable @next/next/no-img-element -- their own photo is served by /api/media to the signed-in person only, which the image optimizer can't fetch */
 
 // Profile photo, or the first letter of the name.
 export default function Avatar({ url, name }: { url: string | null; name: string }) {

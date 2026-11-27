@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element -- their own photo comes as a signed Storage URL that changes */
+/* eslint-disable @next/next/no-img-element -- their own photo is served by /api/media to the signed-in person only, which the image optimizer can't fetch */
 import Image from "next/image";
 import sky from "../../../public/iccup-xNtwmcRP-gw-unsplash.jpg";
 import { GRADIENTS, type BackgroundChoice } from "@/lib/backgrounds";

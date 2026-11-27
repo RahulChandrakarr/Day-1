@@ -9,18 +9,21 @@ import Logo from "@/components/ui/logo";
 import type { Profile } from "@/lib/auth";
 import { useAddHub } from "./add-hub";
 import { isActive, logoutIcon, navItems, settingsIcon, usersIcon } from "./nav";
+import { AlertDot, useTapped } from "./nav-state";
 
 // Desktop and tablet: icon rail at md, full sidebar at lg.
 export default function Sidebar({
   profile,
   avatarUrl = null,
-  alerts = [],
+  alerts,
 }: {
   profile: Profile;
   avatarUrl?: string | null;
-  alerts?: string[];
+  // Tabs that want attention; it arrives after the sidebar itself (see AlertDot)
+  alerts: Promise<string[]>;
 }) {
   const pathname = usePathname();
+  const [tapped, tap] = useTapped(pathname);
   const { openMenu } = useAddHub();
   const name = profile.full_name || profile.email.split("@")[0];
 
@@ -68,7 +71,7 @@ export default function Sidebar({
 
         <nav className="mt-4 flex flex-1 flex-col gap-1">
           {links.map((item, i) => {
-            const active = isActive(pathname, item.href);
+            const active = tapped ? item.href === tapped : isActive(pathname, item.href);
             const isAdminLink = item.href.startsWith("/admin");
             return (
               <motion.div
@@ -83,6 +86,7 @@ export default function Sidebar({
                 <Link
                   href={item.href}
                   title={item.label}
+                  onNavigate={() => tap(item.href)}
                   aria-current={active ? "page" : undefined}
                   className={`group relative flex h-11 items-center justify-center gap-3 rounded-2xl px-3 text-sm transition-colors lg:justify-start ${
                     active ? "font-semibold text-ember" : "text-paper/75 hover:text-paper"
@@ -100,9 +104,10 @@ export default function Sidebar({
                   )}
                   <span className="relative">
                     {item.icon}
-                    {alerts.includes(item.href) && !active && (
-                      <span
-                        aria-label="Reminder"
+                    {!active && (
+                      <AlertDot
+                        alerts={alerts}
+                        href={item.href}
                         className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-ink bg-ember"
                       />
                     )}
