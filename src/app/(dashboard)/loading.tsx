@@ -1,10 +1,6 @@
-import PageShell from "@/components/dashboard/page-shell";
-import { PageSkeleton } from "@/components/ui/kit";
+import RouteSkeleton from "@/components/dashboard/route-skeleton";
 
+// Shown the moment any tab is tapped, whichever section it leads to
 export default function Loading() {
-  return (
-    <PageShell title="Overview">
-      <PageSkeleton rows={6} layout="triple" />
-    </PageShell>
-  );
+  return <RouteSkeleton />;
 }

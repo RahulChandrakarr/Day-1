@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 // The shared look: soft cards, hairline dividers, serif headings, 44px tap
 // targets. Three weights of container, so a page can have a lead: Card for
@@ -428,13 +428,54 @@ export const primaryButtonClass =
 export const quietButtonClass =
   "card flex min-h-11 items-center justify-center px-5 text-sm font-semibold transition hover:bg-paper/[0.03] disabled:opacity-50";
 
-// Placeholder blocks used by the loading screens
-export function Skeleton({ className = "" }: { className?: string }) {
+// Wraps a page where it sits in a layout. Whatever arrives inside (the page,
+// taking its placeholder's place) eases up into position, block by block: see
+// [data-arrive] in globals.css. It adds no box of its own to the layout.
+export function Arrive({ children }: { children: ReactNode }) {
   return (
+    <div data-arrive className="contents">
+      {children}
+    </div>
+  );
+}
+
+const BAR_WIDTHS = ["w-2/5", "w-4/5", "w-3/5", "w-1/2"];
+
+// A placeholder block for the loading screens: the cards' own glass with a
+// band of light crossing it. `order` is its turn in the wave down the page;
+// `lines` draws that many faint bars where text will be; `lead` fills it with
+// the slow warm drift that marks the top of a loading page.
+export function Skeleton({
+  className = "",
+  order = 0,
+  lines = 0,
+  lead = false,
+}: {
+  className?: string;
+  order?: number;
+  lines?: number;
+  lead?: boolean;
+}) {
+  return (
+    // data-skeleton: placeholders hold still (see [data-arrive] in globals.css)
     <div
-      className={`animate-pulse rounded-card border border-glass-edge bg-glass ${className}`}
+      data-skeleton
+      className={`card skeleton ${className}`}
+      style={{ "--i": order } as CSSProperties}
       aria-hidden
-    />
+    >
+      {lead && <span className="skeleton-flow" />}
+      {lines > 0 && (
+        <div className="relative flex flex-col gap-3 p-5">
+          {Array.from({ length: lines }, (_, i) => (
+            <span
+              key={i}
+              className={`rounded-full bg-paper/[0.09] ${i === 0 ? "h-3.5" : "h-2.5"} ${BAR_WIDTHS[i % BAR_WIDTHS.length]}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -450,16 +491,16 @@ export function PageSkeleton({
   rail?: boolean;
 }) {
   const blocks = Array.from({ length: rows }, (_, i) => (
-    <Skeleton key={i} className={i % 2 ? "h-40" : "h-56"} />
+    <Skeleton key={i} order={i + 2} lines={i % 2 ? 3 : 4} className={i % 2 ? "h-40" : "h-56"} />
   ));
   return (
-    <div className="flex flex-col gap-3">
+    <div data-skeleton className="flex flex-col gap-3">
       <Skeleton className="h-11 max-w-xs rounded-inset" />
-      <Skeleton className="h-20" />
+      <Skeleton order={1} lead className="h-20" />
       {rail ? (
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,var(--rail))]">
-          <Skeleton className="h-96" />
-          <Skeleton className="h-56" />
+          <Skeleton order={2} lines={4} className="h-96" />
+          <Skeleton order={3} lines={3} className="h-56" />
         </div>
       ) : layout ? (
         <div className={`grid gap-3 ${LAYOUTS[layout]}`}>{blocks}</div>

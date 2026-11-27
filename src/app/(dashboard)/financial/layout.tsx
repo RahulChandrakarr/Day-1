@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import PageShell from "@/components/dashboard/page-shell";
+import { Arrive } from "@/components/ui/kit";
 import { AddEntryButton } from "@/components/dashboard/add-hub";
 import FinancePdf from "@/components/finance/finance-pdf";
 import {
@@ -20,6 +21,7 @@ export default function FinancialLayout({
       title="Financial"
       description="Income, spending, savings, stocks and EMIs."
       hideMobileDescription
+      frame
     >
       <div className="flex items-start gap-4">
         <FinanceSidebar />
@@ -33,7 +35,7 @@ export default function FinancialLayout({
               <AddEntryButton />
             </div>
           </div>
-          {children}
+          <Arrive>{children}</Arrive>
         </div>
       </div>
     </PageShell>

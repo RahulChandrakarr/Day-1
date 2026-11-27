@@ -22,6 +22,9 @@
     inset 0 1px 0 0 rgb(255 255 255 / 0.65), 0 14px 36px -20px rgb(40 70 110 / 0.3);
   --glass-blur: blur(18px) saturate(125%);
   --inset: rgb(120 90 70 / 0.08); /* inputs and wells inside a card: a sand tint */
+  /* Loading: the light that crosses a placeholder, and the warm band that leads it */
+  --sheen: rgb(255 255 255 / 0.55);
+  --flow: linear-gradient(90deg, #f6e9de, #ecd3c2, #dfbba6, #ecd3c2, #f6e9de, #ecd3c2, #dfbba6, #ecd3c2, #f6e9de);
   /* Chart palette */
   --chart-income: #12b76a;
   --chart-expense: #ff5a1f;
@@ -56,6 +59,8 @@
   --glass-shadow:
     inset 0 1px 0 0 rgb(255 255 255 / 0.07), 0 18px 40px -20px rgb(0 0 0 / 0.55);
   --inset: rgb(255 255 255 / 0.07);
+  --sheen: rgb(255 255 255 / 0.07);
+  --flow: linear-gradient(90deg, #6b4c3f, #5a3f34, #47322a, #5a3f34, #6b4c3f, #5a3f34, #47322a, #5a3f34, #6b4c3f);
   --chart-income: #22c55e;
   --chart-expense: #ff6a2b;
   --chart-net: #e2bfa8;
@@ -163,6 +168,139 @@
     background:
       radial-gradient(60% 45% at 85% 0%, rgb(226 191 168 / 0.18), transparent 70%),
       linear-gradient(180deg, rgb(20 16 14 / 0.55), rgb(20 16 14 / 0.66));
+  }
+
+  /* A page that hasn't arrived yet. Its placeholders are the cards' own glass
+     (add .card), so a real card takes a placeholder's place without the pane
+     changing; a band of light crosses each one, a beat after the one above,
+     so the light runs down the page like a slow wave. --i is the pane's turn. */
+  .skeleton {
+    overflow: hidden;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    translate: -100% 0;
+    background: linear-gradient(100deg, transparent 25%, var(--sheen) 50%, transparent 75%);
+    animation: sheen 1.9s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    animation-delay: calc(var(--i, 0) * 130ms);
+    pointer-events: none;
+  }
+  /* The pane that leads a placeholder page: warm colour drifting through it
+     without a seam, in the tones of the "Today so far" card */
+  .skeleton-flow {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 200%;
+    background: var(--flow);
+    opacity: 0.85;
+    animation: flow 5s linear infinite;
+  }
+
+  /* The line across the top while a page that can't show a placeholder is on
+     its way (stepping to another day, a page not fetched ahead) */
+  .nav-progress {
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    height: 3px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+  .nav-progress.is-busy {
+    opacity: 1;
+  }
+  .nav-progress::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 200%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--ember) 20%,
+      #d4868a 35%,
+      transparent 50%,
+      var(--ember) 70%,
+      #d4868a 85%,
+      transparent
+    );
+    animation: flow 1.4s linear infinite;
+    animation-play-state: paused;
+  }
+  .nav-progress.is-busy::before {
+    animation-play-state: running;
+  }
+}
+
+@keyframes sheen {
+  to {
+    translate: 100% 0;
+  }
+}
+/* Slides a strip twice as wide as its box by one of its two repeats, so the
+   last frame matches the first and the loop has no seam */
+@keyframes flow {
+  from {
+    translate: -50% 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes rise {
+  from {
+    translate: 0 14px;
+  }
+}
+
+/* A page taking its placeholder's place: each block eases up into position,
+   the top one first. [data-arrive] goes on the wrapper around a page (see
+   Arrive in ui/kit); the page's own top-level blocks are what move. It is
+   movement only, never a fade: fading a block would switch off the glass blur
+   of every card inside it until the fade ended. Placeholders stay still, so
+   a page never moves twice. */
+[data-arrive] > :not([data-skeleton]) > * {
+  animation: rise 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(2) {
+  animation-delay: 45ms;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(3) {
+  animation-delay: 90ms;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(4) {
+  animation-delay: 135ms;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(5) {
+  animation-delay: 180ms;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(6) {
+  animation-delay: 225ms;
+}
+[data-arrive] > :not([data-skeleton]) > :nth-child(n + 7) {
+  animation-delay: 270ms;
+}
+/* A placeholder standing in for one block of a page that has otherwise arrived */
+[data-arrive] [data-skeleton] {
+  animation: none;
+}
+
+/* Where the device asks for less movement, nothing loops or slides */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .skeleton-flow,
+  .nav-progress::before,
+  [data-arrive] > :not([data-skeleton]) > * {
+    animation: none;
+  }
+  .skeleton::after {
+    display: none;
   }
 }
 

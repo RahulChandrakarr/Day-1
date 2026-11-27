@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PageShell from "@/components/dashboard/page-shell";
 import HealthTabs from "@/components/health/health-tabs";
+import { Arrive } from "@/components/ui/kit";
 
 export const metadata: Metadata = {
   title: "Health & Habits · Day One",
@@ -12,10 +13,11 @@ export default function HealthLayout({ children }: LayoutProps<"/health">) {
       title="Health & Habits"
       description="Gym plan, workouts and habits."
       hideMobileDescription
+      frame
     >
       <div className="flex flex-col gap-4">
         <HealthTabs />
-        {children}
+        <Arrive>{children}</Arrive>
       </div>
     </PageShell>
   );

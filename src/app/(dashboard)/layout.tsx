@@ -4,6 +4,7 @@ import { todayISO } from "@/lib/finance";
 import { getJournalDays } from "@/lib/journal-queries";
 import AddHub from "@/components/dashboard/add-hub";
 import MobileNav from "@/components/dashboard/mobile-nav";
+import NavProgress from "@/components/dashboard/nav-progress";
 import AddEntry from "@/components/finance/add-entry";
 import RegisterServiceWorker from "@/components/notifications/register-sw";
 import Sidebar from "@/components/dashboard/sidebar";
@@ -34,6 +35,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
           photoUrl={profile.background === "upload" ? backgroundUrl(profile.background_path) : null}
         />
         <RegisterServiceWorker />
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
         <Sidebar profile={profile} alerts={alerts} avatarUrl={avatarUrl(profile.avatar_path)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <MobileNav alerts={alerts} />
