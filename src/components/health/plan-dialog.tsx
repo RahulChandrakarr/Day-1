@@ -59,7 +59,7 @@ const blankExercise = (): DraftExercise => ({
 });
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const smallLabel = "text-[11px] uppercase tracking-wider text-paper/45";
 
 const SUGGESTED_TITLES = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Cardio", "Full body"];
@@ -112,7 +112,7 @@ export default function PlanDialog({
           variant === "primary"
             ? "h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
             : variant === "icon"
-              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-ink"
+              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-inset"
               : "h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
         }
       >
@@ -128,7 +128,7 @@ export default function PlanDialog({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
+              className="fixed inset-0 z-50 bg-[rgb(8_14_30/0.35)] backdrop-blur-[3px]"
             />
             <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6">
               <motion.div
@@ -136,11 +136,11 @@ export default function PlanDialog({
                 role="dialog"
                 aria-modal="true"
                 aria-label="Weekly gym plan"
-                initial={{ y: "100%", opacity: 0.8 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                className="pointer-events-auto flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:max-w-2xl md:rounded-3xl"
+                className="pointer-events-auto flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-[28px] card glass-strong shadow-2xl md:max-w-2xl md:rounded-[28px]"
               >
                 <PlanEditor
                   key={session}
@@ -339,7 +339,7 @@ function PlanEditor({
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="rounded-2xl border border-paper/10 bg-ink p-3"
+                    className="rounded-2xl border border-paper/10 bg-inset p-3"
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-5 shrink-0 text-center text-xs text-paper/40">

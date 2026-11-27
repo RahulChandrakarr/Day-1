@@ -74,7 +74,7 @@ export default async function PlanTodayPage({
                   ? "Day complete 🎉"
                   : `${done} of ${dayItems.length} done`}
             </p>
-            <p className="mt-0.5 text-[13px] text-ink/70">
+            <p className="mt-0.5 text-[13px] text-ink/80">
               Week {week} of the month. Every task here moves a yearly goal.
             </p>
           </DarkCard>

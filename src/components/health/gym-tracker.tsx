@@ -184,7 +184,7 @@ function ExerciseRow({
   return (
     <li
       className={`overflow-hidden rounded-2xl border transition ${
-        checked ? "border-moss/40 bg-moss/10" : "border-paper/10 bg-ink"
+        checked ? "border-moss/40 bg-moss/10" : "border-paper/10 bg-inset"
       }`}
     >
       <div className="flex items-stretch pr-2 sm:pr-3">

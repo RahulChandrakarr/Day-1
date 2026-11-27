@@ -116,14 +116,14 @@ export default function HabitCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: removing ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className={`rounded-3xl border bg-surface ${
+      className={`card rounded-3xl ${
         compact ? "p-3" : "p-4"
       } ${
         draft.done === true
           ? "border-moss/40"
           : draft.done === false
             ? "border-chart-expense/40"
-            : "border-paper/10"
+            : ""
       }`}
     >
       <div className="flex items-start gap-3">
@@ -162,7 +162,7 @@ export default function HabitCard({
 
       {habit.count_label && (
         <div className="mt-3 flex items-center gap-2">
-          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-ink px-3 py-2">
+          <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-inset px-3 py-2">
             <span className="shrink-0 text-xs text-paper/55">
               {habit.kind === "quit" ? "How many today?" : "How much today?"}
             </span>
@@ -297,7 +297,7 @@ export default function HabitCard({
                         ? "Anything to remember? (optional)"
                         : "What happened? (optional)"
                     }
-                    className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
+                    className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
                   />
                 </>
               ) : (
@@ -322,8 +322,8 @@ export default function HabitCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-paper/10 bg-ink p-3">
-              <div className="flex rounded-full border border-paper/10 bg-ink p-0.5 text-xs">
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-paper/10 bg-inset p-3">
+              <div className="flex rounded-full border border-paper/10 bg-inset p-0.5 text-xs">
                 {(
                   [
                     ["build", "Build it"],
@@ -364,7 +364,7 @@ export default function HabitCard({
                   })
                 }
                 placeholder="Count something? e.g. cigarettes"
-                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
               />
               {settings.count_label.trim() && (
                 <input
@@ -387,7 +387,7 @@ export default function HabitCard({
                   }
                   placeholder={settings.kind === "quit" ? "Daily max" : "Daily goal"}
                   aria-label={settings.kind === "quit" ? "Daily maximum" : "Daily goal"}
-                  className="h-8 w-24 rounded-full border border-paper/10 bg-ink px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+                  className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
                 />
               )}
             </div>

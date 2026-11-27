@@ -44,7 +44,7 @@ export default function MobileNav({
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-paper/10 bg-ink/80 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-xl md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-glass-edge bg-glass px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-2xl backdrop-saturate-150 md:hidden">
         <div className="flex items-center gap-3">
           <Logo className="h-8 w-auto" priority />
           <AnimatePresence mode="wait" initial={false}>
@@ -80,7 +80,7 @@ export default function MobileNav({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -6 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-12 w-56 origin-top-right card p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
+                className="absolute right-0 top-12 w-56 origin-top-right card glass-strong p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
               >
                 <div className="px-3 py-2">
                   <p className="truncate text-sm font-medium">{name}</p>
@@ -118,8 +118,9 @@ export default function MobileNav({
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-paper/10 bg-ink/85 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl md:hidden">
-        <ul className="mx-auto grid max-w-lg grid-cols-6 px-1">
+      {/* A floating glass bar, clear of the screen edges */}
+      <nav className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] z-30 md:hidden">
+        <ul className="glass-panel mx-auto grid max-w-lg grid-cols-6 gap-0.5 rounded-[26px] p-1">
           {navItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -127,14 +128,14 @@ export default function MobileNav({
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[10.5px] transition-colors ${
-                    active ? "text-ember" : "text-paper/45"
+                  className={`relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10.5px] transition-colors ${
+                    active ? "font-semibold text-ember" : "text-paper/55"
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="bottom-nav-active"
-                      className="absolute top-0 h-0.5 w-8 rounded-full bg-ember"
+                      className="absolute inset-0 rounded-[20px] bg-surface/90 shadow-[0_6px_16px_-8px_rgb(120_90_70/0.4)] dark:bg-white/[0.12] dark:shadow-none"
                       transition={{
                         type: "spring",
                         stiffness: 420,
@@ -155,7 +156,7 @@ export default function MobileNav({
                       />
                     )}
                   </motion.span>
-                  <span className="font-medium">{item.short}</span>
+                  <span className="relative font-medium">{item.short}</span>
                 </Link>
               </li>
             );

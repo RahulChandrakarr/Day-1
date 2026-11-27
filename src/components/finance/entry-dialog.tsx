@@ -80,7 +80,7 @@ export type EntryPerson = {
 };
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 
@@ -231,7 +231,7 @@ export default function EntryDialog({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setOpen(false)}
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
+              className="fixed inset-0 z-50 bg-[rgb(8_14_30/0.35)] backdrop-blur-[3px]"
             />
             <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6">
               <motion.div
@@ -239,11 +239,11 @@ export default function EntryDialog({
                 role="dialog"
                 aria-modal="true"
                 aria-label="Add entry"
-                initial={{ y: "100%", opacity: 0.8 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 380, damping: 36 }}
-                className="pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:max-w-lg md:rounded-3xl"
+                className="pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] card glass-strong shadow-2xl md:max-w-lg md:rounded-[28px]"
               >
                 <EntryForm
                   key={session}
@@ -403,7 +403,7 @@ function EntryForm({
           transition={{ duration: 0.2 }}
           className="overflow-hidden"
         >
-          <div className="flex flex-col gap-3 rounded-xl border border-paper/10 bg-ink p-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-paper/10 bg-inset p-3">
             <div className="flex flex-wrap gap-2">
               {option(
                 "",
@@ -474,7 +474,7 @@ function EntryForm({
             {habits.map((habit) => (
               <li
                 key={habit.id}
-                className="rounded-inset border border-paper/10 bg-ink"
+                className="rounded-inset border border-paper/10 bg-inset"
               >
                 <ul>
                   <HabitRow
@@ -1327,7 +1327,7 @@ export function Segmented<T extends string>({
 
   // The highlight slides inside the track, so it isn't thrown off while the dialog animates
   return (
-    <div className="rounded-xl border border-paper/10 bg-ink p-1">
+    <div className="rounded-xl border border-paper/10 bg-inset p-1">
       <div
         role="radiogroup"
         aria-label={label}

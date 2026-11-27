@@ -30,7 +30,7 @@ type Status = "idle" | "pending" | "saving" | "saved" | "error";
 const SAVE_DELAY = 900;
 
 const fieldClass =
-  "w-full rounded-xl border border-paper/10 bg-ink px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
+  "w-full rounded-xl border border-paper/10 bg-inset px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
 export default function JournalEditor({
   initial,

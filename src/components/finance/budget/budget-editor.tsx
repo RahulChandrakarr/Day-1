@@ -15,7 +15,7 @@ import {
 } from "@/lib/finance";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
@@ -275,7 +275,7 @@ export default function BudgetEditor({
         </button>
       </fieldset>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl border border-paper/10 bg-ink p-4 text-sm sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl border border-paper/10 bg-inset p-4 text-sm sm:grid-cols-4">
         <Summary label="Income" value={formatMoney(incomeValue)} />
         {toCollect > 0 && (
           <Summary label="To collect" value={`+ ${formatMoney(toCollect)}`} />

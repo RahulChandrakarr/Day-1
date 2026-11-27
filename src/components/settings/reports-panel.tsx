@@ -84,7 +84,7 @@ function ReportCard({
 
       <div className="flex gap-2">
         {report.yearly && (
-          <div role="radiogroup" aria-label="Period" className="flex shrink-0 rounded-xl border border-paper/10 bg-ink p-0.5 text-sm">
+          <div role="radiogroup" aria-label="Period" className="flex shrink-0 rounded-xl border border-paper/10 bg-inset p-0.5 text-sm">
             {[
               { value: false, label: "Month" },
               { value: true, label: "Year" },
@@ -109,7 +109,7 @@ function ReportCard({
             value={year}
             aria-label="Year"
             onChange={(e) => setYear(Number(e.target.value))}
-            className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-ink px-3 text-[15px]"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-[15px]"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -122,7 +122,7 @@ function ReportCard({
             value={month}
             aria-label="Month"
             onChange={(e) => setMonth(e.target.value)}
-            className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-ink px-3 text-[15px]"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-[15px]"
           >
             {months.map((m) => (
               <option key={m} value={m}>

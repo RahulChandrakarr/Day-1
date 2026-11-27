@@ -41,7 +41,7 @@ export default function Sheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
+            className="fixed inset-0 z-50 bg-[rgb(8_14_30/0.35)] backdrop-blur-[3px]"
           />
           <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6">
             <motion.div
@@ -49,11 +49,12 @@ export default function Sheet({
               role="dialog"
               aria-modal="true"
               aria-label={title}
-              initial={{ y: "100%", opacity: 0.8 }}
-              animate={{ y: 0, opacity: 1 }}
+              // Slide only: fading would switch the glass blur off mid-animation
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 36 }}
-              className={`pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl card shadow-2xl md:rounded-3xl ${
+              className={`pointer-events-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] card glass-strong shadow-2xl md:rounded-[28px] ${
                 wide ? "md:max-w-2xl" : "md:max-w-lg"
               }`}
             >

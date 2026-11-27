@@ -119,7 +119,7 @@ export default async function BodyPage() {
               </dl>
 
               {targets && (
-                <div className="mt-5 rounded-2xl border border-paper/10 bg-ink p-4">
+                <div className="mt-5 rounded-2xl border border-paper/10 bg-inset p-4">
                   <p className="text-xs font-medium uppercase tracking-wider text-paper/50">
                     Daily target for your goal
                   </p>

@@ -45,7 +45,10 @@ export function CardList({
   );
 }
 
-// The dark panel used for "Today so far"
+// The lead panel used for "Today so far": a warm nude gradient (sand to
+// blush; deep mocha in dark mode). It re-points the colours its contents
+// already use, so they read on it: ink text turns cocoa, ember accents and
+// rings turn mocha, and paper chips turn cream.
 export function DarkCard({
   children,
   className = "",
@@ -55,7 +58,7 @@ export function DarkCard({
 }) {
   return (
     <section
-      className={`rounded-card bg-paper px-5 py-4 text-ink ${className}`}
+      className={`rounded-card border border-white/70 bg-[radial-gradient(120%_90%_at_100%_0%,rgb(255_255_255/0.5),transparent_55%),linear-gradient(135deg,#f6e9de_0%,#ecd3c2_55%,#dfbba6_100%)] px-5 py-4 text-ink shadow-[0_18px_40px_-20px_rgb(138_92_76/0.55)] [--ember:#8a5c4c] [--ink:#3b2a21] [--on-ember:#ffffff] [--paper:#fffaf6] dark:border-white/10 dark:bg-[radial-gradient(120%_90%_at_100%_0%,rgb(255_255_255/0.12),transparent_55%),linear-gradient(135deg,#6b4c3f_0%,#5a3f34_55%,#47322a_100%)] dark:[--ember:#f0d3bf] dark:[--ink:#fff8f2] dark:[--on-ember:#3b2a21] dark:[--paper:#3b2a21] ${className}`}
     >
       {children}
     </section>
@@ -79,15 +82,16 @@ export function SectionHead({
         {title}
       </h2>
       {href && link ? (
+        // Sits on the sky, so it gets a glass pill rather than bare blue text
         <Link
           href={href}
-          className="shrink-0 text-[13px] font-semibold text-indigo"
+          className="shrink-0 rounded-full border border-glass-edge bg-glass px-3 py-1 text-[13px] font-semibold text-ember backdrop-blur-md transition hover:bg-glass-strong"
         >
           {link} →
         </Link>
       ) : (
         aside && (
-          <span className="shrink-0 text-[13px] text-paper/45">{aside}</span>
+          <span className="shrink-0 text-[13px] text-paper/65">{aside}</span>
         )
       )}
     </div>
@@ -394,7 +398,7 @@ export function Empty({
 }
 
 export const inputClass =
-  "h-12 w-full rounded-inset border border-transparent bg-ink px-4 text-[15px] text-paper outline-none transition placeholder:text-paper/35 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
+  "h-12 w-full rounded-inset border border-transparent bg-inset px-4 text-[15px] text-paper outline-none transition placeholder:text-paper/35 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
 export const labelClass = "text-xs font-medium text-paper/55";
 
@@ -419,7 +423,7 @@ export function Field({
 }
 
 export const primaryButtonClass =
-  "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ember px-6 text-[15px] font-semibold text-on-ember transition-colors hover:bg-ember-light disabled:opacity-60";
+  "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ember px-6 text-[15px] font-semibold text-on-ember shadow-[0_10px_24px_-10px_var(--ember)] transition-colors hover:bg-ember-light disabled:opacity-60";
 
 export const quietButtonClass =
   "card flex min-h-11 items-center justify-center px-5 text-sm font-semibold transition hover:bg-paper/[0.03] disabled:opacity-50";
@@ -428,7 +432,7 @@ export const quietButtonClass =
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-card bg-paper/[0.05] ${className}`}
+      className={`animate-pulse rounded-card border border-glass-edge bg-glass ${className}`}
       aria-hidden
     />
   );
@@ -480,7 +484,7 @@ export function Reminder({
   return (
     <Link
       href={href}
-      className="flex min-h-11 flex-1 items-center gap-3 rounded-inset card px-4 py-3 transition active:bg-ink"
+      className="flex min-h-11 flex-1 items-center gap-3 rounded-inset card px-4 py-3 transition active:bg-inset"
     >
       <span className="text-base">{emoji}</span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>

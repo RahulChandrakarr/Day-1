@@ -134,7 +134,7 @@ export default function CategoryManager({
                 maxLength={40}
                 placeholder="New category name"
                 defaultValue={state.ok ? "" : state.values?.name}
-                className="h-10 flex-1 rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15 sm:min-w-48"
+                className="h-10 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15 sm:min-w-48"
               />
               <div className="flex gap-1 rounded-xl border border-paper/10 p-1">
                 {(["expense", "income"] as const).map((t) => (

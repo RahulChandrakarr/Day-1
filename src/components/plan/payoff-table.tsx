@@ -30,7 +30,7 @@ const amount = (value: number) => (value ? formatMoney(value) : "—");
 // The printed month table: every expense and payment, each column ₹28,000.
 export default function PayoffTable({ month }: { month?: string }) {
   return (
-    <div className="overflow-hidden rounded-[18px] border border-paper/10 bg-surface">
+    <div className="overflow-hidden rounded-[18px] border border-paper/10 bg-glass-strong">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[40rem] text-sm tabular-nums">
           <thead>

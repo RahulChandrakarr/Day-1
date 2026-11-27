@@ -137,7 +137,7 @@ export function SectionMenuButton({
         onClick={() => setOpenOn(pathname)}
         aria-label={label}
         aria-expanded={open}
-        className="flex h-12 shrink-0 items-center gap-2 card pl-3 pr-3.5 text-sm font-semibold transition active:bg-ink xl:hidden"
+        className="flex h-12 shrink-0 items-center gap-2 card pl-3 pr-3.5 text-sm font-semibold transition active:bg-inset xl:hidden"
       >
         <svg {...iconProps}>
           <path d="M4 6h16M4 12h16M4 18h10" />
@@ -154,7 +154,7 @@ export function SectionMenuButton({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={close}
-              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] xl:hidden"
+              className="fixed inset-0 z-50 bg-[rgb(8_14_30/0.35)] backdrop-blur-[3px] xl:hidden"
             />
             <motion.aside
               key="drawer"
@@ -165,7 +165,7 @@ export function SectionMenuButton({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 400, damping: 40 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-paper/10 bg-surface pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl xl:hidden"
+              className="glass-panel fixed inset-y-2 left-2 z-50 flex w-72 max-w-[85vw] flex-col rounded-[28px] pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl xl:hidden"
             >
               <div className="flex items-center justify-between px-5 py-4">
                 <h2 className="font-bold tracking-tight text-2xl">{title}</h2>

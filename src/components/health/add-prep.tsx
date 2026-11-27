@@ -11,7 +11,7 @@ export default function AddPrep({ blockId }: { blockId: string | null }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <section className="flex flex-col gap-3 rounded-card border border-ember/30 bg-ember/10 p-4 sm:flex-row sm:items-center sm:gap-4">
+    <section className="flex flex-col gap-3 card border-ember/30 bg-ember/10 p-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
         <h3 className="font-medium">Add a warm-up and a cool-down</h3>
         <p className="mt-0.5 text-sm text-paper/60">

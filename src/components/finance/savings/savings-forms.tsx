@@ -8,7 +8,7 @@ import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investme
 import { Card } from "@/components/ui/kit";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
   "text-xs font-medium uppercase tracking-wider text-paper/50";
 

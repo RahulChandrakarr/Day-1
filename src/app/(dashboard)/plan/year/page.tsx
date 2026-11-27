@@ -67,7 +67,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
               {year === Number(today.slice(0, 4)) &&
                 ` · ${Math.round((Number(today.slice(5, 7)) / 12) * 100)}% of the year gone`}
             </p>
-            <p className="text-[13px] text-ink/65">
+            <p className="text-[13px] text-ink/80">
               {behind > 0
                 ? `${behind} goal${behind === 1 ? "" : "s"} behind pace`
                 : measured.length

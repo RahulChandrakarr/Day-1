@@ -124,7 +124,7 @@ export default function HabitRow({
         </div>
 
         {habit.count_label && (
-          <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-ink px-2.5 py-2">
+          <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-inset px-2.5 py-2">
             <span className="flex-1 text-xs text-paper/55">
               How many today?
               {habit.daily_limit !== null &&

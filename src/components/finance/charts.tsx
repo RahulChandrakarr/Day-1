@@ -35,7 +35,7 @@ function Tooltip({
   const left = Math.min(Math.max(x, 80), width - 80);
   return (
     <div
-      className="pointer-events-none absolute top-0 z-10 w-40 -translate-x-1/2 rounded-xl card px-3 py-2 text-xs shadow-xl shadow-black/10 dark:shadow-black/40"
+      className="pointer-events-none absolute top-0 z-10 w-40 -translate-x-1/2 rounded-xl card glass-strong px-3 py-2 text-xs shadow-xl shadow-black/10 dark:shadow-black/40"
       style={{ left }}
     >
       <p className="mb-1 text-paper/55">{title}</p>

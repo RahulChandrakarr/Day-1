@@ -357,7 +357,7 @@ function PersonSection({
           return (
             <li
               key={row.id}
-              className="rounded-2xl border border-paper/10 bg-ink p-3"
+              className="rounded-2xl border border-paper/10 bg-inset p-3"
             >
               <div className="flex items-center gap-3 text-sm">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-paper/10 text-xs font-medium">

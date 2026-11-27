@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const avatarUrl = await getAvatarUrl(profile.avatar_path);
 
   return (
-    <div className="flex min-h-dvh flex-1 bg-ink text-paper">
+    <div className="flex min-h-dvh flex-1 text-paper">
       <RegisterServiceWorker />
       <Sidebar profile={profile} alerts={alerts} avatarUrl={avatarUrl} />
       <div className="flex min-w-0 flex-1 flex-col">

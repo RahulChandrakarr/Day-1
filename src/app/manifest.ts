@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "My personal life tracker",
     start_url: "/",
     display: "standalone",
-    background_color: "#100f0d",
-    theme_color: "#100f0d",
+    background_color: "#f3f8fd",
+    theme_color: "#f3f8fd",
     shortcuts: [
       {
         name: "Add entry",

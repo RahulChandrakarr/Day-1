@@ -18,7 +18,7 @@ const arrow = (dir: "left" | "right") => (
 );
 
 const stepClass =
-  "flex h-11 w-11 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-ink";
+  "flex h-11 w-11 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-inset";
 
 // Prev / current / next for a day, month or year.
 export default function PeriodNav({

@@ -30,7 +30,7 @@ export function LogProgress({ goal, date }: { goal: PlanGoal; date: string }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2 rounded-xl bg-ink px-2.5 py-1.5">
+      <div className="flex items-center gap-2 rounded-xl bg-inset px-2.5 py-1.5">
         <span className="shrink-0 text-xs text-paper/55">Log progress</span>
         <input
           inputMode="decimal"

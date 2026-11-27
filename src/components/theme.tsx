@@ -3,10 +3,13 @@
 import { useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const STORAGE_KEY = "theme";
+// A new key for the sky-and-glass redesign: picks saved against the old dark
+// design are left behind, so everyone starts in the light theme.
+const STORAGE_KEY = "theme-v2";
 
-// Runs before first paint so the page never flashes the wrong theme.
-const themeScript = `(function(){try{var t=localStorage.getItem("${STORAGE_KEY}");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",d)}catch(e){document.documentElement.classList.add("dark")}})()`;
+// Runs before first paint so the page never flashes the wrong theme. Light
+// unless dark was picked with the toggle; the system setting is not followed.
+const themeScript = `(function(){try{var d=localStorage.getItem("${STORAGE_KEY}")==="dark";document.documentElement.classList.toggle("dark",d)}catch(e){}})()`;
 
 export function ThemeScript() {
   return (

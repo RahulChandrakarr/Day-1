@@ -16,10 +16,10 @@ export default function PageShell({
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       <header className="hidden md:block">
         <h1 className="font-bold tracking-tight text-4xl xl:text-5xl">{title}</h1>
-        {description && <p className="mt-1 text-paper/50">{description}</p>}
+        {description && <p className="mt-1 text-paper/70">{description}</p>}
       </header>
       {description && !hideMobileDescription && (
-        <p className="-mb-1 text-sm text-paper/50 md:hidden">{description}</p>
+        <p className="-mb-1 text-sm text-paper/70 md:hidden">{description}</p>
       )}
 
       {children ?? (

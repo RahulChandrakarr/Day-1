@@ -93,7 +93,7 @@ function PersonCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: pending ? 0.4 : 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="overflow-hidden rounded-inset border border-paper/10 bg-ink"
+      className="overflow-hidden rounded-inset border border-paper/10 bg-inset"
     >
       <button
         type="button"

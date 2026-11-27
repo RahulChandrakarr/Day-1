@@ -272,7 +272,7 @@ export default async function OverviewPage() {
               {insights[0] ?? "Log something and your day starts filling in."}
             </p>
             {finished.length > 0 && (
-              <p className="truncate text-xs text-ink/60 lg:whitespace-normal">
+              <p className="truncate text-xs text-ink/80 lg:whitespace-normal">
                 ✓ {finished.join(" · ")}
               </p>
             )}

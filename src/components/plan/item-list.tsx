@@ -183,7 +183,7 @@ function AddRow({
             value={goalId}
             onChange={(e) => setGoalId(e.target.value)}
             aria-label="Goal"
-            className="h-10 max-w-[7.5rem] shrink-0 rounded-xl border border-paper/10 bg-ink px-2 text-sm outline-none"
+            className="h-10 max-w-[7.5rem] shrink-0 rounded-xl border border-paper/10 bg-inset px-2 text-sm outline-none"
           >
             {goals.map((g) => (
               <option key={g.id} value={g.id}>
@@ -212,7 +212,7 @@ function AddRow({
             onChange={(e) => setTarget(e.target.value.replace(/[^\d.]/g, ""))}
             placeholder={chosen.unit ?? "#"}
             aria-label="Target"
-            className="h-10 w-20 shrink-0 rounded-xl border border-paper/10 bg-ink px-2 text-sm tabular-nums outline-none"
+            className="h-10 w-20 shrink-0 rounded-xl border border-paper/10 bg-inset px-2 text-sm tabular-nums outline-none"
           />
         )}
         <button

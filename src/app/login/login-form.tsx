@@ -65,25 +65,21 @@ export default function LoginForm() {
   }, [state, shake]);
 
   return (
-    <main className="relative flex min-h-dvh flex-1 items-center justify-center overflow-hidden bg-ink px-4 py-10 text-paper">
-      <ThemeToggle className="absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-10 h-10 w-10 justify-center rounded-full border border-paper/10 bg-paper/5 backdrop-blur hover:bg-paper/10" />
+    <main className="relative isolate flex min-h-dvh flex-1 items-center justify-center overflow-hidden px-4 py-10 text-paper">
+      <ThemeToggle className="absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-10 h-10 w-10 justify-center rounded-full border border-glass-edge bg-glass backdrop-blur-md hover:bg-glass-strong" />
 
-      {/* Drifting light */}
+      {/* Drifting light, kept behind the glass card so the card frosts it */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-ember/25 blur-3xl"
+        className="pointer-events-none absolute -left-40 -top-40 -z-10 h-[34rem] w-[34rem] rounded-full bg-[#f6d9c4]/60 blur-3xl"
         animate={{ x: [0, 80, 0], y: [0, 60, 0] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -bottom-48 -right-32 h-[30rem] w-[30rem] rounded-full bg-moss/20 blur-3xl"
+        className="pointer-events-none absolute -bottom-48 -right-32 -z-10 h-[30rem] w-[30rem] rounded-full bg-[#efc6bd]/55 blur-3xl"
         animate={{ x: [0, -60, 0], y: [0, -40, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(var(--color-paper)_1px,transparent_1px)] [background-size:22px_22px]"
       />
 
       <motion.div
@@ -96,7 +92,7 @@ export default function LoginForm() {
         <section className="flex flex-col gap-6">
           <motion.div variants={item} className="flex items-center gap-3">
             <Logo className="h-11 w-auto" priority />
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/50">
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/70">
               Life tracker
             </span>
           </motion.div>
@@ -107,7 +103,7 @@ export default function LoginForm() {
           >
             {now ? greeting(now.getHours()) : "Welcome back"}.
             <br />
-            <span className="italic text-ember">Let&apos;s begin.</span>
+            <span className="italic">Let&apos;s begin.</span>
           </motion.h1>
 
           <motion.div variants={item} className="h-6">
@@ -116,7 +112,7 @@ export default function LoginForm() {
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-lg text-paper/60"
+                  className="text-lg text-paper/75"
                 >
                   {now.toLocaleDateString(undefined, {
                     weekday: "long",
@@ -131,7 +127,7 @@ export default function LoginForm() {
 
           <motion.ul
             variants={item}
-            className="mt-2 hidden flex-wrap gap-2 text-sm text-paper/60 md:flex"
+            className="mt-2 hidden flex-wrap gap-2 text-sm text-paper/80 md:flex"
           >
             {["Daily tasks", "Habits", "Money", "Notes"].map((label, i) => (
               <motion.li
@@ -139,7 +135,7 @@ export default function LoginForm() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.7 + i * 0.08 }}
-                className="rounded-full border border-paper/15 px-3 py-1"
+                className="rounded-full border border-glass-edge bg-glass px-3 py-1 backdrop-blur-md"
               >
                 {label}
               </motion.li>
@@ -151,7 +147,7 @@ export default function LoginForm() {
         <motion.section variants={item}>
           <motion.div
             animate={shake}
-            className="rounded-3xl border border-paper/10 bg-paper/[0.04] p-6 shadow-2xl shadow-black/10 dark:shadow-black/40 backdrop-blur-xl sm:p-8"
+            className="card glass-strong rounded-[28px] p-6 shadow-2xl shadow-[rgb(120_90_70/0.25)] dark:shadow-black/40 sm:p-8"
           >
             <h2 className="font-bold tracking-tight text-3xl">Sign in</h2>
             <p className="mt-1 text-sm text-paper/50">
@@ -168,7 +164,7 @@ export default function LoginForm() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="h-12 rounded-xl border border-paper/10 bg-ink px-3 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                  className="h-12 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                   placeholder="you@example.com"
                 />
               </label>
@@ -183,7 +179,7 @@ export default function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="h-12 w-full rounded-xl border border-paper/10 bg-ink px-3 pr-16 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                    className="h-12 w-full rounded-xl border border-paper/10 bg-inset px-3 pr-16 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                     placeholder="••••••••"
                   />
                   <button

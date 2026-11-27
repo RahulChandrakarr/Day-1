@@ -164,7 +164,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             </div>
 
             {blockWeekNow && !day.rest && (
-              <p className="mb-4 rounded-2xl border border-paper/10 bg-ink px-3 py-2 text-sm text-paper/60">
+              <p className="mb-4 rounded-2xl border border-paper/10 bg-inset px-3 py-2 text-sm text-paper/60">
                 {blockWeekNow.advice}
               </p>
             )}

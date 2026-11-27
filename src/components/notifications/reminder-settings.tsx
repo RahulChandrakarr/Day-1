@@ -215,7 +215,7 @@ export default function ReminderSettings({
             <li
               className={`flex flex-wrap items-center gap-3 rounded-inset border p-3 transition ${
                 pinned.enabled
-                  ? "border-paper/15 bg-ink"
+                  ? "border-paper/15 bg-inset"
                   : "border-paper/10 opacity-70"
               }`}
             >
@@ -253,7 +253,7 @@ export default function ReminderSettings({
                 key={reminder.kind}
                 className={`flex flex-wrap items-center gap-3 rounded-inset border p-3 transition ${
                   setting.enabled
-                    ? "border-paper/15 bg-ink"
+                    ? "border-paper/15 bg-inset"
                     : "border-paper/10 opacity-70"
                 }`}
               >
@@ -273,7 +273,7 @@ export default function ReminderSettings({
                       update(reminder.kind, { hour, minute });
                   }}
                   aria-label={`${reminder.title} time`}
-                  className="h-10 rounded-xl border border-paper/10 bg-ink px-3 text-sm text-paper outline-none focus:border-ember/70"
+                  className="h-10 rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none focus:border-ember/70"
                 />
                 <button
                   type="button"

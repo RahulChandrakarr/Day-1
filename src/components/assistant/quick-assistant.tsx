@@ -370,7 +370,7 @@ export default function QuickAssistant({ name }: { name: string }) {
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.15 }}
             style={{ width: bubbleWidth, left: bubbleLeft }}
-            className={`absolute card p-3 text-sm shadow-xl ${
+            className={`absolute card glass-strong p-3 text-sm shadow-xl ${
               below ? "top-[4.25rem]" : "bottom-[4.25rem]"
             }`}
           >
@@ -432,7 +432,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                   maxLength={2000}
                   placeholder="Add ₹120 for groceries…"
                   aria-label="Your request"
-                  className="h-10 min-w-0 flex-1 rounded-xl border border-paper/10 bg-ink px-3 text-sm outline-none focus:border-ember/70"
+                  className="h-10 min-w-0 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-sm outline-none focus:border-ember/70"
                 />
                 <button
                   type="submit"

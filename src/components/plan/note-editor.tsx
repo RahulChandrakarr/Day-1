@@ -346,7 +346,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   });
 
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-0.5 overflow-x-auto border-b border-paper/10 bg-surface/95 px-2 py-1.5 backdrop-blur sm:px-4">
+    <div className="sticky top-0 z-10 flex items-center gap-0.5 overflow-x-auto border-b border-glass-edge bg-glass-strong px-2 py-1.5 backdrop-blur-xl sm:px-4">
       <Tool label="Undo" onClick={() => editor.chain().focus().undo().run()} disabled={!s.canUndo}><span className="text-base">↺</span></Tool>
       <Tool label="Redo" onClick={() => editor.chain().focus().redo().run()} disabled={!s.canRedo}><span className="text-base">↻</span></Tool>
       <Divider />
@@ -452,7 +452,7 @@ function SlashMenu({ menu, onHover }: { menu: SlashState; onHover: (index: numbe
       role="listbox"
       aria-label="Blocks"
       style={style}
-      className="fixed z-40 max-h-80 w-64 overflow-y-auto rounded-xl card p-1 shadow-xl"
+      className="fixed z-40 max-h-80 w-64 overflow-y-auto rounded-xl card glass-strong p-1 shadow-xl"
     >
       {menu.items.length === 0 ? (
         <p className="px-3 py-2 text-sm text-paper/45">No matching block</p>
@@ -470,7 +470,7 @@ function SlashMenu({ menu, onHover }: { menu: SlashState; onHover: (index: numbe
             }}
             className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${i === menu.index ? "bg-paper/[0.07]" : ""}`}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-paper/10 bg-ink text-sm font-semibold text-paper/70">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-paper/10 bg-inset text-sm font-semibold text-paper/70">
               {block.icon}
             </span>
             <span className="min-w-0">

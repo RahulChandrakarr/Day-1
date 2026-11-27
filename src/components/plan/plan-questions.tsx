@@ -43,7 +43,7 @@ export default function PlanQuestions({
               setSaved(false);
             }}
             onBlur={() => save(values)}
-            className="h-9 rounded-lg border border-paper/10 bg-ink px-2.5 text-sm outline-none focus:border-ember/70"
+            className="h-9 rounded-lg border border-paper/10 bg-inset px-2.5 text-sm outline-none focus:border-ember/70"
           />
         </li>
       ))}
