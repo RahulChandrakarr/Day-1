@@ -214,6 +214,48 @@ export default function JournalEditor({
                 })}
               </div>
             </div>
+
+            {/* The workday on its own: the office can feel different from the day */}
+            <div className="mt-4 border-t border-paper/[0.06] pt-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/65">
+                Mood in the office
+              </p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {MOODS.map((m) => {
+                  const active = entry.office_mood === m.value;
+                  return (
+                    <motion.button
+                      key={m.value}
+                      type="button"
+                      whileTap={{ scale: 0.92 }}
+                      aria-pressed={active}
+                      aria-label={`Office mood: ${m.label}`}
+                      onClick={() => update({ office_mood: active ? null : m.value })}
+                      className={`flex flex-col items-center gap-1 rounded-2xl border py-2 transition ${
+                        active ? "border-ember/60 bg-ember/15" : "border-paper/10 hover:bg-paper/5"
+                      }`}
+                    >
+                      <span className={`text-2xl transition ${active ? "" : "grayscale-[40%]"}`}>
+                        {m.emoji}
+                      </span>
+                      <span className="text-[11px] text-paper/72">{m.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              <label className="mt-3 block">
+                <span className="mb-1.5 block text-xs font-medium text-paper/70">
+                  How did the day go at the office?
+                </span>
+                <AutoTextarea
+                  value={entry.office_notes}
+                  maxLength={4000}
+                  minRows={2}
+                  onChange={(office_notes) => update({ office_notes })}
+                  placeholder="Meetings, wins, what got in the way…"
+                />
+              </label>
+            </div>
           </Card>
 
           <Card

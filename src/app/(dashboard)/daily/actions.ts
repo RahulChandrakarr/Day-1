@@ -33,6 +33,8 @@ export async function saveJournal(
     entry_date: entry.entry_date,
     mood: scale(entry.mood),
     energy: scale(entry.energy),
+    office_mood: scale(entry.office_mood),
+    office_notes: text(entry.office_notes, 4000),
     gratitude: (Array.isArray(entry.gratitude) ? entry.gratitude : [])
       .slice(0, 3)
       .map((g) => text(g, 300)),

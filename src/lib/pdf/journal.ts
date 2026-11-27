@@ -35,9 +35,12 @@ export async function journalReport(month: string) {
   for (const entry of entries) {
     const mood = MOODS.find((m) => m.value === entry.mood)?.label;
     const energy = entry.energy ? ENERGY[entry.energy - 1] : null;
+    const office = MOODS.find((m) => m.value === entry.office_mood)?.label;
     pdf.heading(
       formatFullDate(entry.entry_date),
-      [mood && `Mood: ${mood}`, energy && `Energy: ${energy}`].filter(Boolean).join(" · "),
+      [mood && `Mood: ${mood}`, energy && `Energy: ${energy}`, office && `Office: ${office}`]
+        .filter(Boolean)
+        .join(" · "),
     );
 
     const todo = entry.priorities.filter((p) => p.text.trim());
@@ -55,6 +58,7 @@ export async function journalReport(month: string) {
       for (const g of gratitude) pdf.text(`•  ${g}`, { indent: 8 });
     }
     const sections: [string, string][] = [
+      ["Office", entry.office_notes],
       ["Notes", entry.notes],
       ["Wins", entry.wins],
       ["Lessons", entry.lessons],

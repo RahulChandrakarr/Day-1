@@ -14,6 +14,8 @@ export type JournalEntry = {
   entry_date: string; // YYYY-MM-DD
   mood: number | null; // 1-5
   energy: number | null; // 1-5
+  office_mood: number | null; // 1-5, the mood in the office
+  office_notes: string; // how the office day went
   gratitude: string[]; // up to 3
   priorities: Priority[]; // any number, in order
   habits_done: string[];
@@ -40,6 +42,8 @@ export function emptyEntry(date: string): JournalEntry {
     entry_date: date,
     mood: null,
     energy: null,
+    office_mood: null,
+    office_notes: "",
     gratitude: ["", "", ""],
     priorities: [
       { text: "", done: false },
@@ -78,5 +82,6 @@ export function normalizeEntry(
     wins: row.wins ?? "",
     lessons: row.lessons ?? "",
     tomorrow: row.tomorrow ?? "",
+    office_notes: row.office_notes ?? "",
   };
 }

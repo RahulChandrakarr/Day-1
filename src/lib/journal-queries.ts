@@ -8,7 +8,7 @@ import {
 } from "@/lib/journal";
 
 const ENTRY_COLUMNS =
-  "entry_date, mood, energy, gratitude, priorities, habits_done, notes, wins, lessons, tomorrow";
+  "entry_date, mood, energy, office_mood, office_notes, gratitude, priorities, habits_done, notes, wins, lessons, tomorrow";
 
 export async function getJournalEntry(date: string) {
   const supabase = await createClient();
