@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { setNotePinned } from "@/app/(dashboard)/plan/actions";
 import { Empty, inputClass, primaryButtonClass } from "@/components/ui/kit";
 import type { Note } from "@/lib/plans";
@@ -31,10 +30,15 @@ function preview(body: string) {
     .trim();
 }
 
-export default function NotesBoard({ notes }: { notes: Note[] }) {
-  const router = useRouter();
+export default function NotesBoard({ notes: saved }: { notes: Note[] }) {
   const [query, setQuery] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  // A pin moves the card at once; the server's order follows
+  const [notes, flip] = useOptimistic(saved, (current: Note[], id: string) =>
+    current
+      .map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n))
+      .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated_at.localeCompare(a.updated_at)),
+  );
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,8 +51,8 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
 
   function togglePin(note: Note) {
     startTransition(async () => {
+      flip(note.id);
       await setNotePinned(note.id, !note.pinned);
-      router.refresh();
     });
   }
 
@@ -94,11 +98,10 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
                     <button
                       type="button"
                       onClick={() => togglePin(note)}
-                      disabled={pending}
                       aria-pressed={note.pinned}
                       aria-label={note.pinned ? "Unpin note" : "Pin note"}
                       title={note.pinned ? "Unpin" : "Pin to top"}
-                      className={`relative z-10 shrink-0 rounded-full px-2 py-1 text-sm transition ${
+                      className={`relative z-10 -mr-1.5 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm transition ${
                         note.pinned ? "bg-ember/15" : "opacity-40 hover:opacity-100"
                       }`}
                     >

@@ -78,8 +78,6 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
         </DarkCard>
       )}
 
-      {(year === 2026 || year === 2027) && <LoanPlan />}
-
       <GoalSheet year={year} label="＋ New goal" />
 
       {goals.length === 0 ? (
@@ -166,7 +164,17 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                     })}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <Link
+                      href={`/plan/month?month=${
+                        goalActiveIn(goal, currentMonth)
+                          ? currentMonth
+                          : goalMonths(goal)[0]
+                      }`}
+                      className="-ml-1 flex h-10 items-center rounded-full px-3 text-sm font-semibold text-ember hover:bg-ember/10"
+                    >
+                      Plan this month →
+                    </Link>
                     {goal.target_value && (
                       <SplitButton
                         goal={goal}
@@ -176,19 +184,9 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                             ? currentMonth
                             : goalMonths(goal)[0]
                         }
-                        label="Split evenly across months"
+                        label="Split across months"
                       />
                     )}
-                    <Link
-                      href={`/plan/month?month=${
-                        goalActiveIn(goal, currentMonth)
-                          ? currentMonth
-                          : goalMonths(goal)[0]
-                      }`}
-                      className="rounded-full px-3 py-1.5 text-xs font-semibold text-ember hover:bg-ember/10"
-                    >
-                      Plan this month →
-                    </Link>
                   </div>
 
                   {goal.target_value && goalActiveIn(goal, currentMonth) && (
@@ -202,6 +200,8 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
           })}
         </ul>
       )}
+
+      {(year === 2026 || year === 2027) && <LoanPlan />}
     </Stack>
   );
 }

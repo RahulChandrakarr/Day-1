@@ -2,7 +2,7 @@ import PeriodNav from "@/components/finance/period-nav";
 import { LogProgress } from "@/components/plan/goal-actions";
 import ItemList from "@/components/plan/item-list";
 import ProgressBar from "@/components/plan/progress-bar";
-import { Card, CardGrid, DarkCard, Empty, Section, Stack } from "@/components/ui/kit";
+import { Card, CardGrid, Empty, Section, Stack } from "@/components/ui/kit";
 import {
   addDays,
   formatFullDate,
@@ -18,6 +18,9 @@ import {
 } from "@/lib/plans";
 import LoanPlan, { LOAN_PLAN_TITLE } from "@/components/plan/loan-plan";
 import { getPlanYear } from "@/lib/plan-queries";
+
+const doneLabel = (done: number, total: number) =>
+  total === 0 ? undefined : done === total ? "All done 🎉" : `${done} of ${total} done`;
 
 export default async function PlanTodayPage({
   searchParams,
@@ -40,23 +43,21 @@ export default async function PlanTodayPage({
       activeGoalIds.has(i.goal_id) &&
       !loanIds.has(i.goal_id),
   );
-  const done = dayItems.filter((i) => i.done).length;
 
   const week = weekOfMonth(date);
   const numeric = goals.filter((g) => g.target_value);
+  const isToday = date === today;
 
   return (
     <Stack>
       <PeriodNav
-        label={date === today ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
+        label={isToday ? `Today · ${formatFullDate(date)}` : formatFullDate(date)}
         prevHref={`/plan?date=${addDays(date, -1)}`}
         nextHref={`/plan?date=${addDays(date, 1)}`}
         currentHref="/plan"
-        isCurrent={date === today}
+        isCurrent={isToday}
         currentLabel="Today"
       />
-
-      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
 
       {goals.length === 0 ? (
         <Empty href="/plan/year">
@@ -65,57 +66,51 @@ export default async function PlanTodayPage({
             : "No goals run in this month. Check the start and end months on the Year tab →"}
         </Empty>
       ) : (
-        <>
-          <DarkCard>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.1em] text-ember">
-              {dayItems.length === 0
-                ? "Nothing planned yet"
-                : done === dayItems.length
-                  ? "Day complete 🎉"
-                  : `${done} of ${dayItems.length} done`}
-            </p>
-            <p className="mt-0.5 text-[13px] text-ink/80">
-              Week {week} of the month. Every task here moves a yearly goal.
-            </p>
-          </DarkCard>
+        <CardGrid align="start">
+          <Section
+            title={isToday ? "Today's tasks" : "Tasks"}
+            aside={doneLabel(dayItems.filter((i) => i.done).length, dayItems.length)}
+          >
+            <Card className="py-2">
+              <ItemList
+                goals={goals}
+                level="day"
+                period={date}
+                items={dayItems}
+                placeholder={isToday ? "What will you do today?" : "Add a task"}
+                showGoal
+                voice
+              />
+            </Card>
+          </Section>
 
-          <CardGrid>
-            {monthItems.length > 0 && (
-              <Section title="Milestones" href={`/plan/month?month=${month}`} link="Month">
-                <Card>
-                  <ItemList
-                    goals={goals}
-                    level="month"
-                    period={month}
-                    items={monthItems}
-                    placeholder="Add a milestone for this month"
-                    showGoal
-                  />
-                </Card>
-              </Section>
-            )}
-            <Section title="Tasks" href={`/plan/week?month=${month}&week=${week}`} link="Week">
-              <Card>
+          {monthItems.length > 0 && (
+            <Section
+              title="This month"
+              aside={doneLabel(monthItems.filter((i) => i.done).length, monthItems.length)}
+            >
+              <Card className="py-2">
                 <ItemList
                   goals={goals}
-                  level="day"
-                  period={date}
-                  items={dayItems}
-                  placeholder="What will you do today?"
+                  level="month"
+                  period={month}
+                  items={monthItems}
+                  placeholder="Add a milestone"
                   showGoal
                 />
               </Card>
             </Section>
+          )}
 
-            {numeric.length > 0 && (
-              <Section title="Log progress">
-                <ul className="flex flex-col gap-2">
-                {numeric.map((goal) => {
-                  const p = goalProgress(goal, items, logs, { month, week });
-                  const dayTarget = periodTarget(goal, items, { day: date });
-                  return (
-                    <li key={goal.id}>
-                      <Card>
+          {numeric.length > 0 && (
+            <Section title="Log progress" aside="This week">
+              <Card className="py-1">
+                <ul className="divide-y divide-paper/[0.06]">
+                  {numeric.map((goal) => {
+                    const p = goalProgress(goal, items, logs, { month, week });
+                    const dayTarget = periodTarget(goal, items, { day: date });
+                    return (
+                      <li key={goal.id} className="py-4">
                         <div className="mb-1.5 flex items-baseline justify-between gap-2">
                           <p className="min-w-0 truncate text-sm font-semibold">
                             {goal.emoji} {goal.title}
@@ -127,18 +122,20 @@ export default async function PlanTodayPage({
                           )}
                         </div>
                         <ProgressBar progress={p} unit={goal.unit} />
-                        <p className="mb-2 mt-0.5 text-xs text-paper/55">This week</p>
-                        <LogProgress goal={goal} date={date} />
-                      </Card>
-                    </li>
-                  );
-                })}
+                        <div className="mt-2.5">
+                          <LogProgress goal={goal} date={date} />
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
-              </Section>
-            )}
-          </CardGrid>
-        </>
+              </Card>
+            </Section>
+          )}
+        </CardGrid>
       )}
+
+      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
     </Stack>
   );
 }

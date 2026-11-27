@@ -5,6 +5,7 @@ import Highlight from "@tiptap/extension-highlight";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
+import { Selection } from "@tiptap/pm/state";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
@@ -12,7 +13,7 @@ import Suggestion, { type SuggestionKeyDownProps } from "@tiptap/suggestion";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { deleteNote, saveNote } from "@/app/(dashboard)/plan/actions";
-import VoiceInput from "@/components/journal/voice-input";
+import { VoiceDock } from "@/components/journal/voice-input";
 import type { Note } from "@/lib/plans";
 
 type Block = {
@@ -136,6 +137,18 @@ export default function NoteEditor({ note }: { note: Note | null }) {
   // The row id once the note exists; a ref so an in-flight first save is seen
   const idRef = useRef(note?.id);
   const saving = useRef<Promise<void> | null>(null);
+  // Saves skip re-rendering this page (see saveNote), so once something is
+  // saved the notes list is refreshed on the way out, however you leave
+  const savedSomething = useRef(false);
+  // Whether you've put the cursor in the note; until then, dictation adds to the end
+  const touched = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (savedSomething.current) router.refresh();
+    },
+    [router],
+  );
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -158,6 +171,12 @@ export default function NoteEditor({ note }: { note: Note | null }) {
     contentType: "markdown",
     editorProps: {
       attributes: { class: "note-content", "aria-label": "Note" },
+      // Keep the line you're on clear of the floating mic at the bottom
+      scrollThreshold: { top: 80, bottom: 150, left: 0, right: 0 },
+      scrollMargin: { top: 80, bottom: 150, left: 0, right: 0 },
+    },
+    onFocus: () => {
+      touched.current = true;
     },
     onUpdate: () => setStatus("dirty"),
   });
@@ -173,13 +192,14 @@ export default function NoteEditor({ note }: { note: Note | null }) {
     }
     setStatus("saving");
     saving.current = (async () => {
-      const result = await saveNote({ id, title, body, pinned });
+      const result = await saveNote({ id, title, body, pinned }, { quiet: true });
       if (!result.ok) {
         setError(result.error);
         setStatus("error");
         return;
       }
       setError(null);
+      savedSomething.current = true;
       setSavedAt(new Date().toISOString());
       setStatus((s) => (s === "saving" ? "saved" : s));
       if (!id) {
@@ -209,7 +229,26 @@ export default function NoteEditor({ note }: { note: Note | null }) {
   async function back() {
     if (status === "dirty" || status === "saving") await save();
     router.push("/plan/notes");
-    router.refresh();
+  }
+
+  // Spoken words go where the cursor is, or at the end if you haven't put it
+  // anywhere yet. The note isn't focused for it, so the phone's keyboard stays
+  // down while you talk, and the new words are scrolled into view above the mic.
+  function dictate(spoken: string) {
+    if (!editor) return;
+    const { state } = editor;
+    const at = touched.current ? state.selection.from : Selection.atEnd(state.doc).from;
+    const before = state.doc.textBetween(Math.max(0, at - 1), at, "\n", "\n");
+    const text = `${before && !/\s/.test(before) ? " " : ""}${spoken}`;
+    editor.chain().insertContentAt(at, { type: "text", text }).run();
+    touched.current = true;
+    requestAnimationFrame(() => {
+      const caret = editor.view.coordsAtPos(editor.state.selection.head);
+      const vv = window.visualViewport;
+      const visibleBottom = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 160;
+      if (caret.bottom > visibleBottom)
+        window.scrollBy({ top: caret.bottom - visibleBottom, behavior: "smooth" });
+    });
   }
 
   function remove() {
@@ -220,14 +259,14 @@ export default function NoteEditor({ note }: { note: Note | null }) {
     }
     if (!confirm("Delete this note?")) return;
     startDelete(async () => {
-      const result = await deleteNote(id);
+      const result = await deleteNote(id, { quiet: true });
       if (!result.ok) {
         setError(result.error);
         return;
       }
       setStatus("saved");
+      savedSomething.current = true;
       router.push("/plan/notes");
-      router.refresh();
     });
   }
 
@@ -282,7 +321,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
 
       {editor && <Toolbar editor={editor} />}
 
-      <div className="mx-auto w-full max-w-3xl px-4 pb-24 pt-6 sm:px-8 sm:pt-10">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-40 pt-6 sm:px-8 sm:pt-10">
         <input
           autoFocus={!note}
           value={title}
@@ -311,6 +350,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
       </div>
 
       {editor && <SelectionMenu editor={editor} />}
+      {editor && <VoiceDock onText={dictate} />}
 
       {menu && menu.rect && (
         <SlashMenu
@@ -376,9 +416,6 @@ function Toolbar({ editor }: { editor: Editor }) {
       <Tool label="Quote" active={s.quote} onClick={() => editor.chain().focus().toggleBlockquote().run()}>❝</Tool>
       <Tool label="Code block" active={s.code} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>{"</>"}</Tool>
       <Tool label="Divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>—</Tool>
-      <div className="ml-auto shrink-0 pl-2">
-        <VoiceInput onText={(spoken) => editor.chain().focus().insertContent(`${spoken} `).run()} />
-      </div>
     </div>
   );
 }

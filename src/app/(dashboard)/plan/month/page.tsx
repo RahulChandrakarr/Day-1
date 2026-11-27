@@ -53,8 +53,6 @@ export default async function PlanMonthPage({
         <PdfLink variant="icon" href={`/api/reports/plan?month=${month}`} label="Month PDF" />
       </PeriodNav>
 
-      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
-
       {goals.length === 0 ? (
         <Empty href="/plan/year">
           {allGoals.length === 0
@@ -62,7 +60,7 @@ export default async function PlanMonthPage({
             : "No goals run in this month. Check the start and end months on the Year tab →"}
         </Empty>
       ) : (
-        <CardGrid layout="triple">
+        <CardGrid layout="triple" align="start">
           {goals
             .filter((goal) => goal.title !== LOAN_PLAN_TITLE)
             .map((goal) => {
@@ -88,19 +86,28 @@ export default async function PlanMonthPage({
                 <ProgressBar progress={p} unit={goal.unit} elapsed={elapsed} />
               </div>
 
-              <p className="mb-1 mt-4 text-xs font-medium text-paper/65">
-                This month&apos;s milestones
-              </p>
+              <p className="mt-4 text-xs font-medium text-paper/65">Milestones</p>
               <ItemList
                 goal={goal}
                 level="month"
                 period={month}
                 items={monthItems}
-                placeholder="Add a milestone for this month"
+                placeholder="Add a milestone"
                 allowTarget
               />
 
-              <p className="mb-2 mt-4 text-xs font-medium text-paper/65">Weeks</p>
+              <div className="mb-2 mt-4 flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-paper/65">Weeks</p>
+                {(goal.target_value ||
+                  monthItems.some((i) => i.target_value !== null)) && (
+                  <SplitButton
+                    goal={goal}
+                    mode="weeks"
+                    period={month}
+                    label="Split into 4 weeks"
+                  />
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {WEEKS.map((week) => {
                   const wp = goalProgress(goal, items, logs, { month, week });
@@ -134,17 +141,6 @@ export default async function PlanMonthPage({
                 })}
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {(goal.target_value ||
-                  monthItems.some((i) => i.target_value !== null)) && (
-                  <SplitButton
-                    goal={goal}
-                    mode="weeks"
-                    period={month}
-                    label="Split month into 4 weeks"
-                  />
-                )}
-              </div>
               {goal.target_value && isCurrent && (
                 <div className="mt-3">
                   <LogProgress goal={goal} date={today} />
@@ -155,6 +151,8 @@ export default async function PlanMonthPage({
           })}
         </CardGrid>
       )}
+
+      {month >= "2026-10" && month <= "2027-02" && <LoanPlan month={month} />}
     </Stack>
   );
 }

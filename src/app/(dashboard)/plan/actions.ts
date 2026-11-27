@@ -236,7 +236,10 @@ export async function addItem(input: {
     period: input.period,
     title,
     target_value: amountOrNull(input.target_value),
-    position: Date.now() % 1_000_000,
+    // Seconds since late 2023: always larger than anything added before, so a
+    // new item lands at the end of its list (it fits the integer column
+    // until the 2090s)
+    position: Math.floor(Date.now() / 1000) - 1_700_000_000,
   });
   if (error)
     return {
@@ -338,12 +341,18 @@ export async function deleteProgress(id: string): Promise<Result> {
 // ---------------------------------------------------------------------------
 // Notes
 // ---------------------------------------------------------------------------
-export async function saveNote(input: {
-  id?: string;
-  title: string;
-  body: string;
-  pinned?: boolean;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+// `quiet` is for the editor's autosave: it skips asking the open page to
+// re-render, which would rebuild the editor (and drop the cursor) mid-sentence.
+// The editor refreshes the notes list itself when you leave it.
+export async function saveNote(
+  input: {
+    id?: string;
+    title: string;
+    body: string;
+    pinned?: boolean;
+  },
+  options: { quiet?: boolean } = {},
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const title = clean(input.title, 120);
   const body = String(input.body ?? "").slice(0, 50000);
   if (!title && !body.trim()) return { ok: false, error: "The note is empty." };
@@ -358,12 +367,12 @@ export async function saveNote(input: {
     if (!uuid.test(input.id)) return { ok: false, error: "Unknown note." };
     const { error } = await supabase.from("notes").update(row).eq("id", input.id);
     if (error) return { ok: false, error: error.message };
-    revalidatePath("/plan/notes", "layout");
+    if (!options.quiet) revalidatePath("/plan/notes", "layout");
     return { ok: true, id: input.id };
   }
   const { data, error } = await supabase.from("notes").insert(row).select("id").single();
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/plan/notes", "layout");
+  if (!options.quiet) revalidatePath("/plan/notes", "layout");
   return { ok: true, id: data.id };
 }
 
@@ -376,11 +385,16 @@ export async function setNotePinned(id: string, pinned: boolean): Promise<Result
   return { ok: true };
 }
 
-export async function deleteNote(id: string): Promise<Result> {
+// `quiet`: the editor deletes the note it is showing and then leaves, so the
+// open page must not re-render first (it would flash "not found")
+export async function deleteNote(
+  id: string,
+  options: { quiet?: boolean } = {},
+): Promise<Result> {
   if (!uuid.test(id)) return { ok: false, error: "Unknown note." };
   const supabase = await authedClient();
   const { error } = await supabase.from("notes").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
-  revalidatePath("/plan/notes", "layout");
+  if (!options.quiet) revalidatePath("/plan/notes", "layout");
   return { ok: true };
 }

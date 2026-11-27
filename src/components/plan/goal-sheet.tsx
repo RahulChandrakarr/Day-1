@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { deleteGoal, saveGoal } from "@/app/(dashboard)/plan/actions";
-import VoiceInput from "@/components/journal/voice-input";
+import VoiceInput, { joinSpoken } from "@/components/journal/voice-input";
 import Sheet from "@/components/ui/sheet";
-import { Field, inputClass, primaryButtonClass } from "@/components/ui/kit";
+import { Field, inputClass, labelClass, primaryButtonClass } from "@/components/ui/kit";
 
 // Buttons that open the sheet (a server page can't pass a render function)
 const TRIGGERS = {
@@ -29,8 +28,9 @@ export default function GoalSheet({
   label: string;
   variant?: keyof typeof TRIGGERS;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const notesBox = useRef<HTMLTextAreaElement>(null);
+  const notesId = useId();
   const [title, setTitle] = useState(goal?.title ?? "");
   const [emoji, setEmoji] = useState(goal?.emoji ?? "🎯");
   const [notes, setNotes] = useState(goal?.notes ?? "");
@@ -65,13 +65,13 @@ export default function GoalSheet({
         setError(result.error);
         return;
       }
+      // saveGoal re-renders the page with the reply, so it is already fresh
       setOpen(false);
       if (!goal) {
         setTitle("");
         setNotes("");
         setTarget("");
       }
-      router.refresh();
     });
   }
 
@@ -79,10 +79,8 @@ export default function GoalSheet({
     if (!goal || !confirm(`Delete "${goal.title}" and its whole breakdown?`)) return;
     startTransition(async () => {
       const result = await deleteGoal(goal.id);
-      if (result.ok) {
-        setOpen(false);
-        router.refresh();
-      } else setError(result.error);
+      if (result.ok) setOpen(false);
+      else setError(result.error);
     });
   }
 
@@ -219,27 +217,35 @@ export default function GoalSheet({
             follows the tasks you tick.
           </p>
 
-          <Field label="Plan notes" hint="what and how">
-            <div className="relative">
-              <textarea
-                value={notes}
-                rows={8}
-                maxLength={20000}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={"Why this matters, the approach, milestones, rules…\n\n• Q1: …\n• Q2: …"}
-                className={`${inputClass} h-auto resize-y py-2.5 pb-16 leading-relaxed`}
+          {/* The mic sits on the label's row, not over the text, so it never
+              covers what you're writing or moves as the notes grow */}
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex min-h-9 items-center justify-between gap-2">
+              <label htmlFor={notesId} className={`${labelClass} shrink-0`}>
+                Plan notes <span className="ml-1 text-paper/50">what and how</span>
+              </label>
+              <VoiceInput
+                onText={(spoken) => {
+                  setNotes((current) => joinSpoken(current, spoken).slice(0, 20000));
+                  // Show the words as they land at the end of the box
+                  requestAnimationFrame(() => {
+                    const box = notesBox.current;
+                    if (box) box.scrollTop = box.scrollHeight;
+                  });
+                }}
               />
-              <div className="absolute bottom-2 left-2 right-2 flex justify-end">
-                <VoiceInput
-                  onText={(spoken) =>
-                    setNotes((current) =>
-                      `${current}${current && !/\s$/.test(current) ? " " : ""}${spoken}`.slice(0, 20000),
-                    )
-                  }
-                />
-              </div>
             </div>
-          </Field>
+            <textarea
+              id={notesId}
+              ref={notesBox}
+              value={notes}
+              rows={7}
+              maxLength={20000}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={"Why this matters, the approach, milestones, rules…\n\n• Q1: …\n• Q2: …"}
+              className={`${inputClass} h-auto resize-y py-2.5 leading-relaxed`}
+            />
+          </div>
 
           {error && (
             <p role="alert" className="text-sm text-red-700 dark:text-red-300">
