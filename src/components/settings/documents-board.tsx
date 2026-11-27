@@ -83,7 +83,7 @@ export default function DocumentsBoard({
               className={`h-9 shrink-0 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition ${
                 active
                   ? "bg-paper text-ink"
-                  : "card text-paper/65"
+                  : "card text-paper/75"
               }`}
             >
               {f ?? "All"}
@@ -173,7 +173,7 @@ function DocumentItem({ doc, folders }: { doc: DocumentRow; folders: string[] })
           >
             {doc.name}
           </button>
-          <p className="truncate text-xs text-paper/50">
+          <p className="truncate text-xs text-paper/65">
             {doc.folder} · {sizeText(doc.size)} · {formatShortDate(doc.created_at.slice(0, 10))}
           </p>
         </div>
@@ -182,7 +182,7 @@ function DocumentItem({ doc, folders }: { doc: DocumentRow; folders: string[] })
           onClick={() => open(true)}
           aria-label={`Download ${doc.name}`}
           title="Download"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-paper/60 transition hover:bg-paper/10 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-paper/72 transition hover:bg-paper/10 hover:text-paper"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
@@ -194,7 +194,7 @@ function DocumentItem({ doc, folders }: { doc: DocumentRow; folders: string[] })
           aria-label={`Edit ${doc.name}`}
           aria-expanded={editing}
           title="More"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg text-paper/60 transition hover:bg-paper/10 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg text-paper/72 transition hover:bg-paper/10 hover:text-paper"
         >
           ⋯
         </button>
@@ -329,7 +329,7 @@ function UploadSheet({
           <span className="max-w-full truncate text-sm font-medium">
             {file ? file.name : "Choose a PDF or photo"}
           </span>
-          <span className="text-xs text-paper/50">
+          <span className="text-xs text-paper/65">
             {file ? sizeText(file.size) : "Up to 10 MB"}
           </span>
         </button>
@@ -355,7 +355,7 @@ function UploadSheet({
         </Field>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-paper/55">Folder</span>
+          <span className="text-xs font-medium text-paper/70">Folder</span>
           <div className="flex flex-wrap gap-2">
             {folders.map((f) => (
               <button
@@ -368,7 +368,7 @@ function UploadSheet({
                 className={`h-9 rounded-full px-3 text-[13px] font-medium transition ${
                   folder === f && !newFolder
                     ? "bg-paper text-ink"
-                    : "border border-paper/10 text-paper/65"
+                    : "border border-paper/10 text-paper/75"
                 }`}
               >
                 {f}

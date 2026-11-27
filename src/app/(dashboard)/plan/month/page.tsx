@@ -79,7 +79,7 @@ export default async function PlanMonthPage({
                   {goal.emoji} {goal.title}
                 </h3>
                 {target !== null && (
-                  <span className="shrink-0 text-xs text-paper/50">
+                  <span className="shrink-0 text-xs text-paper/65">
                     target {formatAmount(target, goal.unit)}
                   </span>
                 )}
@@ -88,7 +88,7 @@ export default async function PlanMonthPage({
                 <ProgressBar progress={p} unit={goal.unit} elapsed={elapsed} />
               </div>
 
-              <p className="mb-1 mt-4 text-xs font-medium text-paper/50">
+              <p className="mb-1 mt-4 text-xs font-medium text-paper/65">
                 This month&apos;s milestones
               </p>
               <ItemList
@@ -100,7 +100,7 @@ export default async function PlanMonthPage({
                 allowTarget
               />
 
-              <p className="mb-2 mt-4 text-xs font-medium text-paper/50">Weeks</p>
+              <p className="mb-2 mt-4 text-xs font-medium text-paper/65">Weeks</p>
               <div className="grid grid-cols-2 gap-2">
                 {WEEKS.map((week) => {
                   const wp = goalProgress(goal, items, logs, { month, week });
@@ -117,14 +117,14 @@ export default async function PlanMonthPage({
                     >
                       <div className="flex items-baseline justify-between text-xs">
                         <span className="font-semibold">Week {week}</span>
-                        <span className="text-paper/45">
+                        <span className="text-paper/60">
                           {Number(from.slice(8))}–{Number(to.slice(8))}
                         </span>
                       </div>
                       <div className="mt-2">
                         <ProgressBar progress={wp} unit={goal.unit} compact />
                       </div>
-                      <p className="mt-1 text-[11px] text-paper/50">
+                      <p className="mt-1 text-[11px] text-paper/65">
                         {wp.ratio === null
                           ? "Plan it →"
                           : `${Math.round((wp.ratio ?? 0) * 100)}%`}

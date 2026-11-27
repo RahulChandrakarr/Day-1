@@ -26,7 +26,7 @@ export default function HealthTabs() {
                 className={`flex h-10 items-center justify-center gap-1.5 rounded-xl text-sm font-semibold transition-colors ${
                   active
                     ? "bg-ember text-on-ember shadow-sm"
-                    : "text-paper/55 hover:text-paper"
+                    : "text-paper/70 hover:text-paper"
                 }`}
               >
                 <span>{tab.emoji}</span>

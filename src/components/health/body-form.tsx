@@ -20,9 +20,9 @@ import {
 import { Card } from "@/components/ui/kit";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
-  "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "text-xs font-medium uppercase tracking-wider text-paper/65";
 
 type Draft = {
   sex: Sex;
@@ -164,7 +164,7 @@ export default function BodyForm({
                 className={`h-9 rounded-lg text-sm font-medium capitalize transition ${
                   draft.sex === s
                     ? "bg-surface text-paper shadow-sm"
-                    : "text-paper/50 hover:text-paper"
+                    : "text-paper/65 hover:text-paper"
                 }`}
               >
                 {s}
@@ -206,7 +206,7 @@ export default function BodyForm({
       </div>
 
       <details className="group mt-4">
-        <summary className="cursor-pointer text-sm text-paper/55 transition hover:text-paper">
+        <summary className="cursor-pointer text-sm text-paper/70 transition hover:text-paper">
           Tape measurements (for the body fat estimate)
         </summary>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -246,7 +246,7 @@ export default function BodyForm({
             </Field>
           )}
         </div>
-        <p className="mt-2 text-xs text-paper/40">
+        <p className="mt-2 text-xs text-paper/55">
           Waist at the navel, neck just below the Adam&apos;s apple, relaxed.
         </p>
       </details>
@@ -335,7 +335,7 @@ export default function BodyForm({
               : "Build my 4-week plan"}
         </button>
       </div>
-      <p className="mt-2 text-xs text-paper/40">
+      <p className="mt-2 text-xs text-paper/55">
         The plan is built from your goal, level, days a week and session length,
         with weeks 1–3 getting harder and week 4 lighter to recover.
       </p>
@@ -356,7 +356,7 @@ function Field({
     <label className="flex min-w-0 flex-col gap-1.5">
       <span className={labelClass}>
         {label}
-        {suffix && <span className="ml-1 normal-case text-paper/35">({suffix})</span>}
+        {suffix && <span className="ml-1 normal-case text-paper/50">({suffix})</span>}
       </span>
       {children}
     </label>
@@ -388,14 +388,14 @@ function Choice<T extends string>({
             className={`flex h-9 items-center rounded-full border px-3 text-sm transition ${
               value === o.value
                 ? "border-paper/40 bg-paper/10 text-paper"
-                : "border-paper/10 text-paper/65 hover:bg-paper/5"
+                : "border-paper/10 text-paper/75 hover:bg-paper/5"
             }`}
           >
             {o.label}
           </button>
         ))}
       </div>
-      <span className="text-xs text-paper/40">
+      <span className="text-xs text-paper/55">
         {options.find((o) => o.value === value)?.hint}
       </span>
     </div>

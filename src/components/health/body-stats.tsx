@@ -13,7 +13,7 @@ export function WeightChart({ logs }: { logs: BodyLog[] }) {
   );
   if (points.length < 2) {
     return (
-      <p className="py-8 text-center text-sm text-paper/40">
+      <p className="py-8 text-center text-sm text-paper/55">
         Log your weight on another day to see the trend.
       </p>
     );
@@ -59,9 +59,9 @@ export function WeightChart({ logs }: { logs: BodyLog[] }) {
           />
         ))}
       </svg>
-      <div className="flex justify-between text-xs text-paper/45">
+      <div className="flex justify-between text-xs text-paper/60">
         <span>{formatShortDate(points[0].logged_on)}</span>
-        <span className={change <= 0 ? "text-moss" : "text-paper/60"}>
+        <span className={change <= 0 ? "text-moss" : "text-paper/72"}>
           {change > 0 ? "+" : ""}
           {change.toFixed(1)} kg over {points.length} entries
         </span>
@@ -81,18 +81,18 @@ export function LogList({ logs }: { logs: BodyLog[] }) {
           key={log.id}
           className="group flex items-center gap-3 border-b border-paper/5 py-2 text-sm last:border-0"
         >
-          <span className="flex-1 text-paper/60">
+          <span className="flex-1 text-paper/72">
             {formatShortDate(log.logged_on)}
           </span>
           <span className="font-medium tabular-nums">{log.weight_kg} kg</span>
           {log.waist_cm && (
-            <span className="text-xs text-paper/45">waist {log.waist_cm}</span>
+            <span className="text-xs text-paper/60">waist {log.waist_cm}</span>
           )}
           <button
             type="button"
             aria-label="Delete entry"
             onClick={() => startTransition(() => deleteBodyLog(log.id))}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
           >
             ×
           </button>

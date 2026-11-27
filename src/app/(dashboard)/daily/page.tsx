@@ -78,8 +78,8 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
                 aria-current={selected ? "date" : undefined}
                 className={`flex flex-col items-center gap-0.5 rounded-2xl border py-2 text-xs transition ${
                   selected
-                    ? "border-ember/60 bg-ember/15 text-paper"
-                    : "border-paper/10 text-paper/55 hover:bg-paper/5"
+                    ? "border-ember/50 bg-surface/90 font-semibold text-paper shadow-[0_6px_16px_-8px_rgb(120_90_70/0.4)]"
+                    : "border-glass-edge bg-glass text-paper/80 backdrop-blur-md hover:bg-glass-strong"
                 } ${d > today ? "opacity-50" : ""}`}
               >
                 <span>{weekday.format(new Date(`${d}T00:00:00Z`))}</span>

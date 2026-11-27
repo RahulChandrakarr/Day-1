@@ -105,10 +105,10 @@ export default function NotesBoard({ notes }: { notes: Note[] }) {
                       📌
                     </button>
                   </div>
-                  <p className="mt-1 line-clamp-4 flex-1 whitespace-pre-line text-sm text-paper/60">
+                  <p className="mt-1 line-clamp-4 flex-1 whitespace-pre-line text-sm text-paper/72">
                     {text || "No text yet"}
                   </p>
-                  <p className="mt-2 text-xs text-paper/35">
+                  <p className="mt-2 text-xs text-paper/50">
                     {updated.format(new Date(note.updated_at))}
                   </p>
                 </article>

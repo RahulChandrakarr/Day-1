@@ -80,9 +80,9 @@ export type EntryPerson = {
 };
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
-  "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "text-xs font-medium uppercase tracking-wider text-paper/65";
 
 const initialState: FormState = { error: null, ok: false, version: 0 };
 const FORM_ID = "add-entry-form";
@@ -365,7 +365,7 @@ function EntryForm({
           strokeWidth="2"
           aria-hidden
           animate={{ rotate: pickerOpen ? 180 : 0 }}
-          className="shrink-0 text-paper/45"
+          className="shrink-0 text-paper/60"
         >
           <path d="M6 9l6 6 6-6" />
         </motion.svg>
@@ -383,7 +383,7 @@ function EntryForm({
       className={`flex h-8 items-center gap-2 rounded-full border px-3 text-sm transition ${
         choice === value
           ? "border-paper/40 bg-paper/10 text-paper"
-          : "border-paper/10 text-paper/70 hover:bg-paper/5"
+          : "border-paper/10 text-paper/78 hover:bg-paper/5"
       }`}
     >
       <span className="h-2 w-2 rounded-full" style={{ background: color }} />
@@ -413,7 +413,7 @@ function EntryForm({
               {sorted.map((c) => option(c.id, c.name, `var(--cat-${c.color})`))}
             </div>
             <div>
-              <p className="mb-2 text-xs text-paper/40">Borrow</p>
+              <p className="mb-2 text-xs text-paper/55">Borrow</p>
               <div className="flex flex-wrap gap-2">
                 {BORROW_OPTIONS[type].map((o) =>
                   option(`borrow:${o.kind}`, o.label, "var(--ember)"),
@@ -444,7 +444,7 @@ function EntryForm({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/65 transition hover:bg-paper/10 hover:text-paper"
         >
           ×
         </button>
@@ -460,7 +460,7 @@ function EntryForm({
             className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${
               variant === tab.value
                 ? "bg-ember text-on-ember"
-                : "text-paper/55 hover:text-paper"
+                : "text-paper/70 hover:text-paper"
             }`}
           >
             {tab.label}
@@ -498,7 +498,7 @@ function EntryForm({
           </ul>
         ) : variant === "workout" && workout ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-paper/55">{workout.title}</p>
+            <p className="text-sm text-paper/70">{workout.title}</p>
             <GymChecklist
               exercises={workout.exercises}
               date={defaultDate}
@@ -769,7 +769,7 @@ function BorrowFields({
                 key={p.id}
                 type="button"
                 onClick={() => setPerson(p.name)}
-                className="rounded-full border border-paper/10 px-3 py-1 text-xs text-paper/70 transition hover:bg-paper/5"
+                className="rounded-full border border-paper/10 px-3 py-1 text-xs text-paper/78 transition hover:bg-paper/5"
               >
                 {p.name} · {balance(p)}
               </button>
@@ -777,7 +777,7 @@ function BorrowFields({
           </div>
         )}
         {match && (
-          <span className="text-xs text-paper/50">
+          <span className="text-xs text-paper/65">
             {match.name}: {balance(match)}
             {(kind === "repaid" || kind === "received") &&
               " · counts toward this month's plan"}
@@ -859,7 +859,7 @@ function SavingsFields({
         placeholder={kind === "value" ? "Worth now" : "0"}
       />
       {sip && selected?.sip_day && (
-        <p className="-mt-1 text-xs text-paper/50">
+        <p className="-mt-1 text-xs text-paper/65">
           {selected.kind === "rd" ? "RD" : "SIP"} of{" "}
           {selected.sip_amount ? formatMoney(selected.sip_amount) : "—"} on the{" "}
           {ordinal(selected.sip_day)} of every month
@@ -883,7 +883,7 @@ function SavingsFields({
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="h-9 rounded-full border border-dashed border-paper/20 px-3 text-sm text-paper/55 transition hover:text-paper"
+            className="h-9 rounded-full border border-dashed border-paper/20 px-3 text-sm text-paper/70 transition hover:text-paper"
           >
             + New account
           </button>
@@ -933,7 +933,7 @@ function EmiFields({
 
   if (options.length === 0) {
     return (
-      <p className="mt-3 text-sm text-paper/55">
+      <p className="mt-3 text-sm text-paper/70">
         Add an EMI on the EMI page first, then log installments here.
       </p>
     );
@@ -953,7 +953,7 @@ function EmiFields({
         pending={pending}
       />
       {selected && (
-        <p className="-mt-1 text-xs text-paper/50">
+        <p className="-mt-1 text-xs text-paper/65">
           {formatMoney(selected.monthly_amount)} a month ·{" "}
           {formatMoney(selected.remaining)} left
         </p>
@@ -1030,7 +1030,7 @@ function NewAccount({
 
   return (
     <div className="mt-3 flex flex-col gap-3">
-      <p className="text-sm text-paper/60">
+      <p className="text-sm text-paper/72">
         {first
           ? "First, where does this money go? Add an account, like your savings account, an FD or a SIP."
           : "Add another account."}
@@ -1073,7 +1073,7 @@ function NewAccount({
               {kind === "rd" ? "Monthly amount" : "SIP amount"}
             </span>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/40">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/55">
                 ₹
               </span>
               <input
@@ -1136,7 +1136,7 @@ function DaySelect({
         placeholder="5"
         className={`${inputClass} pr-24`}
       />
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-paper/40">
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-paper/55">
         of every month
       </span>
     </div>
@@ -1186,7 +1186,7 @@ function JournalNote({
             }`}
           >
             <span className="text-2xl">{m.emoji}</span>
-            <span className="text-[11px] text-paper/60">{m.label}</span>
+            <span className="text-[11px] text-paper/72">{m.label}</span>
           </button>
         ))}
       </div>
@@ -1211,7 +1211,7 @@ function JournalNote({
       >
         {pending ? "Saving…" : "Add to journal"}
       </button>
-      <p className="text-xs text-paper/40">
+      <p className="text-xs text-paper/55">
         Longer writing, priorities and habits live on the Daily tab.
       </p>
     </div>
@@ -1250,7 +1250,7 @@ function AmountRow({
   return (
     <div className="flex gap-2">
       <div className="relative min-w-0 flex-1">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-paper/40">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-paper/55">
           ₹
         </span>
         <input
@@ -1297,7 +1297,7 @@ function Chip({
       className={`flex h-9 items-center gap-2 rounded-full border px-3 text-sm transition ${
         selected
           ? "border-paper/40 bg-paper/10 text-paper"
-          : "border-paper/10 text-paper/70 hover:bg-paper/5"
+          : "border-paper/10 text-paper/78 hover:bg-paper/5"
       }`}
     >
       {color && (
@@ -1350,7 +1350,7 @@ export function Segmented<T extends string>({
             aria-checked={value === o.value}
             onClick={() => onChange(o.value)}
             className={`relative h-9 rounded-lg text-sm font-medium transition-colors duration-200 ${
-              value === o.value ? "text-paper" : "text-paper/50 hover:text-paper"
+              value === o.value ? "text-paper" : "text-paper/65 hover:text-paper"
             }`}
           >
             <span className="flex min-w-0 items-center justify-center gap-2 px-1">
@@ -1435,7 +1435,7 @@ function BalanceChoice({
           Don&apos;t add
         </Chip>
       </div>
-      <span className="text-xs text-paper/40">
+      <span className="text-xs text-paper/55">
         {value === "yes"
           ? "This money changes the day's net balance."
           : value === "no"

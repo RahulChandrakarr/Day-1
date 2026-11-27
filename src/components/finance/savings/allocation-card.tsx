@@ -29,8 +29,8 @@ export default function AllocationCard({ slices }: { slices: Slice[] }) {
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ background: s.color }}
             />
-            <span className="min-w-0 flex-1 truncate text-paper/70">{s.label}</span>
-            <span className="shrink-0 tabular-nums text-paper/50">
+            <span className="min-w-0 flex-1 truncate text-paper/78">{s.label}</span>
+            <span className="shrink-0 tabular-nums text-paper/65">
               {Math.round((s.value / total) * 100)}%
             </span>
             <span className="shrink-0 tabular-nums">{formatMoney(s.value)}</span>

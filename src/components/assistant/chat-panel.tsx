@@ -63,7 +63,7 @@ export default function ChatPanel() {
           aria-expanded={historyOpen}
           title="Past chats"
           aria-label="Past chats"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/72 transition hover:bg-paper/5 hover:text-paper"
         >
           <HistoryIcon />
         </button>
@@ -75,7 +75,7 @@ export default function ChatPanel() {
           }}
           title="New chat"
           aria-label="New chat"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/72 transition hover:bg-paper/5 hover:text-paper"
         >
           <PlusIcon />
         </button>
@@ -112,7 +112,7 @@ export default function ChatPanel() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 * i }}
                       onClick={() => send(s)}
-                      className="min-h-11 rounded-2xl border border-paper/10 px-3 py-2 text-left text-[13px] leading-snug text-paper/70 transition hover:border-paper/25 hover:bg-paper/5 hover:text-paper"
+                      className="card min-h-11 rounded-2xl px-3 py-2 text-left text-[13px] leading-snug text-paper/80 transition hover:bg-paper/5 hover:text-paper"
                     >
                       {s}
                     </motion.button>
@@ -130,7 +130,7 @@ export default function ChatPanel() {
                         key={m.id}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ember/15 px-4 py-2.5 text-[15px]"
+                        className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ember px-4 py-2.5 text-[15px] text-on-ember shadow-[0_8px_20px_-12px_rgb(120_90_70/0.6)]"
                       >
                         {text}
                       </motion.li>
@@ -142,7 +142,7 @@ export default function ChatPanel() {
                       key={m.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="max-w-full text-[15px] leading-relaxed"
+                      className="card max-w-full rounded-2xl rounded-bl-md px-4 py-3 text-[15px] leading-relaxed"
                     >
                       <Markdown streaming={isLast && status === "streaming"}>
                         {text}
@@ -164,7 +164,7 @@ export default function ChatPanel() {
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="flex items-center gap-2 text-sm text-paper/55"
+                      className="flex items-center gap-2 text-sm text-paper/70"
                       role="status"
                     >
                       <span className="relative flex h-2.5 w-2.5">
@@ -274,7 +274,7 @@ function Composer({
           }}
           placeholder="Type a message…"
           aria-label="Message the assistant"
-          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] text-paper outline-none placeholder:text-paper/35"
+          className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] text-paper outline-none placeholder:text-paper/50"
         />
         <MicButton
           onText={(spoken) => {

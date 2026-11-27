@@ -122,7 +122,7 @@ export default function TalkPanel() {
               {persona.emoji}
             </span>
             <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
-            <p className="max-w-xs text-sm text-paper/55">
+            <p className="max-w-xs text-sm text-paper/70">
               A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
               today, interrupt whenever you like, and say &ldquo;bye&rdquo; when you&apos;re done.
             </p>
@@ -213,7 +213,7 @@ export default function TalkPanel() {
               </motion.span>
             </button>
 
-            <p role="status" aria-live="polite" className="min-h-5 max-w-md text-center text-sm text-paper/55">
+            <p role="status" aria-live="polite" className="min-h-5 max-w-md text-center text-sm text-paper/70">
               {label}
             </p>
             {error && (
@@ -224,7 +224,7 @@ export default function TalkPanel() {
             {live && (
               <>
                 <HoldToEnd onEnd={() => session.current?.end()} />
-                <p className="max-w-xs text-center text-xs text-paper/40">
+                <p className="max-w-xs text-center text-xs text-paper/55">
                   Keep this screen open. Locking your phone stops the microphone.
                 </p>
               </>

@@ -66,7 +66,7 @@ export default function Sheet({
                   type="button"
                   onClick={onClose}
                   aria-label="Close"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/65 transition hover:bg-paper/10 hover:text-paper"
                 >
                   ×
                 </button>

@@ -97,7 +97,7 @@ export default function PersonaForm({
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-end justify-between gap-2">
-          <span className="text-xs font-medium text-paper/55">How should it behave?</span>
+          <span className="text-xs font-medium text-paper/70">How should it behave?</span>
           <VoiceInput
             onText={(spoken) =>
               setInstructions((t) => `${t}${t && !/\s$/.test(t) ? " " : ""}${spoken}`.slice(0, 4000))
@@ -115,7 +115,7 @@ export default function PersonaForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-paper/55">Voice language</span>
+        <span className="text-xs font-medium text-paper/70">Voice language</span>
         <div className="flex gap-2">
           {(
             [
@@ -128,7 +128,7 @@ export default function PersonaForm({
               type="button"
               onClick={() => setLanguage(l.value)}
               className={`h-9 rounded-full px-4 text-sm font-medium transition ${
-                language === l.value ? "bg-paper text-ink" : "border border-paper/10 text-paper/65"
+                language === l.value ? "bg-paper text-ink" : "border border-paper/10 text-paper/75"
               }`}
             >
               {l.label}
@@ -138,8 +138,8 @@ export default function PersonaForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-paper/55">
-          What can it see and change? <span className="text-paper/40">(none = conversation only)</span>
+        <span className="text-xs font-medium text-paper/70">
+          What can it see and change? <span className="text-paper/55">(none = conversation only)</span>
         </span>
         <div className="flex flex-wrap gap-2">
           {PERSONA_SECTIONS.map((s) => {
@@ -152,7 +152,7 @@ export default function PersonaForm({
                 aria-checked={on}
                 onClick={() => toggle(s.value)}
                 className={`h-9 rounded-full px-3 text-[13px] font-medium transition ${
-                  on ? "bg-ember text-on-ember" : "border border-paper/10 text-paper/65"
+                  on ? "bg-ember text-on-ember" : "border border-paper/10 text-paper/75"
                 }`}
               >
                 {on ? "✓ " : ""}

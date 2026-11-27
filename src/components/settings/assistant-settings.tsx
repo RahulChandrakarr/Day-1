@@ -97,7 +97,7 @@ function HandsFreeCard({ name }: { name: string }) {
       <label className="flex cursor-pointer items-start justify-between gap-4">
         <span className="flex flex-col gap-1">
           <span className="font-medium">Wake her by name</span>
-          <span className="text-sm text-paper/55">
+          <span className="text-sm text-paper/70">
             Say &ldquo;{name}&rdquo; and she answers &ldquo;Yes? What&apos;s going on?&rdquo;, or say
             &ldquo;{name}, add ₹120 for groceries&rdquo; to do it straight away. Say &ldquo;thanks&rdquo;
             or &ldquo;bye&rdquo; when you&apos;re done.
@@ -112,7 +112,7 @@ function HandsFreeCard({ name }: { name: string }) {
           className="mt-1 h-5 w-5 shrink-0 accent-ember"
         />
       </label>
-      <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-xs text-paper/50">
+      <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-xs text-paper/65">
         {!supported && (
           <li className="text-red-700 dark:text-red-300">
             This browser can&apos;t listen. Chrome or Edge work best.
@@ -135,12 +135,12 @@ function MemoryCard({ name, memories }: { name: string; memories: Memory[] }) {
   return (
     <Card>
       <CardHead title={`What ${name} knows about you`} aside={memories.length ? `${memories.length}` : undefined} />
-      <p className="-mt-1 mb-3 text-sm text-paper/55">
+      <p className="-mt-1 mb-3 text-sm text-paper/70">
         Tell her things like your birthday, family or what you like, and she&apos;ll remember them.
         Edit or delete anything here.
       </p>
       {memories.length === 0 && !adding && (
-        <p className="card px-4 py-6 text-center text-sm text-paper/45">
+        <p className="card px-4 py-6 text-center text-sm text-paper/60">
           Nothing yet. Try saying &ldquo;{name}, my date of birth is 12 May 1998&rdquo;.
         </p>
       )}
@@ -172,14 +172,14 @@ function MemoryRow({ memory }: { memory: Memory }) {
   return (
     <li className={`flex items-start gap-3 py-3 ${deleting ? "opacity-40" : ""}`}>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-paper/50">{memory.label}</p>
+        <p className="text-xs text-paper/65">{memory.label}</p>
         <p className="break-words font-medium">{memory.value}</p>
         {error && <p className="text-xs text-red-700 dark:text-red-300">{error}</p>}
       </div>
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="shrink-0 rounded-lg px-2 py-1 text-sm text-paper/60 hover:bg-paper/5 hover:text-paper"
+        className="shrink-0 rounded-lg px-2 py-1 text-sm text-paper/72 hover:bg-paper/5 hover:text-paper"
       >
         Edit
       </button>

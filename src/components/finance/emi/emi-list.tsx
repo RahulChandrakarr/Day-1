@@ -27,7 +27,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
         <AddEmiButton />
       </div>
       {emis.length === 0 ? (
-        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/55">
           No EMIs yet. Add a loan or installment to track what’s left.
         </p>
       ) : (
@@ -46,7 +46,7 @@ export default function EmiList({ emis }: { emis: EmiSummary[] }) {
                   />
                 ))}
               </div>
-              <p className="mt-1.5 text-xs text-paper/45">
+              <p className="mt-1.5 text-xs text-paper/60">
                 {formatMoney(totalDue)} still to pay
               </p>
             </div>
@@ -91,7 +91,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
         />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{emi.name}</span>
-          <span className="block truncate text-xs text-paper/45">
+          <span className="block truncate text-xs text-paper/60">
             {emi.lender ? `${emi.lender} · ` : ""}
             {formatMoney(emi.monthly_amount)} / month
             {` · ${monthsLabel(emi)}`}
@@ -110,7 +110,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
           <span className="block font-semibold tabular-nums">
             {done ? "Paid off" : formatMoney(emi.remaining)}
           </span>
-          <span className="block text-xs text-paper/40">
+          <span className="block text-xs text-paper/55">
             {done ? formatMoney(emi.paid) : `${formatMoney(emi.paid)} paid`}
           </span>
         </span>
@@ -131,7 +131,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                   style={{ width: `${Math.min(progress, 1) * 100}%` }}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-paper/45">
+              <p className="mt-1.5 text-xs text-paper/60">
                 {formatMoney(emi.paid)} of {formatMoney(emi.total_amount)}
                 {emi.monthsLeft > 0
                   ? ` · ${emi.monthsLeft} ${emi.monthsLeft === 1 ? "month" : "months"} left`
@@ -140,21 +140,21 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
             </div>
             <dl className="grid grid-cols-2 gap-3 px-4 pt-3 text-xs">
               <div>
-                <dt className="text-paper/45">Monthly</dt>
+                <dt className="text-paper/60">Monthly</dt>
                 <dd className="font-medium tabular-nums">
                   {formatMoney(emi.monthly_amount)}
                 </dd>
               </div>
               <div>
-                <dt className="text-paper/45">Months done</dt>
+                <dt className="text-paper/60">Months done</dt>
                 <dd className="font-medium tabular-nums">{monthsLabel(emi)}</dd>
               </div>
               <div>
-                <dt className="text-paper/45">Due</dt>
+                <dt className="text-paper/60">Due</dt>
                 <dd className="font-medium">{dueDayLabel(emi.due_day)}</dd>
               </div>
               <div>
-                <dt className="text-paper/45">Started</dt>
+                <dt className="text-paper/60">Started</dt>
                 <dd className="font-medium">{formatShortDate(emi.start_on)}</dd>
               </div>
             </dl>
@@ -164,14 +164,14 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                 <PaymentRow key={payment.id} payment={payment} />
               ))}
               {emi.payments.length === 0 && (
-                <li className="py-3 text-sm text-paper/40">No payments yet.</li>
+                <li className="py-3 text-sm text-paper/55">No payments yet.</li>
               )}
             </ul>
             <div className="flex justify-end gap-1 px-4 pb-3">
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="rounded-lg px-2 py-1 text-xs text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+                className="rounded-lg px-2 py-1 text-xs text-paper/65 transition hover:bg-paper/10 hover:text-paper"
               >
                 Edit
               </button>
@@ -182,7 +182,7 @@ function EmiCard({ emi }: { emi: EmiSummary }) {
                   if (confirm(`Delete ${emi.name} and all its payments?`))
                     startTransition(() => deleteEmi(emi.id));
                 }}
-                className="rounded-lg px-2 py-1 text-xs text-paper/40 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="rounded-lg px-2 py-1 text-xs text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
               >
                 Delete EMI
               </button>
@@ -209,7 +209,7 @@ function PaymentRow({ payment }: { payment: EmiPayment }) {
     >
       <span className="min-w-0 flex-1">
         <span className="block truncate">Installment</span>
-        <span className="block truncate text-xs text-paper/45">
+        <span className="block truncate text-xs text-paper/60">
           {formatShortDate(payment.occurred_on)}
           {payment.note ? ` · ${payment.note}` : ""}
         </span>
@@ -225,7 +225,7 @@ function PaymentRow({ payment }: { payment: EmiPayment }) {
             startTransition(() => deleteEmiPayment(payment.id));
         }}
         aria-label="Delete payment"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
       >
         ×
       </button>

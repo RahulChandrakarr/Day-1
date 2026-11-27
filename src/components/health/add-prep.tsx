@@ -14,7 +14,7 @@ export default function AddPrep({ blockId }: { blockId: string | null }) {
     <section className="flex flex-col gap-3 card border-ember/30 bg-ember/10 p-4 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
         <h3 className="font-medium">Add a warm-up and a cool-down</h3>
-        <p className="mt-0.5 text-sm text-paper/60">
+        <p className="mt-0.5 text-sm text-paper/72">
           3 quick moves to loosen up before each workout, and 3 stretches after it so
           your muscles can relax.
         </p>

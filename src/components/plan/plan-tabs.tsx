@@ -28,7 +28,7 @@ export default function PlanTabs() {
                 className={`flex h-10 items-center justify-center rounded-xl text-sm font-semibold transition-colors ${
                   active
                     ? "bg-ember text-on-ember shadow-sm"
-                    : "text-paper/55 hover:text-paper"
+                    : "text-paper/70 hover:text-paper"
                 }`}
               >
                 {tab.label}

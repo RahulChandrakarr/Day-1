@@ -91,7 +91,7 @@ export function SectionHead({
         </Link>
       ) : (
         aside && (
-          <span className="shrink-0 text-[13px] text-paper/65">{aside}</span>
+          <span className="shrink-0 text-[13px] text-paper/75">{aside}</span>
         )
       )}
     </div>
@@ -118,7 +118,7 @@ export function CardHead({
         </Link>
       ) : (
         aside && (
-          <span className="shrink-0 text-xs text-paper/45">{aside}</span>
+          <span className="shrink-0 text-xs text-paper/60">{aside}</span>
         )
       )}
     </div>
@@ -267,13 +267,13 @@ export function Figure({
         : "border-b border-paper/[0.06]";
   return (
     <div className={`min-w-0 py-2.5 ${line}`}>
-      <p className="truncate text-xs text-paper/55">{label}</p>
+      <p className="truncate text-xs text-paper/70">{label}</p>
       <p
         className={`mt-0.5 truncate text-[22px] font-bold tracking-[-0.01em] tabular-nums ${toneClass(tone)}`}
       >
         {value}
       </p>
-      {hint && <p className="mt-0.5 truncate text-xs text-paper/40">{hint}</p>}
+      {hint && <p className="mt-0.5 truncate text-xs text-paper/55">{hint}</p>}
     </div>
   );
 }
@@ -291,13 +291,13 @@ export function Figures({
     <dl className={`grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4 ${className}`}>
       {items.map((item) => (
         <div key={item.label} className="min-w-0">
-          <dt className="truncate text-xs text-paper/55">{item.label}</dt>
+          <dt className="truncate text-xs text-paper/70">{item.label}</dt>
           <dd
             className={`mt-0.5 truncate text-[28px] font-bold tracking-[-0.02em] tabular-nums ${toneClass(item.tone)}`}
           >
             {item.value}
           </dd>
-          {item.hint && <dd className="truncate text-xs text-paper/40">{item.hint}</dd>}
+          {item.hint && <dd className="truncate text-xs text-paper/55">{item.hint}</dd>}
         </div>
       ))}
     </dl>
@@ -351,7 +351,7 @@ export const toneClass = (tone?: "good" | "bad" | "muted") =>
     : tone === "good"
       ? "text-moss"
       : tone === "muted"
-        ? "text-paper/45"
+        ? "text-paper/60"
         : "";
 
 export function Pill({
@@ -362,7 +362,7 @@ export function Pill({
   tone?: "neutral" | "good" | "bad" | "accent";
 }) {
   const tones = {
-    neutral: "bg-paper/[0.06] text-paper/60",
+    neutral: "bg-paper/[0.06] text-paper/72",
     good: "bg-moss/15 text-moss",
     bad: "bg-[#b3372e]/10 text-[#b3372e] dark:text-red-300",
     accent: "bg-ember/15 text-ember",
@@ -384,7 +384,7 @@ export function Empty({
   href?: string;
 }) {
   const className =
-    "card block px-4 py-8 text-center text-sm text-paper/45";
+    "card block px-4 py-8 text-center text-sm text-paper/60";
   return href ? (
     <Link
       href={href}
@@ -398,9 +398,9 @@ export function Empty({
 }
 
 export const inputClass =
-  "h-12 w-full rounded-inset border border-transparent bg-inset px-4 text-[15px] text-paper outline-none transition placeholder:text-paper/35 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
+  "h-12 w-full rounded-inset border border-transparent bg-inset px-4 text-[15px] text-paper outline-none transition placeholder:text-paper/50 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
-export const labelClass = "text-xs font-medium text-paper/55";
+export const labelClass = "text-xs font-medium text-paper/70";
 
 export function Field({
   label,
@@ -415,7 +415,7 @@ export function Field({
     <label className="flex min-w-0 flex-col gap-1.5">
       <span className={labelClass}>
         {label}
-        {hint && <span className="ml-1 text-paper/35">{hint}</span>}
+        {hint && <span className="ml-1 text-paper/50">{hint}</span>}
       </span>
       {children}
     </label>

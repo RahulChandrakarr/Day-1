@@ -9,7 +9,7 @@ import { Card, CardHead, Empty } from "@/components/ui/kit";
 
 const signed = (n: number) => `${n < 0 ? "−" : "+"}${formatMoney(Math.abs(n))}`;
 const tone = (n: number) =>
-  n > 0 ? "text-moss" : n < 0 ? "text-red-700 dark:text-red-300" : "text-paper/60";
+  n > 0 ? "text-moss" : n < 0 ? "text-red-700 dark:text-red-300" : "text-paper/72";
 
 export default function HoldingsCard({
   holdings,
@@ -68,7 +68,7 @@ export default function HoldingsCard({
       {note && (
         <p
           role={note.ok ? "status" : "alert"}
-          className={`mb-3 text-sm ${note.ok ? "text-paper/60" : "text-red-700 dark:text-red-300"}`}
+          className={`mb-3 text-sm ${note.ok ? "text-paper/72" : "text-red-700 dark:text-red-300"}`}
         >
           {note.message}
         </p>
@@ -92,12 +92,12 @@ export default function HoldingsCard({
                 <p className="truncate font-medium">
                   {h.name?.trim() || h.symbol}
                   {h.mode === "swing" && (
-                    <span className="ml-2 rounded-full bg-paper/[0.06] px-2 py-0.5 text-[11px] font-semibold text-paper/60">
+                    <span className="ml-2 rounded-full bg-paper/[0.06] px-2 py-0.5 text-[11px] font-semibold text-paper/72">
                       swing
                     </span>
                   )}
                 </p>
-                <p className="truncate text-xs text-paper/50">
+                <p className="truncate text-xs text-paper/65">
                   {h.quantity % 1 === 0 ? h.quantity : h.quantity.toFixed(2)} ×{" "}
                   {formatMoney(h.average_price)}
                   {h.last_price === null ? " · no live price" : ` · now ${formatMoney(h.last_price)}`}
@@ -108,7 +108,7 @@ export default function HoldingsCard({
                 <p className="font-semibold tabular-nums">{formatMoney(h.worth)}</p>
                 {h.last_price === null ? (
                   // No price means this is just what it cost, not a gain of zero
-                  <p className="text-xs text-paper/45">at cost</p>
+                  <p className="text-xs text-paper/60">at cost</p>
                 ) : (
                   <p className={`text-xs tabular-nums ${tone(h.gain)}`}>
                     {signed(h.gain)}
@@ -130,7 +130,7 @@ export default function HoldingsCard({
         </ul>
       )}
       {holdings.length > 0 && exemption.longTermGain > 0 && (
-        <p className="mt-3 border-t border-paper/[0.06] pt-3 text-xs text-paper/45">
+        <p className="mt-3 border-t border-paper/[0.06] pt-3 text-xs text-paper/60">
           {exemption.overExemption
             ? `Unrealised long-term gains are ${formatMoney(exemption.longTermGain)} — past the ₹1.25 lakh that's exempt in ${exemption.year}.`
             : `${formatMoney(exemption.headroom)} of the ₹1.25 lakh long-term exemption is unused in ${exemption.year}.`}{" "}

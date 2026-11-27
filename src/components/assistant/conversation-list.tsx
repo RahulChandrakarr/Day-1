@@ -43,14 +43,14 @@ export default function ConversationList({ onClose }: { onClose: () => void }) {
       transition={{ duration: 0.15 }}
       className="absolute inset-x-0 top-[3.25rem] z-20 max-h-80 origin-top overflow-y-auto card glass-strong p-2 shadow-2xl shadow-black/10 dark:shadow-black/50"
     >
-      <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wider text-paper/45">
+      <p className="px-3 pb-1 pt-2 text-xs font-medium uppercase tracking-wider text-paper/60">
         Past chats
       </p>
       {items === null && (
-        <p className="px-3 py-4 text-sm text-paper/40">Loading…</p>
+        <p className="px-3 py-4 text-sm text-paper/55">Loading…</p>
       )}
       {items?.length === 0 && (
-        <p className="px-3 py-4 text-sm text-paper/40">No saved chats yet.</p>
+        <p className="px-3 py-4 text-sm text-paper/55">No saved chats yet.</p>
       )}
       <ul>
         {items?.map((c) => (
@@ -66,7 +66,7 @@ export default function ConversationList({ onClose }: { onClose: () => void }) {
               }`}
             >
               <span className="block truncate text-sm">{c.title}</span>
-              <span className="block text-xs text-paper/40">
+              <span className="block text-xs text-paper/55">
                 {when.format(new Date(c.updated_at))}
               </span>
             </button>
@@ -74,7 +74,7 @@ export default function ConversationList({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={() => void remove(c.id)}
               aria-label={`Delete chat "${c.title}"`}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/35 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
             >
               <TrashIcon />
             </button>

@@ -248,12 +248,12 @@ export default function NoteEditor({ note }: { note: Note | null }) {
         <button
           type="button"
           onClick={back}
-          className="rounded-xl px-2 py-1.5 text-sm text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+          className="rounded-xl px-2 py-1.5 text-sm text-paper/72 transition hover:bg-paper/5 hover:text-paper"
         >
           ← All notes
         </button>
         <span
-          className={`ml-auto text-xs ${status === "error" ? "text-red-700 dark:text-red-300" : "text-paper/40"}`}
+          className={`ml-auto text-xs ${status === "error" ? "text-red-700 dark:text-red-300" : "text-paper/55"}`}
           aria-live="polite"
         >
           {statusText}
@@ -274,7 +274,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
           type="button"
           onClick={remove}
           disabled={deleting}
-          className="rounded-xl px-2 py-1.5 text-sm text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+          className="rounded-xl px-2 py-1.5 text-sm text-paper/65 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
         >
           Delete
         </button>
@@ -298,7 +298,7 @@ export default function NoteEditor({ note }: { note: Note | null }) {
             }
           }}
           placeholder="Untitled"
-          className="w-full bg-transparent font-bold tracking-tight text-4xl leading-tight text-paper outline-none placeholder:text-paper/25 sm:text-5xl"
+          className="w-full bg-transparent font-bold tracking-tight text-4xl leading-tight text-paper outline-none placeholder:text-paper/40 sm:text-5xl"
         />
         {error && (
           <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
@@ -455,7 +455,7 @@ function SlashMenu({ menu, onHover }: { menu: SlashState; onHover: (index: numbe
       className="fixed z-40 max-h-80 w-64 overflow-y-auto rounded-xl card glass-strong p-1 shadow-xl"
     >
       {menu.items.length === 0 ? (
-        <p className="px-3 py-2 text-sm text-paper/45">No matching block</p>
+        <p className="px-3 py-2 text-sm text-paper/60">No matching block</p>
       ) : (
         menu.items.map((block, i) => (
           <button
@@ -470,12 +470,12 @@ function SlashMenu({ menu, onHover }: { menu: SlashState; onHover: (index: numbe
             }}
             className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${i === menu.index ? "bg-paper/[0.07]" : ""}`}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-paper/10 bg-inset text-sm font-semibold text-paper/70">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-paper/10 bg-inset text-sm font-semibold text-paper/78">
               {block.icon}
             </span>
             <span className="min-w-0">
               <span className="block text-sm text-paper">{block.label}</span>
-              <span className="block truncate text-xs text-paper/45">{block.hint}</span>
+              <span className="block truncate text-xs text-paper/60">{block.hint}</span>
             </span>
           </button>
         ))
@@ -507,7 +507,7 @@ function Tool({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={`flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg px-1.5 text-sm transition disabled:opacity-30 ${
-        active ? "bg-ember/20 font-semibold text-ember" : "text-paper/70 hover:bg-paper/[0.07] hover:text-paper"
+        active ? "bg-ember/20 font-semibold text-ember" : "text-paper/78 hover:bg-paper/[0.07] hover:text-paper"
       }`}
     >
       {children}

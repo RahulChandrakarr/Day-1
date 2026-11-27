@@ -38,7 +38,7 @@ function Chip({ category }: { category: Category }) {
           )
             startTransition(() => deleteCategory(category.id));
         }}
-        className="flex h-7 w-7 items-center justify-center rounded-full text-paper/35 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
       >
         ×
       </button>
@@ -72,13 +72,13 @@ export default function CategoryManager({
       >
         <div>
           <h3 className="font-bold tracking-tight text-2xl">Categories</h3>
-          <p className="mt-0.5 text-sm text-paper/50">
+          <p className="mt-0.5 text-sm text-paper/65">
             {categories.length} categories · group your entries
           </p>
         </div>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/10 text-paper/60"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/10 text-paper/72"
         >
           <svg
             width="16"
@@ -105,7 +105,7 @@ export default function CategoryManager({
             <div className="grid gap-6 pt-6 md:grid-cols-2">
               {(["expense", "income"] as const).map((t) => (
                 <div key={t}>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/50">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/65">
                     {t}
                   </p>
                   <ul className="flex flex-wrap gap-2">
@@ -134,7 +134,7 @@ export default function CategoryManager({
                 maxLength={40}
                 placeholder="New category name"
                 defaultValue={state.ok ? "" : state.values?.name}
-                className="h-10 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15 sm:min-w-48"
+                className="h-10 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15 sm:min-w-48"
               />
               <div className="flex gap-1 rounded-xl border border-paper/10 p-1">
                 {(["expense", "income"] as const).map((t) => (
@@ -146,7 +146,7 @@ export default function CategoryManager({
                     className={`h-8 rounded-lg px-3 text-sm capitalize transition ${
                       type === t
                         ? "bg-paper/10 text-paper"
-                        : "text-paper/50 hover:text-paper"
+                        : "text-paper/65 hover:text-paper"
                     }`}
                   >
                     {t}

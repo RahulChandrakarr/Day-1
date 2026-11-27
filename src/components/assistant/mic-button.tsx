@@ -70,7 +70,7 @@ export default function MicButton({
         state === "listening"
           ? "bg-red-500 text-white"
           : state === "off"
-            ? "text-paper/55 hover:bg-paper/10 hover:text-paper"
+            ? "text-paper/70 hover:bg-paper/10 hover:text-paper"
             : "bg-paper/10 text-paper"
       }`}
     >

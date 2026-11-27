@@ -84,7 +84,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
           <h2 className="font-bold tracking-tight text-2xl leading-tight">
             Today&apos;s briefing
           </h2>
-          <p className="text-xs text-paper/45">
+          <p className="text-xs text-paper/60">
             {busy
               ? "Writing…"
               : updatedAt
@@ -96,7 +96,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
           type="button"
           onClick={() => void generate(true)}
           disabled={busy}
-          className="flex h-9 items-center gap-1.5 rounded-xl border border-paper/10 px-3 text-sm text-paper/65 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+          className="flex h-9 items-center gap-1.5 rounded-xl border border-paper/10 px-3 text-sm text-paper/75 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
         >
           <motion.span
             animate={busy ? { rotate: 360 } : { rotate: 0 }}
@@ -122,7 +122,7 @@ export default function BriefingCard({ initial }: { initial: Briefing }) {
               className="flex flex-col gap-2.5"
               role="status"
             >
-              <p className="text-sm text-paper/50">Catching up on your day…</p>
+              <p className="text-sm text-paper/65">Catching up on your day…</p>
               {[92, 78, 85, 60].map((w, i) => (
                 <motion.span
                   key={i}

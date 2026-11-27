@@ -68,18 +68,18 @@ export default async function EmiPage() {
               i === 2 ? "col-span-2 sm:col-span-1" : ""
             }`}
           >
-            <p className="text-sm text-paper/55">{tile.label}</p>
+            <p className="text-sm text-paper/70">{tile.label}</p>
             <p
               className={`mt-2 text-xl font-semibold tracking-tight [overflow-wrap:anywhere] sm:text-2xl xl:text-3xl ${tile.tone ?? ""}`}
             >
               {tile.value}
             </p>
-            <p className="mt-1 text-xs text-paper/45">{tile.hint}</p>
+            <p className="mt-1 text-xs text-paper/60">{tile.hint}</p>
           </div>
         ))}
       </div>
 
-      <p className="-mt-2 text-sm text-paper/45">
+      <p className="-mt-2 text-sm text-paper/60">
         Log each installment here. It isn’t counted as daily spending unless you
         also add it as an expense.
         {month && dueThisMonth.length > 0

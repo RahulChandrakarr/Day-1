@@ -11,8 +11,8 @@ import { BankPicker, Segmented, type BankOption } from "@/components/finance/ent
 import type { Category, Transaction, TxType } from "@/lib/finance";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
-const labelClass = "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+const labelClass = "text-xs font-medium uppercase tracking-wider text-paper/65";
 const badText = "text-red-700 dark:text-red-300";
 const initial: FormState = { error: null, ok: false, version: 0 };
 
@@ -63,7 +63,7 @@ export default function EditEntry({
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>Amount</span>
         <div className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/55">
             ₹
           </span>
           <input

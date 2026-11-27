@@ -38,7 +38,7 @@ export default function PeopleList({
           <button
             type="button"
             onClick={() => setShowSettled((v) => !v)}
-            className="text-sm text-paper/50 transition hover:text-paper"
+            className="text-sm text-paper/65 transition hover:text-paper"
           >
             {showSettled ? "Hide settled" : `Show ${settled} settled`}
           </button>
@@ -46,7 +46,7 @@ export default function PeopleList({
       </div>
 
       {shown.length === 0 ? (
-        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/55">
           {people.length === 0
             ? "No one yet. Add money you took from or gave to someone."
             : "All settled. Nobody owes anything."}
@@ -85,7 +85,7 @@ function PersonCard({
       ? { text: `You owe ${formatMoney(person.owe)}`, tone: "text-chart-expense" }
       : person.owed > 0
         ? { text: `Owes you ${formatMoney(person.owed)}`, tone: "text-moss" }
-        : { text: "Settled", tone: "text-paper/45" };
+        : { text: "Settled", tone: "text-paper/60" };
 
   return (
     <motion.li
@@ -106,7 +106,7 @@ function PersonCard({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{person.name}</span>
-          <span className="block text-xs text-paper/45">
+          <span className="block text-xs text-paper/60">
             {person.entries.length}{" "}
             {person.entries.length === 1 ? "entry" : "entries"}
             {person.lastOn && ` · last ${formatShortDate(person.lastOn)}`}
@@ -159,7 +159,7 @@ function PersonCard({
                   )
                     startTransition(() => deletePerson(person.id));
                 }}
-                className="rounded-lg px-2 py-1 text-xs text-paper/40 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="rounded-lg px-2 py-1 text-xs text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
               >
                 Remove person
               </button>
@@ -209,7 +209,7 @@ function EntryRow({ entry }: { entry: DebtEntry }) {
         <span className="block truncate">
           {meta.verb} {entry.person.name}
         </span>
-        <span className="block truncate text-xs text-paper/45">
+        <span className="block truncate text-xs text-paper/60">
           {formatShortDate(entry.occurred_on)}
           {entry.in_balance && " · added to balance"}
           {entry.note && ` · ${entry.note}`}
@@ -229,7 +229,7 @@ function EntryRow({ entry }: { entry: DebtEntry }) {
             startTransition(() => deleteDebt(entry.id));
         }}
         aria-label="Delete entry"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
       >
         ×
       </button>

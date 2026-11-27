@@ -142,13 +142,13 @@ export default function ReminderSettings({
           <Card>
             <h3 className="font-bold tracking-tight text-[19px]">This device</h3>
             {permission === "unsupported" ? (
-              <p className="mt-2 text-sm text-paper/55">
+              <p className="mt-2 text-sm text-paper/70">
                 This browser can&apos;t show notifications. On iPhone, add Day One to
                 your home screen first, then open it from there.
               </p>
             ) : (
               <>
-                <p className="mt-1 text-sm text-paper/55">
+                <p className="mt-1 text-sm text-paper/70">
                   {deviceCount === 0
                     ? "No device is set up yet."
                     : `${deviceCount} device${deviceCount === 1 ? "" : "s"} set up.`}{" "}
@@ -178,7 +178,7 @@ export default function ReminderSettings({
                       type="button"
                       onClick={turnOffHere}
                       disabled={busy}
-                      className="h-11 rounded-xl px-4 text-sm text-paper/50 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+                      className="h-11 rounded-xl px-4 text-sm text-paper/65 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
                     >
                       Turn off here
                     </button>
@@ -206,7 +206,7 @@ export default function ReminderSettings({
     >
       <Card>
         <h3 className="font-bold tracking-tight text-[19px]">Reminders</h3>
-        <p className="mt-1 text-sm text-paper/55">
+        <p className="mt-1 text-sm text-paper/70">
           Times are Indian time. A reminder is skipped when the thing is already
           done.
         </p>
@@ -222,7 +222,7 @@ export default function ReminderSettings({
               <span className="text-xl">{PINNED.emoji}</span>
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{PINNED.title}</span>
-                <span className="block text-xs text-paper/45">{PINNED.hint}</span>
+                <span className="block text-xs text-paper/60">{PINNED.hint}</span>
               </span>
               <button
                 type="button"
@@ -260,7 +260,7 @@ export default function ReminderSettings({
                 <span className="text-xl">{reminder.emoji}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{reminder.title}</span>
-                  <span className="block text-xs text-paper/45">
+                  <span className="block text-xs text-paper/60">
                     {reminder.hint}
                   </span>
                 </span>

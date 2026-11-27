@@ -22,7 +22,7 @@ export default function PaymentChecklist({
           <Card key={period}>
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <h3 className="font-serif text-xl">{formatMonth(period)}</h3>
-              <p className="text-xs tabular-nums text-paper/50">
+              <p className="text-xs tabular-nums text-paper/65">
                 {done}/{rows.length}
               </p>
             </div>

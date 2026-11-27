@@ -60,7 +60,7 @@ export function SectionSidebar({
         onClick={() => setCollapsed((v) => !v)}
         aria-label={collapsed ? "Expand sections" : "Collapse sections"}
         aria-expanded={!collapsed}
-        className="mb-1 flex h-9 items-center gap-2 rounded-xl px-2.5 text-xs font-medium uppercase tracking-wider text-paper/45 transition hover:bg-paper/5 hover:text-paper"
+        className="mb-1 flex h-9 items-center gap-2 rounded-xl px-2.5 text-xs font-medium uppercase tracking-wider text-paper/60 transition hover:bg-paper/5 hover:text-paper"
       >
         <motion.svg
           {...iconProps}
@@ -86,7 +86,7 @@ export function SectionSidebar({
               } ${
                 isActive
                   ? "bg-ember text-on-ember"
-                  : "text-paper/60 hover:bg-paper/5 hover:text-paper"
+                  : "text-paper/72 hover:bg-paper/5 hover:text-paper"
               }`}
             >
               <span className="shrink-0">{s.icon}</span>
@@ -173,7 +173,7 @@ export function SectionMenuButton({
                   type="button"
                   onClick={close}
                   aria-label="Close"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/65 transition hover:bg-paper/10 hover:text-paper"
                 >
                   ×
                 </button>
@@ -197,7 +197,7 @@ export function SectionMenuButton({
                         } ${
                           isActive
                             ? "bg-ember text-on-ember"
-                            : "text-paper/75 hover:bg-paper/5 hover:text-paper"
+                            : "text-paper/80 hover:bg-paper/5 hover:text-paper"
                         }`}
                       >
                         <span className="shrink-0">{s.icon}</span>
@@ -207,7 +207,7 @@ export function SectionMenuButton({
                           </span>
                           <span
                             className={`block truncate text-xs ${
-                              isActive ? "text-on-ember/70" : "text-paper/45"
+                              isActive ? "text-on-ember/70" : "text-paper/60"
                             }`}
                           >
                             {s.hint}

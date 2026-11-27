@@ -48,7 +48,7 @@ const trashIcon = (
 );
 
 const deleteButtonClass =
-  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300";
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300";
 
 function Row({
   tx,
@@ -79,7 +79,7 @@ function Row({
       />
       <div className="min-w-0 flex-1">
         <p className="break-words font-medium leading-snug line-clamp-2">{title}</p>
-        <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/45">
+        <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/60">
           <span>{tx.category?.name ?? "Uncategorized"}</span>
           {tx.bank_account && <span>· {tx.bank_account.name}</span>}
           {showDate && <span>· {formatShortDate(tx.occurred_on)}</span>}
@@ -178,7 +178,7 @@ function ActivityRow({
       />
       <div className="min-w-0 flex-1">
         <p className="break-words font-medium leading-snug line-clamp-2">{title}</p>
-        <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/45">
+        <p className="flex flex-wrap items-center gap-x-2 text-xs text-paper/60">
           <span className="shrink-0 rounded-full border border-paper/15 px-1.5">
             {badge}
           </span>
@@ -188,7 +188,7 @@ function ActivityRow({
       </div>
       <p
         className={`shrink-0 text-right font-semibold tabular-nums ${
-          incoming ? "text-moss" : incoming === null ? "text-paper/70" : ""
+          incoming ? "text-moss" : incoming === null ? "text-paper/78" : ""
         }`}
       >
         {incoming === null ? "" : incoming ? "+" : "−"}
@@ -289,13 +289,13 @@ export default function TransactionList({
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-bold tracking-tight text-2xl">{title}</h3>
         {aside ?? (
-          <span className="text-sm text-paper/45">
+          <span className="text-sm text-paper/60">
             {items.length} {items.length === 1 ? "entry" : "entries"}
           </span>
         )}
       </div>
       {items.length === 0 ? (
-        <p className="mt-6 card py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card py-10 text-center text-sm text-paper/55">
           {empty}
         </p>
       ) : (

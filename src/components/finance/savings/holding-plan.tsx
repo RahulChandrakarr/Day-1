@@ -31,14 +31,14 @@ export function PlanLine({
       view?.stop && `stop ${formatMoney(view.stop.level)} (${pct(view.stop.awayPct)})`,
     ].filter(Boolean);
     return (
-      <span className="text-xs text-paper/45">
+      <span className="text-xs text-paper/60">
         {parts.length ? parts.join(" · ") : "Swing — set a target and a stop"}
       </span>
     );
   }
 
   const timing = holdingTiming(holding, lots, today);
-  if (!timing) return <span className="text-xs text-paper/45">Add the buy date for tax timing</span>;
+  if (!timing) return <span className="text-xs text-paper/60">Add the buy date for tax timing</span>;
   if (timing.allLongTerm)
     return (
       <span className="text-xs text-moss">
@@ -46,9 +46,9 @@ export function PlanLine({
       </span>
     );
   if (!timing.next)
-    return <span className="text-xs text-paper/45">Held {timing.daysHeld} days</span>;
+    return <span className="text-xs text-paper/60">Held {timing.daysHeld} days</span>;
   return (
-    <span className="text-xs text-paper/60">
+    <span className="text-xs text-paper/72">
       {timing.next.daysToLongTerm} days to long term
       {timing.saving > 0 && ` · waiting saves ${formatMoney(timing.saving)} tax`}
     </span>
@@ -103,7 +103,7 @@ export function PlanForm({
             aria-pressed={mode === value}
             onClick={() => setMode(value)}
             className={`min-h-9 flex-1 rounded-lg text-sm font-medium transition ${
-              mode === value ? "bg-ember text-on-ember" : "text-paper/70 hover:bg-paper/5"
+              mode === value ? "bg-ember text-on-ember" : "text-paper/78 hover:bg-paper/5"
             }`}
           >
             {label}

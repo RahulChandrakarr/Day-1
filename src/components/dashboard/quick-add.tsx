@@ -81,7 +81,7 @@ export function AddTodoButton({ date }: { date: string }) {
           >
             + Another
           </button>
-          <p className="text-xs text-paper/50">
+          <p className="text-xs text-paper/65">
             These show in today&apos;s journal priorities too.
           </p>
           {error && (

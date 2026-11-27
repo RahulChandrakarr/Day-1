@@ -13,8 +13,8 @@ import { formatMoney, formatShortDate, type BankAccount } from "@/lib/finance";
 import { Card } from "@/components/ui/kit";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
-const labelClass = "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+const labelClass = "text-xs font-medium uppercase tracking-wider text-paper/65";
 const badText = "text-red-700 dark:text-red-300";
 const initial: FormState = { error: null, ok: false, version: 0 };
 
@@ -46,7 +46,7 @@ export default function BankAccounts({
         <div className="min-w-0">
           <h3 className="font-bold tracking-tight text-2xl">Bank accounts</h3>
           {accounts.length > 0 && (
-            <p className="mt-0.5 text-sm text-paper/50">
+            <p className="mt-0.5 text-sm text-paper/65">
               <span className={total < 0 ? badText : ""}>{signedMoney(total)}</span> in{" "}
               {accounts.length} {accounts.length === 1 ? "account" : "accounts"}
               {asOf !== today && ` at the end of ${formatShortDate(asOf)}`}
@@ -67,7 +67,7 @@ export default function BankAccounts({
 
       {accounts.length === 0 ? (
         <div className="mt-4 flex flex-col items-start gap-3 card p-4">
-          <p className="text-sm text-paper/55">
+          <p className="text-sm text-paper/70">
             Add SBI, Axis, cash… with what&apos;s in each right now. Entries you log
             come out of the account you pick, and Net balance shows the total.
           </p>
@@ -145,7 +145,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/70 transition hover:bg-paper/5 hover:text-paper"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
     >
       {children}
     </button>
@@ -189,7 +189,7 @@ function AccountForm({
       </label>
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>
-          Last 4 digits <span className="text-paper/35">optional</span>
+          Last 4 digits <span className="text-paper/50">optional</span>
         </span>
         <input
           name="account_tail"
@@ -200,14 +200,14 @@ function AccountForm({
           placeholder="8723"
           className={inputClass}
         />
-        <span className="text-xs text-paper/40">
+        <span className="text-xs text-paper/55">
           Lets a forwarded bank message know which account it belongs to
         </span>
       </label>
       <label className="flex flex-col gap-1.5">
         <span className={labelClass}>In it right now</span>
         <div className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/55">
             ₹
           </span>
           <input
@@ -219,7 +219,7 @@ function AccountForm({
             className={`${inputClass} pl-8 tabular-nums`}
           />
         </div>
-        <span className="text-xs text-paper/45">
+        <span className="text-xs text-paper/60">
           {account
             ? `Your balance on ${formatShortDate(today)}. Entries you've logged stay as they are.`
             : "From now on, entries you log against it add to or take from this."}
@@ -235,7 +235,7 @@ function AccountForm({
           />
           <span className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">Count it as income this month</span>
-            <span className="text-xs text-paper/50">
+            <span className="text-xs text-paper/65">
               Tick this if the money came in this month, so your monthly totals include it.
             </span>
           </span>
@@ -305,12 +305,12 @@ function TransferForm({
             className={`flex h-9 items-center gap-2 rounded-full border px-3 text-sm transition disabled:opacity-35 ${
               value === a.id
                 ? "border-paper/40 bg-paper/10 text-paper"
-                : "border-paper/10 text-paper/70 hover:bg-paper/5"
+                : "border-paper/10 text-paper/78 hover:bg-paper/5"
             }`}
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: `var(--cat-${a.color})` }} />
             {a.name}
-            <span className="text-xs text-paper/45 tabular-nums">{signedMoney(a.balance)}</span>
+            <span className="text-xs text-paper/60 tabular-nums">{signedMoney(a.balance)}</span>
           </button>
         ))}
       </div>
@@ -327,7 +327,7 @@ function TransferForm({
         <label className="flex min-w-0 flex-col gap-1.5">
           <span className={labelClass}>Amount</span>
           <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/55">
               ₹
             </span>
             <input

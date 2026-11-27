@@ -106,7 +106,7 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className={`flex items-center gap-3 overflow-hidden text-paper/60 transition-colors hover:text-paper ${className}`}
+      className={`flex items-center gap-3 overflow-hidden text-paper/72 transition-colors hover:text-paper ${className}`}
     >
       <span className="relative flex h-5 w-5 items-center justify-center">
         <AnimatePresence mode="wait" initial={false}>

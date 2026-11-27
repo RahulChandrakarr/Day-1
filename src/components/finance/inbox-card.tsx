@@ -27,7 +27,7 @@ export default function InboxCard({
         <h2 className="font-bold tracking-tight text-2xl">
           From your bank
           {items.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-paper/45">
+            <span className="ml-2 text-sm font-normal text-paper/60">
               {items.length} waiting
             </span>
           )}
@@ -44,7 +44,7 @@ export default function InboxCard({
       {setup && <Setup token={token} />}
 
       {items.length === 0 ? (
-        <p className="text-sm text-paper/55">
+        <p className="text-sm text-paper/70">
           Nothing waiting. Messages your bank sends will appear here once forwarding is on.
         </p>
       ) : (
@@ -82,12 +82,12 @@ function InboxRow({ item, categories }: { item: InboxItem; categories: Category[
               {item.direction === "credit" ? "+" : "−"}
               {formatMoney(item.amount!)}
             </span>
-            {item.merchant && <span className="text-paper/70"> · {item.merchant}</span>}
+            {item.merchant && <span className="text-paper/78"> · {item.merchant}</span>}
           </p>
         ) : (
-          <p className="truncate font-medium text-paper/70">Couldn&apos;t read this one</p>
+          <p className="truncate font-medium text-paper/78">Couldn&apos;t read this one</p>
         )}
-        <p className="truncate text-xs text-paper/45">
+        <p className="truncate text-xs text-paper/60">
           {item.occurred_on ? formatShortDate(item.occurred_on) : "no date"}
           {item.sender && ` · ${item.sender}`}
           {!readable && ` · ${item.body.slice(0, 60)}`}
@@ -126,7 +126,7 @@ function InboxRow({ item, categories }: { item: InboxItem; categories: Category[
           type="button"
           disabled={pending}
           onClick={() => run(() => ignoreInboxItem(item.id))}
-          className="text-paper/50"
+          className="text-paper/65"
         >
           Ignore
         </button>
@@ -144,7 +144,7 @@ function Setup({ token }: { token: string | null }) {
       : `${window.location.origin}/api/inbox/sms?token=${token}`;
 
   return (
-    <div className="flex flex-col gap-2 rounded-inset border border-paper/10 p-3 text-sm text-paper/70">
+    <div className="flex flex-col gap-2 rounded-inset border border-paper/10 p-3 text-sm text-paper/78">
       <p>
         On Android, install MacroDroid or Tasker and make one rule: when an SMS arrives
         from your bank, POST it to this address with the message as{" "}
@@ -165,7 +165,7 @@ function Setup({ token }: { token: string | null }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className="text-xs text-paper/45">
+      <p className="text-xs text-paper/60">
         Set the rule to match only your bank&apos;s senders, so one-time passwords and
         personal messages never leave the phone. Anyone with this address can add
         messages to your inbox, so keep it to yourself.

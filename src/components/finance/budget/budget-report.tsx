@@ -32,7 +32,7 @@ export default function BudgetReportView({
 
       {report.rows.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-paper/50">
+          <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-paper/65">
             By category
           </h4>
           <ul className="flex flex-col gap-4">
@@ -61,10 +61,10 @@ export default function BudgetReportView({
 
       {report.unplanned.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/50">
+          <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/65">
             Not in the plan
           </h4>
-          <p className="mb-3 text-sm text-paper/45">
+          <p className="mb-3 text-sm text-paper/60">
             {formatMoney(report.unplanned.reduce((s, r) => s + r.actual, 0))}{" "}
             spent in categories you didn&apos;t plan for.
           </p>
@@ -107,7 +107,7 @@ function PlanTotals({ report }: { report: BudgetReport }) {
 
   return (
     <div>
-      <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/50">
+      <h4 className="mb-1 text-xs font-medium uppercase tracking-wider text-paper/65">
         Plan totals
       </h4>
       <ul className="flex flex-col divide-y divide-paper/5 text-sm">
@@ -146,7 +146,7 @@ function TotalRow({
   return (
     <li
       className={`flex items-center justify-between gap-3 py-2 ${
-        strong ? "font-semibold" : "text-paper/70"
+        strong ? "font-semibold" : "text-paper/78"
       }`}
     >
       <span className="min-w-0">{label}</span>
@@ -190,7 +190,7 @@ function Headline({
           <Figure>{formatMoney(actual)}</Figure> of{" "}
           <Figure>{formatMoney(planned)}</Figure> spent
         </p>
-        <p className="mt-1 text-sm text-paper/55">
+        <p className="mt-1 text-sm text-paper/70">
           {over
             ? `${formatMoney(-diff)} over plan already`
             : `${formatMoney(diff)} left`}{" "}
@@ -256,7 +256,7 @@ function OverallBar({
           />
         )}
       </div>
-      <div className="mt-1.5 flex justify-between text-xs text-paper/45">
+      <div className="mt-1.5 flex justify-between text-xs text-paper/60">
         <span>{Math.round((actual / planned) * 100)}% of plan used</span>
         {elapsed > 0 && elapsed < 1 && (
           <span>{Math.round(elapsed * 100)}% of the time gone</span>
@@ -284,7 +284,7 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
         </span>
         <span className="shrink-0 tabular-nums">
           {formatMoney(row.actual)}
-          <span className="text-paper/40"> / {formatMoney(row.planned)}</span>
+          <span className="text-paper/55"> / {formatMoney(row.planned)}</span>
         </span>
       </div>
       <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-paper/10">
@@ -305,7 +305,7 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
           />
         )}
       </div>
-      <p className={`mt-1 text-xs ${diff < 0 ? badText : "text-paper/45"}`}>
+      <p className={`mt-1 text-xs ${diff < 0 ? badText : "text-paper/60"}`}>
         {diff < 0
           ? `${formatMoney(-diff)} over`
           : row.actual === 0
@@ -313,7 +313,7 @@ function CategoryRow({ row, index }: { row: BudgetRow; index: number }) {
             : `${formatMoney(diff)} left`}
       </p>
       {row.items.some((item) => item.label) && (
-        <ul className="mt-2 flex flex-col gap-1 border-l border-paper/10 pl-3 text-xs text-paper/55">
+        <ul className="mt-2 flex flex-col gap-1 border-l border-paper/10 pl-3 text-xs text-paper/70">
           {row.items.map((item, i) => (
             <li key={i} className="flex justify-between gap-3">
               <span className="min-w-0 truncate">{item.label ?? row.name}</span>
@@ -343,10 +343,10 @@ function PersonSection({
   return (
     <div>
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h4 className="text-xs font-medium uppercase tracking-wider text-paper/50">
+        <h4 className="text-xs font-medium uppercase tracking-wider text-paper/65">
           {title}
         </h4>
-        <span className="text-xs text-paper/45 tabular-nums">
+        <span className="text-xs text-paper/60 tabular-nums">
           {formatMoney(actual)} of {formatMoney(planned)} {done}
         </span>
       </div>
@@ -368,7 +368,7 @@ function PersonSection({
                 </span>
                 <span
                   className={`shrink-0 text-xs font-medium ${
-                    complete ? "text-moss" : "text-paper/55"
+                    complete ? "text-moss" : "text-paper/70"
                   }`}
                 >
                   {complete
@@ -385,7 +385,7 @@ function PersonSection({
                 />
               </div>
               {row.items.some((item) => item.label) && (
-                <ul className="mt-2 flex flex-col gap-0.5 text-xs text-paper/50">
+                <ul className="mt-2 flex flex-col gap-0.5 text-xs text-paper/65">
                   {row.items.map((item, i) => (
                     <li key={i} className="flex justify-between gap-3">
                       <span className="min-w-0 truncate">{item.label ?? "—"}</span>

@@ -31,7 +31,7 @@ export default async function ReportPage({
       </PeriodNav>
 
       {nothingYet ? (
-        <p className="card px-6 py-12 text-center text-sm text-paper/50">
+        <p className="card px-6 py-12 text-center text-sm text-paper/65">
           Nothing tracked in {formatMonth(month)} yet. Tick off workouts and
           habits and the report fills in.
         </p>
@@ -114,7 +114,7 @@ export default async function ReportPage({
                     compare={`${previous.gym.doneExercises} last month`}
                   />
                 </div>
-                <p className="mt-3 text-sm text-paper/55">
+                <p className="mt-3 text-sm text-paper/70">
                   {report.gym.fullSessions} workout
                   {report.gym.fullSessions === 1 ? "" : "s"} finished completely
                   {report.gym.restDays > 0 &&
@@ -123,7 +123,7 @@ export default async function ReportPage({
                 </p>
               </div>
               <div>
-                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/45">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-paper/60">
                   Where the work went
                 </p>
                 {report.gym.byMuscle.length ? (
@@ -132,7 +132,7 @@ export default async function ReportPage({
                       <li key={m.muscle}>
                         <div className="flex justify-between text-sm">
                           <span className="truncate">{m.muscle}</span>
-                          <span className="tabular-nums text-paper/55">
+                          <span className="tabular-nums text-paper/70">
                             {m.count}
                           </span>
                         </div>
@@ -165,7 +165,7 @@ export default async function ReportPage({
                     <li key={h.habit.id}>
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-medium">{h.habit.name}</span>
-                        <span className="text-sm text-paper/55">
+                        <span className="text-sm text-paper/70">
                           {h.done} of {report.days} days
                           {last && ` · was ${last.done}/${previous.days}`}
                         </span>
@@ -177,11 +177,11 @@ export default async function ReportPage({
                             style={{ width: `${Math.min(h.rate, 1) * 100}%` }}
                           />
                         </div>
-                        <span className="w-12 shrink-0 text-right text-xs tabular-nums text-paper/55">
+                        <span className="w-12 shrink-0 text-right text-xs tabular-nums text-paper/70">
                           {pct(h.rate)}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs text-paper/45">
+                      <p className="mt-1 text-xs text-paper/60">
                         {h.avgCount !== null && h.habit.count_label && (
                           <>
                             {h.avgCount.toFixed(1)} {h.habit.count_label} a day
@@ -275,11 +275,11 @@ function Tile({
   const show = !hideDelta && delta !== null && delta !== 0;
   return (
     <div className="card p-4">
-      <p className="truncate text-sm text-paper/55">{label}</p>
+      <p className="truncate text-sm text-paper/70">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
         {value}
       </p>
-      <p className="mt-1 truncate text-xs text-paper/45">{hint}</p>
+      <p className="mt-1 truncate text-xs text-paper/60">{hint}</p>
       {show && (
         <p
           className={`mt-1 text-xs font-medium ${
@@ -317,7 +317,7 @@ function ChangeList({
           </span>
           <span className="min-w-0">
             <span className="font-medium">{item.label}</span>
-            <span className="block text-xs text-paper/50">{item.detail}</span>
+            <span className="block text-xs text-paper/65">{item.detail}</span>
           </span>
         </li>
       ))}
@@ -341,7 +341,7 @@ function Bar({
     <div>
       <div className="flex items-baseline justify-between text-sm">
         <span>{label}</span>
-        <span className="tabular-nums text-paper/55">
+        <span className="tabular-nums text-paper/70">
           {value}/{total}
         </span>
       </div>
@@ -351,7 +351,7 @@ function Bar({
           style={{ width: `${share * 100}%` }}
         />
       </div>
-      <p className="mt-1 text-xs text-paper/45">{compare}</p>
+      <p className="mt-1 text-xs text-paper/60">{compare}</p>
     </div>
   );
 }
@@ -369,7 +369,7 @@ function Stat({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="truncate text-xs text-paper/50">{label}</dt>
+      <dt className="truncate text-xs text-paper/65">{label}</dt>
       <dd
         className={`truncate font-semibold tabular-nums ${
           tone === "good" ? "text-moss" : tone === "warn" ? "text-chart-expense" : ""
@@ -377,14 +377,14 @@ function Stat({
       >
         {value}
       </dd>
-      {hint && <dd className="truncate text-xs text-paper/40">{hint}</dd>}
+      {hint && <dd className="truncate text-xs text-paper/55">{hint}</dd>}
     </div>
   );
 }
 
 function Empty({ children }: { children: ReactNode }) {
   return (
-    <p className="card py-6 text-center text-sm text-paper/40">
+    <p className="card py-6 text-center text-sm text-paper/55">
       {children}
     </p>
   );

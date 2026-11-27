@@ -30,7 +30,7 @@ type Status = "idle" | "pending" | "saving" | "saved" | "error";
 const SAVE_DELAY = 900;
 
 const fieldClass =
-  "w-full rounded-xl border border-paper/10 bg-inset px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
+  "w-full rounded-xl border border-paper/10 bg-inset px-3 py-2.5 text-[15px] text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/60 focus:ring-4 focus:ring-ember/10";
 
 export default function JournalEditor({
   initial,
@@ -141,7 +141,7 @@ export default function JournalEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-paper/50">
+        <p className="text-sm text-paper/65">
           {isToday ? "Write as the day goes." : "Looking back on this day."}
         </p>
         <SaveStatus
@@ -174,7 +174,7 @@ export default function JournalEditor({
                     >
                       {m.emoji}
                     </span>
-                    <span className="text-[11px] text-paper/60">{m.label}</span>
+                    <span className="text-[11px] text-paper/72">{m.label}</span>
                   </motion.button>
                 );
               })}
@@ -182,10 +182,10 @@ export default function JournalEditor({
 
             <div className="mt-4">
               <div className="mb-2 flex items-baseline justify-between text-xs">
-                <span className="font-medium uppercase tracking-wider text-paper/50">
+                <span className="font-medium uppercase tracking-wider text-paper/65">
                   Energy
                 </span>
-                <span className="text-paper/55">
+                <span className="text-paper/70">
                   {entry.energy ? ENERGY[entry.energy - 1] : "Tap to set"}
                 </span>
               </div>
@@ -285,13 +285,13 @@ export default function JournalEditor({
                         }
                       }}
                       placeholder={i === 0 ? "Most important thing" : "Another priority"}
-                      className={`${fieldClass} ${p.done ? "text-paper/45 line-through" : ""}`}
+                      className={`${fieldClass} ${p.done ? "text-paper/60 line-through" : ""}`}
                     />
                     <button
                       type="button"
                       aria-label={`Remove priority ${i + 1}`}
                       onClick={() => removePriority(i)}
-                      className="flex h-9 w-8 shrink-0 items-center justify-center rounded-lg text-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+                      className="flex h-9 w-8 shrink-0 items-center justify-center rounded-lg text-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
                     >
                       ×
                     </button>
@@ -302,7 +302,7 @@ export default function JournalEditor({
             <button
               type="button"
               onClick={() => addPriority(entry.priorities.length)}
-              className="mt-2 flex h-10 w-full items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/55 transition hover:border-paper/40 hover:text-paper"
+              className="mt-2 flex h-10 w-full items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/70 transition hover:border-paper/40 hover:text-paper"
             >
               + Add priority
             </button>
@@ -338,7 +338,7 @@ export default function JournalEditor({
             <ol className="flex flex-col gap-2">
               {entry.gratitude.map((g, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <span className="w-5 shrink-0 text-center text-sm text-paper/35">
+                  <span className="w-5 shrink-0 text-center text-sm text-paper/50">
                     {i + 1}
                   </span>
                   <input
@@ -388,14 +388,14 @@ export default function JournalEditor({
           <details className="group card p-4">
             <summary className="cursor-pointer list-none font-bold tracking-tight text-xl">
               Wins, lessons and tomorrow
-              <span className="ml-2 text-sm text-paper/40 group-open:hidden">
+              <span className="ml-2 text-sm text-paper/55 group-open:hidden">
                 tap to write
               </span>
             </summary>
             <div className="mt-4 flex flex-col gap-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-paper/55">Wins</p>
+                  <p className="mb-1.5 text-xs font-medium text-paper/70">Wins</p>
                   <AutoTextarea
                     value={entry.wins}
                     maxLength={2000}
@@ -405,7 +405,7 @@ export default function JournalEditor({
                   />
                 </div>
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-paper/55">
+                  <p className="mb-1.5 text-xs font-medium text-paper/70">
                     Lessons
                   </p>
                   <AutoTextarea
@@ -418,7 +418,7 @@ export default function JournalEditor({
                 </div>
               </div>
               <div>
-                <p className="mb-1.5 text-xs font-medium text-paper/55">
+                <p className="mb-1.5 text-xs font-medium text-paper/70">
                   Tomorrow
                 </p>
                 <AutoTextarea
@@ -495,7 +495,7 @@ function HabitsCard({
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h3 className="font-bold tracking-tight text-xl sm:text-2xl">Habits</h3>
         <div className="flex items-baseline gap-3">
-          {summary && <span className="text-xs text-paper/50">{summary}</span>}
+          {summary && <span className="text-xs text-paper/65">{summary}</span>}
           <button
             type="button"
             onClick={() => setEditing((v) => !v)}
@@ -507,7 +507,7 @@ function HabitsCard({
       </div>
 
       {habits.length === 0 && !editing && (
-        <p className="text-sm text-paper/45">No habits yet.</p>
+        <p className="text-sm text-paper/60">No habits yet.</p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -524,7 +524,7 @@ function HabitsCard({
                 className={`flex h-9 items-center gap-2 rounded-full border px-3 text-sm transition ${
                   checked
                     ? "border-moss/50 bg-moss/15 text-paper"
-                    : "border-paper/10 text-paper/70 hover:bg-paper/5"
+                    : "border-paper/10 text-paper/78 hover:bg-paper/5"
                 } ${editing ? "rounded-r-none border-r-0" : ""}`}
               >
                 <span
@@ -546,7 +546,7 @@ function HabitsCard({
                       startTransition(() => deleteHabit(h.id));
                     }
                   }}
-                  className="flex h-9 w-8 items-center justify-center rounded-r-full border border-paper/10 text-paper/40 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                  className="flex h-9 w-8 items-center justify-center rounded-r-full border border-paper/10 text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
                 >
                   ×
                 </button>
@@ -671,7 +671,7 @@ function SaveStatus({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           className={`flex items-center gap-1.5 text-xs font-medium ${
-            label === "Saved" ? "text-moss" : "text-paper/50"
+            label === "Saved" ? "text-moss" : "text-paper/65"
           }`}
         >
           {label === "Saved" && <CheckIcon size={12} />}

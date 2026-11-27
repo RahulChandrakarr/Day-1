@@ -78,7 +78,7 @@ export default async function BorrowPage() {
               i === 2 ? "col-span-2 sm:col-span-1" : ""
             }`}
           >
-            <p className="flex items-center gap-2 text-sm text-paper/55">
+            <p className="flex items-center gap-2 text-sm text-paper/70">
               {tile.swatch && (
                 <span className={`h-2.5 w-2.5 rounded-sm ${tile.swatch}`} />
               )}
@@ -87,12 +87,12 @@ export default async function BorrowPage() {
             <p className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl xl:text-3xl">
               {tile.value}
             </p>
-            <p className="mt-1 text-xs text-paper/45">{tile.hint}</p>
+            <p className="mt-1 text-xs text-paper/60">{tile.hint}</p>
           </div>
         ))}
       </div>
 
-      <p className="-mt-2 text-sm text-paper/45">
+      <p className="-mt-2 text-sm text-paper/60">
         Log borrowing with Add entry above. It isn&apos;t counted as income or
         expenses. Plan what to return or collect in the{" "}
         <Link href="/financial/monthly" className="text-ember hover:underline">

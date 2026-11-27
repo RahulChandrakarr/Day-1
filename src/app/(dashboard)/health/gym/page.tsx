@@ -62,11 +62,11 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             selected ? "border-ember/60 bg-ember/15" : "border-paper/10 hover:bg-paper/5"
           }`}
         >
-          <span className="text-xs text-paper/55">{WEEKDAYS[i].short}</span>
+          <span className="text-xs text-paper/70">{WEEKDAYS[i].short}</span>
           <span className="text-base leading-none">
             {d.rest ? "😴" : complete ? "✅" : total ? `${doneCount}/${total}` : "—"}
           </span>
-          <span className="w-full truncate text-[10px] text-paper/45">
+          <span className="w-full truncate text-[10px] text-paper/60">
             {d.rest ? "Rest" : d.title || (total ? "Workout" : "")}
           </span>
         </Link>
@@ -109,7 +109,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           <span className="text-4xl">🏋️</span>
           <div>
             <h3 className="font-bold tracking-tight text-2xl">Build your training plan</h3>
-            <p className="mt-1 max-w-sm text-sm text-paper/55">
+            <p className="mt-1 max-w-sm text-sm text-paper/70">
               Add your height, weight and goal, and the app builds a 4-week plan
               for you: weeks 1–3 get harder, week 4 is lighter so you recover.
             </p>
@@ -129,7 +129,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
               <div className="mb-3 flex items-baseline justify-between gap-3">
                 <h3 className="font-bold tracking-tight text-[19px]">This week</h3>
                 {block && ends && (
-                  <span className="text-xs text-paper/45">
+                  <span className="text-xs text-paper/60">
                     Block ends {formatShortDate(ends)}
                   </span>
                 )}
@@ -141,7 +141,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
           <Card>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wider text-paper/45">
+                <p className="text-xs font-medium uppercase tracking-wider text-paper/60">
                   {WEEKDAYS[weekday - 1].label}
                   {block && ` · ${block.name}`}
                 </p>
@@ -164,7 +164,7 @@ export default async function GymPage({ searchParams }: PageProps<"/health/gym">
             </div>
 
             {blockWeekNow && !day.rest && (
-              <p className="mb-4 rounded-2xl border border-paper/10 bg-inset px-3 py-2 text-sm text-paper/60">
+              <p className="mb-4 rounded-2xl border border-paper/10 bg-inset px-3 py-2 text-sm text-paper/72">
                 {blockWeekNow.advice}
               </p>
             )}

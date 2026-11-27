@@ -42,7 +42,7 @@ export default function PersonaPicker() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-semibold">{p.name}</span>
-          <span className="block truncate text-xs text-paper/50">{p.tagline}</span>
+          <span className="block truncate text-xs text-paper/65">{p.tagline}</span>
         </span>
         {p.id === persona.id && <span className="text-sm font-bold text-ember">✓</span>}
       </button>
@@ -51,7 +51,7 @@ export default function PersonaPicker() {
           type="button"
           onClick={() => setView({ kind: "edit", persona: p })}
           aria-label={`Edit ${p.name}`}
-          className="mr-1 flex h-10 w-10 items-center justify-center rounded-full text-paper/50 hover:bg-paper/10 hover:text-paper"
+          className="mr-1 flex h-10 w-10 items-center justify-center rounded-full text-paper/65 hover:bg-paper/10 hover:text-paper"
         >
           ✎
         </button>
@@ -75,7 +75,7 @@ export default function PersonaPicker() {
         {persona.id !== "assistant" && (
           <span className="truncate text-sm font-semibold">{persona.name}</span>
         )}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="shrink-0 text-paper/45">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="shrink-0 text-paper/60">
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
@@ -92,7 +92,7 @@ export default function PersonaPicker() {
             <ul className="overflow-hidden rounded-card border border-paper/10">{builtIns.map(row)}</ul>
             {custom.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <p className="px-1 text-xs font-medium text-paper/55">Your personas</p>
+                <p className="px-1 text-xs font-medium text-paper/70">Your personas</p>
                 <ul className="overflow-hidden rounded-card border border-paper/10">{custom.map(row)}</ul>
               </div>
             )}
@@ -109,7 +109,7 @@ export default function PersonaPicker() {
             <button
               type="button"
               onClick={() => setView({ kind: "list" })}
-              className="self-start text-sm font-semibold text-paper/55 hover:text-paper"
+              className="self-start text-sm font-semibold text-paper/70 hover:text-paper"
             >
               ← All personas
             </button>

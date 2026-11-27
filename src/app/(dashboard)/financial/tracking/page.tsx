@@ -48,7 +48,7 @@ function Card({
   return (
     <Shell>
       <h3 className="font-bold tracking-tight text-[19px]">{title}</h3>
-      {subtitle && <p className="text-sm text-paper/50">{subtitle}</p>}
+      {subtitle && <p className="text-sm text-paper/65">{subtitle}</p>}
       <div className="mt-3">{children}</div>
     </Shell>
   );
@@ -142,7 +142,7 @@ export default async function TrackingPage({
               className={`h-9 rounded-lg px-4 text-sm leading-9 transition ${
                 view === v.id
                   ? "bg-paper/10 font-medium text-paper"
-                  : "text-paper/55 hover:text-paper"
+                  : "text-paper/70 hover:text-paper"
               }`}
             >
               {v.label}

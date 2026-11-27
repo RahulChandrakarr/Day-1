@@ -155,7 +155,7 @@ function AboutCard({
                 setPath(null);
                 setPreview(null);
               }}
-              className="text-sm text-paper/50"
+              className="text-sm text-paper/65"
             >
               Remove photo
             </button>
@@ -183,7 +183,7 @@ function AboutCard({
           />
         </Field>
         <Field label="Email">
-          <input value={email} readOnly className={`${inputClass} text-paper/50`} />
+          <input value={email} readOnly className={`${inputClass} text-paper/65`} />
         </Field>
       </div>
       <div className="mt-4 flex flex-col gap-2">

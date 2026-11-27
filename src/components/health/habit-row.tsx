@@ -74,7 +74,7 @@ export default function HabitRow({
             <p className="text-[15px] font-medium">{habit.name}</p>
             <p
               className={`mt-0.5 text-xs ${
-                did || streak > 0 ? "text-moss" : "text-paper/45"
+                did || streak > 0 ? "text-moss" : "text-paper/60"
               }`}
             >
               {sub}
@@ -95,7 +95,7 @@ export default function HabitRow({
                 type="button"
                 aria-label={`${habit.name}: didn't`}
                 onClick={() => resolve("skip")}
-                className="h-11 w-11 rounded-full border-[1.5px] border-paper/15 text-[15px] text-paper/55 transition active:bg-paper/5"
+                className="h-11 w-11 rounded-full border-[1.5px] border-paper/15 text-[15px] text-paper/70 transition active:bg-paper/5"
               >
                 ✕
               </button>
@@ -104,7 +104,7 @@ export default function HabitRow({
             <div className="flex items-center gap-2.5">
               <span
                 className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  did ? "bg-moss/15 text-moss" : "bg-paper/[0.07] text-paper/55"
+                  did ? "bg-moss/15 text-moss" : "bg-paper/[0.07] text-paper/70"
                 }`}
               >
                 {did ? "Did it" : "Didn't"}
@@ -115,7 +115,7 @@ export default function HabitRow({
                   setStatus(null);
                   save({ done: null });
                 }}
-                className="px-0.5 py-1.5 text-xs text-paper/40 transition hover:text-paper"
+                className="px-0.5 py-1.5 text-xs text-paper/55 transition hover:text-paper"
               >
                 Undo
               </button>
@@ -125,7 +125,7 @@ export default function HabitRow({
 
         {habit.count_label && (
           <div className="mt-2.5 flex items-center gap-3 rounded-xl bg-inset px-2.5 py-2">
-            <span className="flex-1 text-xs text-paper/55">
+            <span className="flex-1 text-xs text-paper/70">
               How many today?
               {habit.daily_limit !== null &&
                 ` · ${habit.kind === "quit" ? "max" : "goal"} ${habit.daily_limit}`}

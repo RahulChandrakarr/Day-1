@@ -131,7 +131,7 @@ export default function HabitCard({
           <h4 className={`truncate font-medium ${compact ? "" : "text-lg"}`}>
             {habit.name}
           </h4>
-          <p className="text-xs text-paper/50">
+          <p className="text-xs text-paper/65">
             {streak > 0 ? `🔥 ${streak} day${streak === 1 ? "" : "s"} in a row` : "No streak yet"}
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function HabitCard({
                       c ? (c.done ? "bg-moss" : "bg-chart-expense") : "bg-paper/10"
                     } ${d === date ? "ring-2 ring-ember/50 ring-offset-1 ring-offset-surface" : ""}`}
                   />
-                  <span className="text-[9px] text-paper/35">
+                  <span className="text-[9px] text-paper/50">
                     {weekdayNarrow.format(new Date(`${d}T00:00:00Z`))}
                   </span>
                 </li>
@@ -163,7 +163,7 @@ export default function HabitCard({
       {habit.count_label && (
         <div className="mt-3 flex items-center gap-2">
           <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-paper/10 bg-inset px-3 py-2">
-            <span className="shrink-0 text-xs text-paper/55">
+            <span className="shrink-0 text-xs text-paper/70">
               {habit.kind === "quit" ? "How many today?" : "How much today?"}
             </span>
             <input
@@ -190,9 +190,9 @@ export default function HabitCard({
               }}
               placeholder="0"
               aria-label={`${habit.name}: ${habit.count_label} today`}
-              className="w-16 bg-transparent text-right text-lg font-semibold tabular-nums text-paper outline-none placeholder:text-paper/25"
+              className="w-16 bg-transparent text-right text-lg font-semibold tabular-nums text-paper outline-none placeholder:text-paper/40"
             />
-            <span className="shrink-0 text-sm text-paper/45">
+            <span className="shrink-0 text-sm text-paper/60">
               {habit.count_label}
             </span>
           </label>
@@ -200,7 +200,7 @@ export default function HabitCard({
             <span
               className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${
                 draft.count === null
-                  ? "text-paper/40"
+                  ? "text-paper/55"
                   : (habit.kind === "quit"
                         ? draft.count <= habit.daily_limit
                         : draft.count >= habit.daily_limit)
@@ -222,7 +222,7 @@ export default function HabitCard({
           className={`flex h-10 items-center justify-center gap-2 rounded-xl border text-sm font-medium transition ${
             draft.done === true
               ? "border-moss bg-moss text-ink"
-              : "border-paper/15 text-paper/70 hover:bg-paper/5"
+              : "border-paper/15 text-paper/78 hover:bg-paper/5"
           }`}
         >
           ✓ Did it
@@ -234,7 +234,7 @@ export default function HabitCard({
           className={`flex h-10 items-center justify-center gap-2 rounded-xl border text-sm font-medium transition ${
             draft.done === false
               ? "border-chart-expense bg-chart-expense text-white"
-              : "border-paper/15 text-paper/70 hover:bg-paper/5"
+              : "border-paper/15 text-paper/78 hover:bg-paper/5"
           }`}
         >
           ✗ Didn&apos;t
@@ -253,7 +253,7 @@ export default function HabitCard({
             <div className="pt-2">
               {details ? (
                 <>
-                  <p className="mb-2 text-xs text-paper/55">
+                  <p className="mb-2 text-xs text-paper/70">
                     {draft.done ? "How did it feel?" : "Why not?"}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -297,14 +297,14 @@ export default function HabitCard({
                         ? "Anything to remember? (optional)"
                         : "What happened? (optional)"
                     }
-                    className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
+                    className="mt-2 h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/60 focus:ring-4 focus:ring-ember/10"
                   />
                 </>
               ) : (
                 <button
                   type="button"
                   onClick={() => setDetails(true)}
-                  className="text-xs text-paper/45 transition hover:text-paper"
+                  className="text-xs text-paper/60 transition hover:text-paper"
                 >
                   {summary ?? (draft.done ? "+ How did it feel?" : "+ Why not?")}
                 </button>
@@ -341,7 +341,7 @@ export default function HabitCard({
                     className={`h-7 rounded-full px-3 font-medium transition ${
                       settings.kind === value
                         ? "bg-paper/10 text-paper"
-                        : "text-paper/45 hover:text-paper"
+                        : "text-paper/60 hover:text-paper"
                     }`}
                   >
                     {text}
@@ -364,7 +364,7 @@ export default function HabitCard({
                   })
                 }
                 placeholder="Count something? e.g. cigarettes"
-                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+                className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
               />
               {settings.count_label.trim() && (
                 <input
@@ -387,7 +387,7 @@ export default function HabitCard({
                   }
                   placeholder={settings.kind === "quit" ? "Daily max" : "Daily goal"}
                   aria-label={settings.kind === "quit" ? "Daily maximum" : "Daily goal"}
-                  className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+                  className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
                 />
               )}
             </div>
@@ -404,7 +404,7 @@ export default function HabitCard({
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
-              className="rounded-lg px-2 py-1 text-paper/40 transition hover:bg-paper/5 hover:text-paper"
+              className="rounded-lg px-2 py-1 text-paper/55 transition hover:bg-paper/5 hover:text-paper"
             >
               {editing ? "Done" : "Settings"}
             </button>
@@ -421,7 +421,7 @@ export default function HabitCard({
                 )
                   startRemove(() => deleteHabit(habit.id));
               }}
-              className="rounded-lg px-2 py-1 text-paper/35 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+              className="rounded-lg px-2 py-1 text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
             >
               Remove
             </button>
@@ -449,7 +449,7 @@ function Pill({
       className={`h-8 rounded-full border px-3 text-sm transition ${
         selected
           ? "border-paper/40 bg-paper/10 text-paper"
-          : "border-paper/10 text-paper/65 hover:bg-paper/5"
+          : "border-paper/10 text-paper/75 hover:bg-paper/5"
       }`}
     >
       {children}

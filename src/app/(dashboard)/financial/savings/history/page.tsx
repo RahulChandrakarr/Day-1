@@ -50,7 +50,7 @@ export default async function SavingsHistoryPage({
       <Card>
         <div className="mb-3">
           <h3 className="font-bold tracking-tight text-[19px]">Saved each month</h3>
-          <p className="text-sm text-paper/50">
+          <p className="text-sm text-paper/65">
             {formatMoney(Math.max(yearNet, 0))} saved in {year}, against the savings
             target in each month&apos;s plan.
           </p>
@@ -58,7 +58,7 @@ export default async function SavingsHistoryPage({
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <table className="w-full min-w-[32rem] text-sm">
             <thead>
-              <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/45">
+              <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/60">
                 <th className="py-2 pr-3 font-medium">Month</th>
                 <th className="px-3 py-2 text-right font-medium">Put in</th>
                 <th className="px-3 py-2 text-right font-medium">Took out</th>
@@ -79,10 +79,10 @@ export default async function SavingsHistoryPage({
                         {formatMonth(r.key).replace(` ${year}`, "")}
                       </Link>
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums text-paper/70">
+                    <td className="px-3 py-2.5 text-right tabular-nums text-paper/78">
                       {empty ? "—" : formatMoney(r.put)}
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums text-paper/70">
+                    <td className="px-3 py-2.5 text-right tabular-nums text-paper/78">
                       {empty ? "—" : formatMoney(r.out)}
                     </td>
                     <td
@@ -98,7 +98,7 @@ export default async function SavingsHistoryPage({
                     >
                       {empty ? "—" : `${r.net < 0 ? "−" : ""}${formatMoney(Math.abs(r.net))}`}
                     </td>
-                    <td className="py-2.5 pl-3 text-right tabular-nums text-paper/50">
+                    <td className="py-2.5 pl-3 text-right tabular-nums text-paper/65">
                       {r.target === null ? "—" : formatMoney(r.target)}
                     </td>
                   </tr>

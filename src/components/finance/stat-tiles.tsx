@@ -54,7 +54,7 @@ export default function StatTiles({
           title={tile.hint ? `${tile.label}: ${tile.value} · ${tile.hint}` : `${tile.label}: ${tile.value}`}
           className={`min-w-0 card p-3 sm:col-span-1 ${phoneSpan(tiles.length, i)}`}
         >
-          <p className="truncate text-[11px] text-paper/55 sm:text-xs">{tile.label}</p>
+          <p className="truncate text-[11px] text-paper/70 sm:text-xs">{tile.label}</p>
           <p
             // Lakh-sized amounts step down a size to fit three across on phones
             className={`mt-0.5 truncate font-bold tabular-nums sm:text-[19px] ${
@@ -64,7 +64,7 @@ export default function StatTiles({
             {tile.value}
           </p>
           {tile.hint && (
-            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-paper/40 sm:text-xs">{tile.hint}</p>
+            <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-paper/55 sm:text-xs">{tile.hint}</p>
           )}
         </div>
       ))}

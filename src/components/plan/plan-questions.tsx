@@ -28,7 +28,7 @@ export default function PlanQuestions({
     <ol className="flex flex-col gap-2 border-t border-paper/[0.06] px-1 py-3">
       {questions.map((question, index) => (
         <li key={question} className="flex flex-col gap-1">
-          <label className="text-[13px] text-paper/70" htmlFor={`plan-q-${index}`}>
+          <label className="text-[13px] text-paper/78" htmlFor={`plan-q-${index}`}>
             {index + 1}. {question}
           </label>
           <input
@@ -47,7 +47,7 @@ export default function PlanQuestions({
           />
         </li>
       ))}
-      <p className="text-[11px] text-paper/40">
+      <p className="text-[11px] text-paper/55">
         {pending ? "Saving…" : saved ? "Saved" : "Answer in a line. It saves when you leave the box."}
       </p>
     </ol>

@@ -23,11 +23,11 @@ const SECTIONS: { phase: Phase; label: string; hint: string }[] = [
 // tone: colour of the working muscles in the drawing
 const ACCENT: Record<Phase, { heading: string; icon: string; tone: string }> = {
   warmup: { heading: "text-ember", icon: "bg-ember/15 text-ember", tone: "text-ember" },
-  main: { heading: "text-paper/60", icon: "bg-paper/10 text-paper/80", tone: "text-ember" },
+  main: { heading: "text-paper/72", icon: "bg-paper/10 text-paper/80", tone: "text-ember" },
   cooldown: { heading: "text-moss", icon: "bg-moss/15 text-moss", tone: "text-moss" },
 };
 
-const label = "text-[11px] font-semibold uppercase tracking-wider text-paper/45";
+const label = "text-[11px] font-semibold uppercase tracking-wider text-paper/60";
 
 // Today's exercises from the plan, ticked off one by one. Tap an exercise to
 // see what it works and how to do it.
@@ -66,7 +66,7 @@ export default function GymTracker({
 
   if (day.rest) {
     return (
-      <p className="card py-8 text-center text-sm text-paper/50">
+      <p className="card py-8 text-center text-sm text-paper/65">
         😴 Rest day. Recover well.
       </p>
     );
@@ -74,7 +74,7 @@ export default function GymTracker({
 
   if (total === 0) {
     return (
-      <p className="card py-8 text-center text-sm text-paper/50">
+      <p className="card py-8 text-center text-sm text-paper/65">
         Nothing planned for this day.
       </p>
     );
@@ -91,10 +91,10 @@ export default function GymTracker({
     <div className="flex flex-col gap-4">
       <div>
         <div className="mb-1.5 flex items-baseline justify-between text-sm">
-          <span className={complete ? "font-medium text-moss" : "text-paper/60"}>
+          <span className={complete ? "font-medium text-moss" : "text-paper/72"}>
             {complete ? "Workout complete 💪" : `${finished} of ${total} done`}
           </span>
-          <span className="text-xs text-paper/45 tabular-nums">
+          <span className="text-xs text-paper/60 tabular-nums">
             {Math.round((finished / total) * 100)}%
           </span>
         </div>
@@ -116,9 +116,9 @@ export default function GymTracker({
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${ACCENT[g.phase].heading}`}>
                   {g.label}
                 </h3>
-                <p className="text-xs text-paper/40">{g.hint}</p>
+                <p className="text-xs text-paper/55">{g.hint}</p>
               </div>
-              <span className="shrink-0 text-xs text-paper/40 tabular-nums">
+              <span className="shrink-0 text-xs text-paper/55 tabular-nums">
                 {g.exercises.filter((e) => done.includes(e.id)).length}/{g.exercises.length}
               </span>
             </header>
@@ -178,7 +178,7 @@ function ExerciseRow({
   ]
     .filter(Boolean)
     .join(" · ");
-  const pill = checked ? "bg-moss/15 text-moss" : "bg-paper/10 text-paper/75";
+  const pill = checked ? "bg-moss/15 text-moss" : "bg-paper/10 text-paper/80";
   const panelId = `exercise-${e.id}`;
 
   return (
@@ -239,14 +239,14 @@ function ExerciseRow({
           <span className="min-w-0 flex-1">
             <span
               className={`block break-words font-medium leading-snug ${
-                checked ? "text-paper/55 line-through" : ""
+                checked ? "text-paper/70 line-through" : ""
               }`}
             >
-              {main && <span className="mr-1.5 text-xs text-paper/35">{index + 1}.</span>}
+              {main && <span className="mr-1.5 text-xs text-paper/50">{index + 1}.</span>}
               {e.name}
             </span>
             {(target || summary) && (
-              <span className="mt-1 flex min-w-0 items-center gap-2 text-xs text-paper/45">
+              <span className="mt-1 flex min-w-0 items-center gap-2 text-xs text-paper/60">
                 {target && (
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 font-medium tabular-nums sm:hidden ${pill}`}
@@ -275,7 +275,7 @@ function ExerciseRow({
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden
-            className={`shrink-0 text-paper/35 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`shrink-0 text-paper/50 transition-transform ${open ? "rotate-180" : ""}`}
           >
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -321,7 +321,7 @@ function ExerciseDetail({
 }) {
   return (
     <div className="grid gap-4 border-t border-paper/10 px-3 pb-4 pt-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:px-4">
-      <div className="flex items-center justify-center rounded-xl bg-paper/5 p-2 text-paper/75">
+      <div className="flex items-center justify-center rounded-xl bg-paper/5 p-2 text-paper/80">
         <MotionIllustration
           name={exercise.name}
           category={info.category}
@@ -337,7 +337,7 @@ function ExerciseDetail({
         {info.instructions.length > 0 ? (
           <div>
             <p className={label}>How to do it</p>
-            <ol className="mt-1 flex list-decimal flex-col gap-1 pl-4 text-paper/75 marker:text-paper/35">
+            <ol className="mt-1 flex list-decimal flex-col gap-1 pl-4 text-paper/80 marker:text-paper/50">
               {info.instructions.map((step) => (
                 <li key={step}>{step}</li>
               ))}
@@ -358,7 +358,7 @@ function ExerciseDetail({
         {tips.length > 0 && (
           <div>
             <p className={label}>Tips</p>
-            <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-paper/75 marker:text-paper/35">
+            <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-paper/80 marker:text-paper/50">
               {tips.map((tip) => (
                 <li key={tip}>{tip}</li>
               ))}

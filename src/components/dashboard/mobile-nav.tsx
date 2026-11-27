@@ -84,14 +84,14 @@ export default function MobileNav({
               >
                 <div className="px-3 py-2">
                   <p className="truncate text-sm font-medium">{name}</p>
-                  <p className="truncate text-xs text-paper/40">
+                  <p className="truncate text-xs text-paper/55">
                     {profile.email}
                   </p>
                 </div>
                 <Link
                   href="/settings"
                   onClick={() => setMenuOpen(false)}
-                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper"
+                  className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/78 hover:bg-paper/5 hover:text-paper"
                 >
                   {settingsIcon}
                   Settings
@@ -100,14 +100,14 @@ export default function MobileNav({
                   <Link
                     href="/admin/users"
                     onClick={() => setMenuOpen(false)}
-                    className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper"
+                    className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm text-paper/78 hover:bg-paper/5 hover:text-paper"
                   >
                     {usersIcon}
                     Manage users
                   </Link>
                 )}
                 <form action={logout}>
-                  <button className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm text-paper/70 hover:bg-paper/5 hover:text-paper">
+                  <button className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm text-paper/78 hover:bg-paper/5 hover:text-paper">
                     {logoutIcon}
                     Sign out
                   </button>
@@ -129,7 +129,7 @@ export default function MobileNav({
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={`relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10.5px] transition-colors ${
-                    active ? "font-semibold text-ember" : "text-paper/55"
+                    active ? "font-semibold text-ember" : "text-paper/70"
                   }`}
                 >
                   {active && (

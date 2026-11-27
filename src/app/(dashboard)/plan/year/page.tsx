@@ -98,7 +98,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                     <span className="text-2xl leading-none">{goal.emoji}</span>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-bold tracking-tight text-xl leading-tight">{goal.title}</h3>
-                      <p className="text-xs text-paper/45">
+                      <p className="text-xs text-paper/60">
                         {goal.start_month === 1 && goal.end_month === 12
                           ? "All year"
                           : `${MONTH_NAMES[goal.start_month - 1]} – ${MONTH_NAMES[goal.end_month - 1]}`}{" "}
@@ -106,7 +106,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                         {goalMonths(goal).length === 1 ? "" : "s"}
                       </p>
                       {goal.notes && (
-                        <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-paper/55">
+                        <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-paper/70">
                           {goal.notes}
                         </p>
                       )}
@@ -136,7 +136,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                             className="flex flex-col items-center gap-1 opacity-25"
                           >
                             <span className="h-10 w-full rounded-md border border-dashed border-paper/20" />
-                            <span className="text-[9px] text-paper/40">
+                            <span className="text-[9px] text-paper/55">
                               {formatMonthShort(month).slice(0, 1)}
                             </span>
                           </span>
@@ -157,7 +157,7 @@ export default async function PlanYearPage({ searchParams }: PageProps<"/plan/ye
                             />
                           </span>
                           <span
-                            className={`text-[9px] ${month === currentMonth ? "font-bold text-ember" : "text-paper/40"}`}
+                            className={`text-[9px] ${month === currentMonth ? "font-bold text-ember" : "text-paper/55"}`}
                           >
                             {formatMonthShort(month).slice(0, 1)}
                           </span>

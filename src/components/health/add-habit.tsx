@@ -64,7 +64,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
           maxLength={40}
           onChange={(e) => setName(e.target.value)}
           placeholder="Add a habit to track, e.g. Quit smoking"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
         />
         <button
           type="submit"
@@ -88,7 +88,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
               aria-pressed={kind === value}
               onClick={() => setKind(value)}
               className={`h-7 rounded-full px-3 font-medium transition ${
-                kind === value ? "bg-paper/10 text-paper" : "text-paper/45 hover:text-paper"
+                kind === value ? "bg-paper/10 text-paper" : "text-paper/60 hover:text-paper"
               }`}
             >
               {text}
@@ -100,7 +100,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
           maxLength={20}
           onChange={(e) => setCountLabel(e.target.value)}
           placeholder="Count something? e.g. cigarettes"
-          className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+          className="h-8 min-w-0 flex-1 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
         />
         {countLabel.trim() && (
           <input
@@ -109,7 +109,7 @@ export default function AddHabit({ existing }: { existing: string[] }) {
             onChange={(e) => setLimit(e.target.value.replace(/\D/g, "").slice(0, 4))}
             placeholder={kind === "quit" ? "Daily max" : "Daily goal"}
             aria-label={kind === "quit" ? "Daily maximum" : "Daily goal"}
-            className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/30 focus:border-ember/60"
+            className="h-8 w-24 rounded-full border border-paper/10 bg-inset px-3 text-xs text-paper outline-none placeholder:text-paper/45 focus:border-ember/60"
           />
         )}
       </div>
@@ -131,11 +131,11 @@ export default function AddHabit({ existing }: { existing: string[] }) {
                 ? `Tracks ${s.count_label} a day`
                 : "Yes / no each day"
             }
-            className="rounded-full border border-dashed border-paper/20 px-2.5 py-1 text-xs text-paper/55 transition hover:border-paper/40 hover:text-paper"
+            className="rounded-full border border-dashed border-paper/20 px-2.5 py-1 text-xs text-paper/70 transition hover:border-paper/40 hover:text-paper"
           >
             + {s.name}
             {s.count_label && (
-              <span className="text-paper/35"> · {s.count_label}</span>
+              <span className="text-paper/50"> · {s.count_label}</span>
             )}
           </button>
         ))}

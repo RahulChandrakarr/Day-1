@@ -92,7 +92,7 @@ export default function LoginForm() {
         <section className="flex flex-col gap-6">
           <motion.div variants={item} className="flex items-center gap-3">
             <Logo className="h-11 w-auto" priority />
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/70">
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/78">
               Life tracker
             </span>
           </motion.div>
@@ -112,7 +112,7 @@ export default function LoginForm() {
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-lg text-paper/75"
+                  className="text-lg text-paper/80"
                 >
                   {now.toLocaleDateString(undefined, {
                     weekday: "long",
@@ -150,13 +150,13 @@ export default function LoginForm() {
             className="card glass-strong rounded-[28px] p-6 shadow-2xl shadow-[rgb(120_90_70/0.25)] dark:shadow-black/40 sm:p-8"
           >
             <h2 className="font-bold tracking-tight text-3xl">Sign in</h2>
-            <p className="mt-1 text-sm text-paper/50">
+            <p className="mt-1 text-sm text-paper/65">
               Pick up where you left off.
             </p>
 
             <form action={action} className="mt-8 flex flex-col gap-5">
               <label className="flex flex-col gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-paper/50">
+                <span className="text-xs font-medium uppercase tracking-wider text-paper/65">
                   Email
                 </span>
                 <input
@@ -164,13 +164,13 @@ export default function LoginForm() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="h-12 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                  className="h-12 rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/40 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                   placeholder="you@example.com"
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-paper/50">
+                <span className="text-xs font-medium uppercase tracking-wider text-paper/65">
                   Password
                 </span>
                 <div className="relative">
@@ -179,13 +179,13 @@ export default function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="h-12 w-full rounded-xl border border-paper/10 bg-inset px-3 pr-16 text-paper outline-none transition placeholder:text-paper/25 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
+                    className="h-12 w-full rounded-xl border border-paper/10 bg-inset px-3 pr-16 text-paper outline-none transition placeholder:text-paper/40 focus:border-ember/70 focus:ring-4 focus:ring-ember/15"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute inset-y-0 right-2 my-auto h-8 rounded-lg px-2 text-xs text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+                    className="absolute inset-y-0 right-2 my-auto h-8 rounded-lg px-2 text-xs text-paper/65 transition hover:bg-paper/10 hover:text-paper"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
@@ -249,7 +249,7 @@ export default function LoginForm() {
             </form>
           </motion.div>
 
-          <p className="mt-4 text-center text-xs text-paper/30">
+          <p className="mt-4 text-center text-xs text-paper/45">
             Invite only. Ask your admin for access.
           </p>
         </motion.section>

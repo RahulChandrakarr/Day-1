@@ -107,7 +107,7 @@ export default function GoalSheet({
                 type="button"
                 onClick={remove}
                 disabled={pending}
-                className="h-12 rounded-2xl px-4 text-sm text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="h-12 rounded-2xl px-4 text-sm text-paper/65 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
               >
                 Delete
               </button>
@@ -183,7 +183,7 @@ export default function GoalSheet({
               </select>
             </Field>
           </div>
-          <p className="-mt-2 text-xs text-paper/40">
+          <p className="-mt-2 text-xs text-paper/55">
             {endMonth - startMonth + 1} month
             {endMonth - startMonth === 0 ? "" : "s"}. Monthly targets and tasks
             are spread across these months only.
@@ -214,7 +214,7 @@ export default function GoalSheet({
               </select>
             </Field>
           </div>
-          <p className="-mt-2 text-xs text-paper/40">
+          <p className="-mt-2 text-xs text-paper/55">
             With a number, progress follows what you log. Without one, it
             follows the tasks you tick.
           </p>

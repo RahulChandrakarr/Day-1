@@ -194,7 +194,7 @@ export default function VoiceInput({
               className={`h-7 min-w-9 rounded-full px-2 font-medium transition-colors ${
                 lang === l.code
                   ? "bg-paper/10 text-paper"
-                  : "text-paper/45 hover:text-paper"
+                  : "text-paper/60 hover:text-paper"
               }`}
             >
               {l.short}
@@ -249,7 +249,7 @@ export default function VoiceInput({
             exit={{ opacity: 0 }}
             role={error ? "alert" : "status"}
             className={`max-w-full text-right text-xs ${
-              error ? "text-red-700 dark:text-red-300" : "text-paper/55"
+              error ? "text-red-700 dark:text-red-300" : "text-paper/70"
             }`}
           >
             {error ??

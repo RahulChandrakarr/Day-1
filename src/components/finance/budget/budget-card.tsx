@@ -58,7 +58,7 @@ export default function BudgetCard({
                 : `Plan ${periodLabel}`
               : "Plan vs actual"}
           </h3>
-          <p className="mt-0.5 text-sm text-paper/50">
+          <p className="mt-0.5 text-sm text-paper/65">
             {editing
               ? mode === "copy" && previousLabel
                 ? `Starting from ${previousLabel}. Adjust and save.`
@@ -75,7 +75,7 @@ export default function BudgetCard({
               onClick={() => setMode("edit")}
               aria-label="Edit plan"
               title="Edit plan"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/70 transition hover:bg-paper/5 hover:text-paper"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/15 text-paper/78 transition hover:bg-paper/5 hover:text-paper"
             >
               <PencilIcon />
             </button>
@@ -88,7 +88,7 @@ export default function BudgetCard({
               }}
               aria-label={deleting ? "Deleting plan" : "Delete plan"}
               title="Delete plan"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-paper/60 transition hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50 dark:hover:text-red-300"
             >
               <TrashIcon />
             </button>
@@ -119,7 +119,7 @@ export default function BudgetCard({
             <BudgetReportView report={report} periodLabel={periodLabel} />
           ) : (
             <div className="flex flex-col items-center gap-4 card px-4 py-10 text-center">
-              <p className="max-w-sm text-sm text-paper/55">
+              <p className="max-w-sm text-sm text-paper/70">
                 Set how much goes to rent, EMI, bills and savings this {noun}.
                 Keep logging as usual and see how the estimate holds up.
               </p>

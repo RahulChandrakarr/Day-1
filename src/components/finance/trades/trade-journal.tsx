@@ -102,7 +102,7 @@ export default function TradeJournal({
       </div>
 
       {trades.length === 0 && (
-        <p className="text-sm text-paper/55">
+        <p className="text-sm text-paper/70">
           Nothing logged yet. Record a trade as you take it — the entry, your stop, your
           target and why — and this page will tell you which of your setups actually pay.
         </p>
@@ -120,13 +120,13 @@ export default function TradeJournal({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">
                       {t.symbol}
-                      <span className="ml-2 text-xs text-paper/45">
+                      <span className="ml-2 text-xs text-paper/60">
                         {t.side === "short" ? "short · " : ""}
                         {t.kind}
                         {t.setup ? ` · ${t.setup}` : ""}
                       </span>
                     </p>
-                    <p className="truncate text-xs text-paper/50">
+                    <p className="truncate text-xs text-paper/65">
                       {t.quantity} × {formatMoney(t.entry_price)} ·{" "}
                       {days === 0 ? "opened today" : `${days} ${days === 1 ? "day" : "days"} in`}
                       {t.stop_price !== null && ` · stop ${formatMoney(t.stop_price)}`}
@@ -135,11 +135,11 @@ export default function TradeJournal({
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-sm tabular-nums text-paper/70">
+                    <p className="text-sm tabular-nums text-paper/78">
                       {risk === null ? "no stop set" : `risking ${money(risk)}`}
                     </p>
                     <div className="mt-0.5 flex justify-end gap-3 text-xs font-medium">
-                      <button type="button" onClick={() => setEditing({ mode: "edit", trade: t })} className="text-paper/60">
+                      <button type="button" onClick={() => setEditing({ mode: "edit", trade: t })} className="text-paper/72">
                         Edit
                       </button>
                       <button type="button" onClick={() => setEditing({ mode: "close", trade: t })} className="text-ember">
@@ -151,7 +151,7 @@ export default function TradeJournal({
               );
             })}
           </Rows>
-          <p className="text-xs text-paper/40">
+          <p className="text-xs text-paper/55">
             Charges on the entries so far:{" "}
             {money(open.reduce((sum, t) => sum + openCosts(t), 0))}, estimated.
           </p>
@@ -171,11 +171,11 @@ export default function TradeJournal({
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">
                         {t.symbol}
-                        <span className="ml-2 text-xs text-paper/45">
+                        <span className="ml-2 text-xs text-paper/60">
                           {t.setup ?? t.kind}
                         </span>
                       </p>
-                      <p className="truncate text-xs text-paper/50">
+                      <p className="truncate text-xs text-paper/65">
                         {formatShortDate(t.entry_on)} → {formatShortDate(t.exit_on!)} ·{" "}
                         {formatMoney(t.entry_price)} → {formatMoney(t.exit_price!)}
                         {t.exit_reason && ` · ${t.exit_reason}`}
@@ -185,7 +185,7 @@ export default function TradeJournal({
                       <p className={`font-semibold tabular-nums ${toneClass(tone(pnl.net))}`}>
                         {signed(pnl.net)}
                       </p>
-                      <p className="text-xs tabular-nums text-paper/45">
+                      <p className="text-xs tabular-nums text-paper/60">
                         {r === null ? "" : `${r > 0 ? "+" : ""}${r.toFixed(2)}R · `}
                         {pnl.estimated ? "charges est." : "actual charges"}
                       </p>
@@ -241,7 +241,7 @@ function Breakdown({ trades }: { trades: Trade[] }) {
               type="button"
               onClick={() => setBy(option)}
               aria-pressed={by === option}
-              className={by === option ? "text-ember" : "text-paper/50"}
+              className={by === option ? "text-ember" : "text-paper/65"}
             >
               {option === "setup" ? "By setup" : "By horizon"}
             </button>
@@ -253,7 +253,7 @@ function Breakdown({ trades }: { trades: Trade[] }) {
           <li key={group.name} className="flex items-center gap-3 py-3">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium capitalize">{group.name}</p>
-              <p className="text-xs text-paper/50">
+              <p className="text-xs text-paper/65">
                 {group.stats.closed} closed
                 {group.stats.winRate !== null && ` · ${group.stats.winRate.toFixed(0)}% won`}
                 {group.stats.avgR !== null &&
@@ -297,7 +297,7 @@ function Segmented<T extends string>({
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={`min-h-9 flex-1 rounded-lg text-sm font-medium transition ${
-            value === option.value ? "bg-ember text-on-ember" : "text-paper/70 hover:bg-paper/5"
+            value === option.value ? "bg-ember text-on-ember" : "text-paper/78 hover:bg-paper/5"
           }`}
         >
           {option.label}
@@ -466,7 +466,7 @@ function LogForm({
             setError(null);
             setFile(picked);
           }}
-          className="text-sm text-paper/60"
+          className="text-sm text-paper/72"
         />
       </Field>
       <Error message={error} />
@@ -519,7 +519,7 @@ function EditForm({ trade, onDone }: { trade: Trade; onDone: () => void }) {
         </Field>
       </div>
       {movingStop && (
-        <p className="text-xs text-paper/45">
+        <p className="text-xs text-paper/60">
           Moving the stop is recorded — it&apos;s been moved {trade.stop_moves}× so far.
         </p>
       )}
@@ -616,7 +616,7 @@ function CloseForm({
         });
       }}
     >
-      <p className="text-sm text-paper/55">
+      <p className="text-sm text-paper/70">
         {trade.quantity} × {formatMoney(trade.entry_price)} in on {formatShortDate(trade.entry_on)}
         {trade.stop_price !== null && `, stop ${formatMoney(trade.stop_price)}`}.
       </p>
@@ -660,7 +660,7 @@ function CloseForm({
       {preview && (
         <p className="text-sm">
           <span className={toneClass(tone(preview.net))}>{signed(preview.net)}</span>{" "}
-          <span className="text-paper/45">
+          <span className="text-paper/60">
             after {money(preview.costs)} charges
             {preview.estimated ? " (estimated)" : ""}
           </span>

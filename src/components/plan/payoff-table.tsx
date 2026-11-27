@@ -34,7 +34,7 @@ export default function PayoffTable({ month }: { month?: string }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[40rem] text-sm tabular-nums">
           <thead>
-            <tr className="border-b border-paper/10 text-left text-paper/50">
+            <tr className="border-b border-paper/10 text-left text-paper/65">
               <th className="px-4 py-2.5 font-medium">Item</th>
               {MONTHS.map((column) => (
                 <th key={column.period} className="px-3 py-2.5 text-right font-medium">
@@ -82,7 +82,7 @@ export default function PayoffTable({ month }: { month?: string }) {
           </tfoot>
         </table>
       </div>
-      <p className="px-4 py-3 text-xs leading-relaxed text-paper/50">
+      <p className="px-4 py-3 text-xs leading-relaxed text-paper/65">
         The ₹6,000 Odessa trip is included in Vasu, so he is owed ₹20,478. It is
         not a second bill. November other is ₹1,425 and December other is ₹3,425.
       </p>

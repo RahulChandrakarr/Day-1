@@ -37,7 +37,7 @@ export default function GymChecklist({
   return (
     <section className="overflow-hidden card">
       <div className="px-4 pb-2.5 pt-3.5">
-        <div className="mb-2 flex justify-between text-xs text-paper/55">
+        <div className="mb-2 flex justify-between text-xs text-paper/70">
           <span className="font-semibold text-moss">
             {finished} done · {total - finished} to go
           </span>
@@ -91,7 +91,7 @@ export default function GymChecklist({
                       ? "bg-ember/15 text-ember"
                       : phase === "cooldown"
                         ? "bg-moss/15 text-moss"
-                        : "bg-paper/[0.06] text-paper/60"
+                        : "bg-paper/[0.06] text-paper/72"
                   }`}
                 >
                   <CategoryIcon
@@ -102,13 +102,13 @@ export default function GymChecklist({
                 <span className="min-w-0 flex-1">
                   <span
                     className={`block break-words text-[15px] font-medium leading-snug ${
-                      checked ? "text-paper/45 line-through" : ""
+                      checked ? "text-paper/60 line-through" : ""
                     }`}
                   >
                     {exercise.name}
                   </span>
                   {(phase !== "main" || target) && (
-                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-paper/45 sm:hidden">
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-paper/60 sm:hidden">
                       {phase !== "main" && (
                         <span>{phase === "warmup" ? "Warm-up" : "Cool-down"}</span>
                       )}
@@ -117,12 +117,12 @@ export default function GymChecklist({
                   )}
                 </span>
                 {phase !== "main" && (
-                  <span className="hidden shrink-0 text-xs text-paper/45 sm:inline">
+                  <span className="hidden shrink-0 text-xs text-paper/60 sm:inline">
                     {phase === "warmup" ? "Warm-up" : "Cool-down"}
                   </span>
                 )}
                 {target && (
-                  <span className="hidden shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold text-paper/55 sm:inline-block">
+                  <span className="hidden shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold text-paper/70 sm:inline-block">
                     {target}
                   </span>
                 )}

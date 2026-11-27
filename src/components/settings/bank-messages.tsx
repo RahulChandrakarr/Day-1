@@ -29,7 +29,7 @@ export default function BankMessages({
       <section className="flex flex-col gap-3">
         <div>
           <h2 className="font-bold tracking-tight text-2xl">Forward your bank SMS</h2>
-          <p className="mt-1 text-sm text-paper/55">
+          <p className="mt-1 text-sm text-paper/70">
             India has no way for a personal app to read your bank directly — the account
             aggregator system is only open to licensed companies. What works instead is the
             message your bank already sends you. Your phone forwards those here, and each one
@@ -39,7 +39,7 @@ export default function BankMessages({
 
         <CopyRow label="Your forwarding address" value={full} />
 
-        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm text-paper/70">
+        <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm text-paper/78">
           <li>
             Install <span className="text-paper">MacroDroid</span> from the Play Store on your
             Android phone.
@@ -59,7 +59,7 @@ export default function BankMessages({
           label="Request body"
           value={'{"sender": "[sms_sender]", "body": "[sms_message]"}'}
         />
-        <p className="text-sm text-paper/55">
+        <p className="text-sm text-paper/70">
           Repeat the trigger for each bank. Keep the sender filter tight: messages that never
           match never leave your phone, so one-time passwords stay where they belong.
         </p>
@@ -68,7 +68,7 @@ export default function BankMessages({
       {untagged.length > 0 && (
         <section className="flex flex-col gap-2">
           <h2 className="font-bold tracking-tight text-2xl">Tell the app which account is which</h2>
-          <p className="text-sm text-paper/55">
+          <p className="text-sm text-paper/70">
             {untagged.map((a) => a.name).join(" and ")}{" "}
             {untagged.length === 1 ? "has" : "have"} no account digits saved, so a forwarded
             message can&apos;t tell which account it belongs to. Open Financial → Daily, edit the
@@ -82,7 +82,7 @@ export default function BankMessages({
       <section className="flex flex-col gap-2">
         <h2 className="font-bold tracking-tight text-2xl">What has arrived</h2>
         {recent.length === 0 ? (
-          <p className="text-sm text-paper/55">
+          <p className="text-sm text-paper/70">
             Nothing yet. Once the macro is on, send yourself a small payment and it should show
             up here within seconds.
           </p>
@@ -93,7 +93,7 @@ export default function BankMessages({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">
                     {item.amount === null ? (
-                      <span className="text-paper/60">Couldn&apos;t read it</span>
+                      <span className="text-paper/72">Couldn&apos;t read it</span>
                     ) : (
                       <>
                         {item.direction === "credit" ? "+" : "−"}
@@ -102,12 +102,12 @@ export default function BankMessages({
                       </>
                     )}
                   </p>
-                  <p className="truncate text-xs text-paper/45">
+                  <p className="truncate text-xs text-paper/60">
                     {item.sender ?? "unknown sender"} ·{" "}
                     {item.occurred_on ? formatShortDate(item.occurred_on) : "no date"}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs text-paper/45">{item.status}</span>
+                <span className="shrink-0 text-xs text-paper/60">{item.status}</span>
               </li>
             ))}
           </Rows>
@@ -116,7 +116,7 @@ export default function BankMessages({
 
       <section className="flex flex-col gap-2">
         <h2 className="font-bold tracking-tight text-2xl">If the address leaks</h2>
-        <p className="text-sm text-paper/55">
+        <p className="text-sm text-paper/70">
           Anyone holding it could add messages to your waiting list. They couldn&apos;t read
           anything or change your money, but a new address stops the old one at once — you would
           then update the macro on your phone.
@@ -131,7 +131,7 @@ function CopyRow({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-paper/55">{label}</span>
+      <span className="text-xs font-medium text-paper/70">{label}</span>
       <span className="flex items-center gap-2">
         <input readOnly value={value} className={`${inputClass} text-xs`} />
         <button
@@ -160,7 +160,7 @@ function Tester() {
     <section className="flex flex-col gap-2">
       <div>
         <h2 className="font-bold tracking-tight text-2xl">Try a message</h2>
-        <p className="mt-1 text-sm text-paper/55">
+        <p className="mt-1 text-sm text-paper/70">
           Paste one of your bank&apos;s texts to see what it would record. Nothing is saved.
         </p>
       </div>
@@ -181,11 +181,11 @@ function Tester() {
       </button>
       {result &&
         (result.junk ? (
-          <p className="text-sm text-paper/60">
+          <p className="text-sm text-paper/72">
             Treated as a one-time password or an advert, so it would be dropped and never stored.
           </p>
         ) : result.parsed === null ? (
-          <p className="text-sm text-paper/60">
+          <p className="text-sm text-paper/72">
             Couldn&apos;t read this one. It would still be kept so you can enter it by hand — send
             it to me and I&apos;ll teach the parser this wording.
           </p>
@@ -200,7 +200,7 @@ function Tester() {
               ["Reference", result.parsed.reference ?? "—"],
             ].map(([label, value]) => (
               <div key={label} className="min-w-0">
-                <dt className="truncate text-xs text-paper/55">{label}</dt>
+                <dt className="truncate text-xs text-paper/70">{label}</dt>
                 <dd className="truncate font-medium tabular-nums">{value}</dd>
               </div>
             ))}

@@ -8,9 +8,9 @@ import { ACCOUNT_KINDS, isRecurringKind, type AccountKind } from "@/lib/investme
 import { Card } from "@/components/ui/kit";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 const labelClass =
-  "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "text-xs font-medium uppercase tracking-wider text-paper/65";
 
 const initial: FormState = { error: null, ok: false, version: 0 };
 
@@ -29,13 +29,13 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
       >
         <div>
           <h3 className="font-bold tracking-tight text-2xl">New account</h3>
-          <p className="mt-0.5 text-sm text-paper/50">
+          <p className="mt-0.5 text-sm text-paper/65">
             FD, mutual fund, stocks, PPF, gold…
           </p>
         </div>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/10 text-lg text-paper/60"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/10 text-lg text-paper/72"
         >
           +
         </motion.span>
@@ -111,7 +111,7 @@ export function AddAccountForm({ startOpen }: { startOpen: boolean }) {
               <label className="flex flex-col gap-1.5">
                 <span className={labelClass}>Already in it</span>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/55">
                     ₹
                   </span>
                   <input

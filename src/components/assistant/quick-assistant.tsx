@@ -399,7 +399,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                         setPhase("idle");
                       }
                     }}
-                    className="rounded-full border border-paper/15 px-2 py-0.5 text-[11px] text-paper/60"
+                    className="rounded-full border border-paper/15 px-2 py-0.5 text-[11px] text-paper/72"
                     aria-label="Switch language"
                   >
                     {lang === "en-IN" ? "EN" : "हिं"}
@@ -409,7 +409,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                   type="button"
                   onClick={close}
                   aria-label="Close"
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-base text-paper/50 hover:bg-paper/10"
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-base text-paper/65 hover:bg-paper/10"
                 >
                   ×
                 </button>
@@ -445,10 +445,10 @@ export default function QuickAssistant({ name }: { name: string }) {
             ) : (
               <>
                 {heard && phase !== "answer" && (
-                  <p className="break-words text-paper/70">&ldquo;{heard}&rdquo;</p>
+                  <p className="break-words text-paper/78">&ldquo;{heard}&rdquo;</p>
                 )}
                 {phase === "listening" && !heard && (
-                  <p className="text-paper/50">
+                  <p className="text-paper/65">
                     {convo.current
                       ? "Go ahead, I'm listening."
                       : "Say something like “add ₹120 for groceries”."}
@@ -472,7 +472,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                         listener.current = null;
                         setPhase("typing");
                       }}
-                      className="text-paper/55 underline-offset-2 hover:underline"
+                      className="text-paper/70 underline-offset-2 hover:underline"
                     >
                       Type instead
                     </button>
@@ -486,7 +486,7 @@ export default function QuickAssistant({ name }: { name: string }) {
                   )}
                 </div>
                 {canWake() && (
-                  <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 border-t border-paper/10 pt-2 text-xs text-paper/60">
+                  <label className="mt-2 flex cursor-pointer items-center justify-between gap-2 border-t border-paper/10 pt-2 text-xs text-paper/72">
                     <span>Hands-free: say “{name}”</span>
                     <input
                       type="checkbox"

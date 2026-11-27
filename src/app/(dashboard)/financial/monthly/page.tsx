@@ -165,7 +165,7 @@ export default async function MonthlyFinancePage({
       {/* The chart needs the whole width: a month is up to 31 pairs of bars */}
       <Card>
         <h3 className="font-bold tracking-tight text-[19px]">Day by day</h3>
-        <p className="mb-4 text-sm text-paper/50">
+        <p className="mb-4 text-sm text-paper/65">
           Everything logged in {formatMonth(month)}.
         </p>
         <IncomeExpenseChart data={dayBuckets(month, transactions)} />

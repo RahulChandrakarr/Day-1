@@ -176,7 +176,7 @@ export default async function YearlyFinancePage({
       {/* Twelve pairs of bars: full width or nothing */}
       <Card>
         <h3 className="font-bold tracking-tight text-[19px]">Month by month</h3>
-        <p className="mb-4 text-sm text-paper/50">
+        <p className="mb-4 text-sm text-paper/65">
           Everything logged in {year}.
         </p>
         <IncomeExpenseChart data={buckets} />
@@ -226,7 +226,7 @@ function MonthPlanTable({
   return (
     <Card>
       <h3 className="font-bold tracking-tight text-[19px]">Monthly plans in {year}</h3>
-      <p className="mb-4 text-sm text-paper/50">
+      <p className="mb-4 text-sm text-paper/65">
         {planned.length === 0
           ? "No monthly plans yet. Open a month to set one."
           : `${planned.length} of 12 months planned · ${formatMoney(spentInPlanned)} spent against ${formatMoney(plannedTotal)} planned.`}
@@ -234,7 +234,7 @@ function MonthPlanTable({
       <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <table className="w-full min-w-[34rem] text-sm">
           <thead>
-            <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/45">
+            <tr className="border-b border-paper/10 text-left text-xs uppercase tracking-wider text-paper/60">
               <th className="py-2 pr-3 font-medium">Month</th>
               <th className="px-3 py-2 text-right font-medium">Planned</th>
               <th className="px-3 py-2 text-right font-medium">Spent</th>
@@ -259,7 +259,7 @@ function MonthPlanTable({
                       {bucket.title.replace(` ${year}`, "")}
                     </Link>
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums text-paper/70">
+                  <td className="px-3 py-2.5 text-right tabular-nums text-paper/78">
                     {planned === null ? "—" : formatMoney(planned)}
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">
@@ -270,7 +270,7 @@ function MonthPlanTable({
                   <td
                     className={`px-3 py-2.5 text-right tabular-nums ${
                       diff === null || future
-                        ? "text-paper/40"
+                        ? "text-paper/55"
                         : diff < 0
                           ? "text-red-700 dark:text-red-300"
                           : "text-moss"
@@ -290,7 +290,7 @@ function MonthPlanTable({
                       </>
                     )}
                     {target !== null && (
-                      <span className="text-paper/40">
+                      <span className="text-paper/55">
                         {" "}
                         / {formatMoney(target)}
                       </span>
@@ -302,7 +302,7 @@ function MonthPlanTable({
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-paper/40">
+      <p className="mt-3 text-xs text-paper/55">
         Saved is money put into savings &amp; investments that month, against the plan&apos;s savings target.
       </p>
     </Card>

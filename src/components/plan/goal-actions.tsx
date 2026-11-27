@@ -31,7 +31,7 @@ export function LogProgress({ goal, date }: { goal: PlanGoal; date: string }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-2 rounded-xl bg-inset px-2.5 py-1.5">
-        <span className="shrink-0 text-xs text-paper/55">Log progress</span>
+        <span className="shrink-0 text-xs text-paper/70">Log progress</span>
         <input
           inputMode="decimal"
           value={amount}
@@ -39,7 +39,7 @@ export function LogProgress({ goal, date }: { goal: PlanGoal; date: string }) {
           onKeyDown={(e) => e.key === "Enter" && save()}
           placeholder={goal.unit === "₹" ? "₹ amount" : goal.unit ?? "amount"}
           aria-label={`Progress toward ${goal.title}`}
-          className="h-8 min-w-0 flex-1 bg-transparent text-right text-[15px] font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-paper/30"
+          className="h-8 min-w-0 flex-1 bg-transparent text-right text-[15px] font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-paper/45"
         />
         <button
           type="button"
@@ -91,7 +91,7 @@ export function SplitButton({
             else setError(result.error);
           });
         }}
-        className="rounded-full border border-paper/15 px-3 py-1.5 text-xs font-semibold text-paper/70 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
+        className="rounded-full border border-paper/15 px-3 py-1.5 text-xs font-semibold text-paper/78 transition hover:bg-paper/5 hover:text-paper disabled:opacity-50"
       >
         {pending ? "Splitting…" : label}
       </button>

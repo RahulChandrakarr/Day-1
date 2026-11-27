@@ -31,7 +31,7 @@ export default function AccountList({
       <h3 className="font-bold tracking-tight text-2xl">Accounts</h3>
 
       {accounts.length === 0 ? (
-        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/40">
+        <p className="mt-6 card px-4 py-10 text-center text-sm text-paper/55">
           No accounts yet. Add your FDs, SIPs, stocks or savings to track them.
         </p>
       ) : (
@@ -52,7 +52,7 @@ export default function AccountList({
                     />
                   ))}
               </div>
-              <p className="mt-1.5 text-xs text-paper/45">
+              <p className="mt-1.5 text-xs text-paper/60">
                 Where your {formatMoney(total)} is
               </p>
             </div>
@@ -101,7 +101,7 @@ function AccountCard({
         />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{account.name}</span>
-          <span className="block truncate text-xs text-paper/45">
+          <span className="block truncate text-xs text-paper/60">
             {accountKindLabel(account.kind)}
             {account.sip_day &&
               ` · ${account.kind === "rd" ? "RD" : "SIP"}${
@@ -126,7 +126,7 @@ function AccountCard({
               {gainPct && ` (${gainPct})`}
             </span>
           ) : (
-            <span className="block text-xs text-paper/40">
+            <span className="block text-xs text-paper/55">
               {formatMoney(account.invested)} put in
             </span>
           )}
@@ -143,19 +143,19 @@ function AccountCard({
           >
             <dl className="grid grid-cols-3 gap-3 px-4 pt-3 text-xs">
               <div>
-                <dt className="text-paper/45">Put in</dt>
+                <dt className="text-paper/60">Put in</dt>
                 <dd className="font-medium tabular-nums">
                   {formatMoney(account.invested)}
                 </dd>
               </div>
               <div>
-                <dt className="text-paper/45">Worth now</dt>
+                <dt className="text-paper/60">Worth now</dt>
                 <dd className="font-medium tabular-nums">
                   {formatMoney(account.current)}
                 </dd>
               </div>
               <div>
-                <dt className="text-paper/45">Value updated</dt>
+                <dt className="text-paper/60">Value updated</dt>
                 <dd className="font-medium">
                   {account.valuedOn ? formatShortDate(account.valuedOn) : "Never"}
                 </dd>
@@ -166,7 +166,7 @@ function AccountCard({
                 <EntryRow key={entry.id} entry={entry} />
               ))}
               {account.entries.length === 0 && (
-                <li className="py-3 text-sm text-paper/40">No entries yet.</li>
+                <li className="py-3 text-sm text-paper/55">No entries yet.</li>
               )}
             </ul>
             <div className="flex justify-end px-4 pb-3">
@@ -177,7 +177,7 @@ function AccountCard({
                   if (confirm(`Delete ${account.name} and all its entries?`))
                     startTransition(() => deleteAccount(account.id));
                 }}
-                className="rounded-lg px-2 py-1 text-xs text-paper/40 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="rounded-lg px-2 py-1 text-xs text-paper/55 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
               >
                 Delete account
               </button>
@@ -206,7 +206,7 @@ function EntryRow({ entry }: { entry: InvestmentEntry }) {
     >
       <span className="min-w-0 flex-1">
         <span className="block truncate">{entryLabels[entry.kind]}</span>
-        <span className="block truncate text-xs text-paper/45">
+        <span className="block truncate text-xs text-paper/60">
           {formatShortDate(entry.occurred_on)}
           {entry.note && ` · ${entry.note}`}
         </span>
@@ -216,7 +216,7 @@ function EntryRow({ entry }: { entry: InvestmentEntry }) {
           entry.kind === "deposit"
             ? "text-moss"
             : entry.kind === "value"
-              ? "text-paper/60"
+              ? "text-paper/72"
               : ""
         }`}
       >
@@ -231,7 +231,7 @@ function EntryRow({ entry }: { entry: InvestmentEntry }) {
             startTransition(() => deleteInvestmentEntry(entry.id));
         }}
         aria-label="Delete entry"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
       >
         ×
       </button>

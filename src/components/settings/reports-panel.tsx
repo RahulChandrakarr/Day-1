@@ -41,7 +41,7 @@ const REPORTS: { kind: Kind; emoji: string; title: string; about: string; yearly
 export default function ReportsPanel({ today }: { today: string }) {
   return (
     <Stack>
-      <p className="text-sm text-paper/55">
+      <p className="text-sm text-paper/70">
         Pick a period and download a PDF you can save, print or share.
       </p>
       <CardGrid layout="wide">
@@ -78,7 +78,7 @@ function ReportCard({
         </span>
         <div className="min-w-0">
           <h3 className="font-bold tracking-tight text-xl">{report.title}</h3>
-          <p className="text-sm text-paper/55">{report.about}</p>
+          <p className="text-sm text-paper/70">{report.about}</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ function ReportCard({
                 aria-checked={byYear === option.value}
                 onClick={() => setByYear(option.value)}
                 className={`h-10 rounded-[10px] px-3 font-medium transition ${
-                  byYear === option.value ? "bg-surface text-paper shadow-sm" : "text-paper/50"
+                  byYear === option.value ? "bg-surface text-paper shadow-sm" : "text-paper/65"
                 }`}
               >
                 {option.label}

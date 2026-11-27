@@ -93,11 +93,11 @@ export default function ItemList({
                   }}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
                   className={`min-w-0 flex-1 bg-transparent text-[15px] outline-none focus:underline focus:decoration-ember/40 ${
-                    item.done ? "text-paper/45 line-through" : ""
+                    item.done ? "text-paper/60 line-through" : ""
                   }`}
                 />
                 {item.target_value !== null && (
-                  <span className="shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold tabular-nums text-paper/60">
+                  <span className="shrink-0 rounded-full bg-paper/[0.06] px-2.5 py-1 text-xs font-semibold tabular-nums text-paper/72">
                     {formatAmount(item.target_value, itemGoal?.unit ?? null)}
                   </span>
                 )}
@@ -110,7 +110,7 @@ export default function ItemList({
                       await deleteItem(item.id);
                     })
                   }
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/30 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-paper/45 transition hover:bg-red-500/10 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 dark:hover:text-red-300"
                 >
                   ×
                 </button>
@@ -203,7 +203,7 @@ function AddRow({
             }
           }}
           placeholder={placeholder}
-          className="h-10 min-w-0 flex-1 rounded-xl border border-dashed border-paper/15 bg-transparent px-3 text-sm outline-none transition placeholder:text-paper/35 focus:border-ember/60"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-dashed border-paper/15 bg-transparent px-3 text-sm outline-none transition placeholder:text-paper/50 focus:border-ember/60"
         />
         {allowTarget && chosen?.target_value && (
           <input

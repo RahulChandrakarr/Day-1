@@ -121,13 +121,13 @@ export default async function PlanTodayPage({
                             {goal.emoji} {goal.title}
                           </p>
                           {dayTarget !== null && (
-                            <span className="shrink-0 text-xs text-paper/45">
+                            <span className="shrink-0 text-xs text-paper/60">
                               ~{formatAmount(dayTarget, goal.unit)} a day
                             </span>
                           )}
                         </div>
                         <ProgressBar progress={p} unit={goal.unit} />
-                        <p className="mb-2 mt-0.5 text-xs text-paper/40">This week</p>
+                        <p className="mb-2 mt-0.5 text-xs text-paper/55">This week</p>
                         <LogProgress goal={goal} date={date} />
                       </Card>
                     </li>

@@ -115,7 +115,7 @@ export default async function PlanWeekPage({
                         {formatShortDate(day)}
                       </h4>
                       {dayItems.length > 0 && (
-                        <span className="text-xs text-paper/45">
+                        <span className="text-xs text-paper/60">
                           {done}/{dayItems.length} done
                         </span>
                       )}

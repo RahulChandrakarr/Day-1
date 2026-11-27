@@ -315,7 +315,7 @@ export default async function OverviewPage() {
           {!hasPlan ? (
             <Link
               href="/health/body"
-              className="flex min-h-11 items-center gap-3 rounded-inset border border-dashed border-paper/15 px-4 py-2.5 text-sm text-paper/60"
+              className="card flex min-h-11 items-center gap-3 rounded-inset border-dashed border-paper/25 px-4 py-2.5 text-sm text-paper/80"
             >
               <span>🏋️</span>
               <span className="flex-1">No gym plan yet. Build your 4-week plan</span>
@@ -382,8 +382,8 @@ export default async function OverviewPage() {
               {banks.length > 0 && (
                 <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-paper/50">Net balance</p>
-                    <p className="truncate text-xs text-paper/55">
+                    <p className="text-[11px] text-paper/65">Net balance</p>
+                    <p className="truncate text-xs text-paper/70">
                       {banks
                         .map((a) => `${a.name} ${a.balance < 0 ? "−" : ""}${formatMoney(Math.abs(a.balance))}`)
                         .join(" · ")}
@@ -406,7 +406,7 @@ export default async function OverviewPage() {
                   { label: "Month", flow: monthFlow },
                 ].map(({ label, flow }) => (
                   <div key={label} className="min-w-0 px-2 text-center">
-                    <p className="truncate text-[11px] text-paper/50">{label}</p>
+                    <p className="truncate text-[11px] text-paper/65">{label}</p>
                     <p className="flex flex-wrap items-center justify-center gap-x-3 text-sm font-bold tabular-nums">
                       <span className="text-moss" title={`${formatMoney(flow.income)} came in`}>
                         <span aria-hidden>↑ </span>
@@ -427,7 +427,7 @@ export default async function OverviewPage() {
               </div>
             </Link>
             {topToday.length > 0 && (
-              <p className="truncate px-1 text-xs text-paper/45">
+              <p className="truncate px-1 text-xs text-paper/60">
                 Top today: {topToday.map((c) => `${c.name} ${formatMoney(c.amount)}`).join(" · ")}
               </p>
             )}
@@ -453,7 +453,7 @@ export default async function OverviewPage() {
             <Section title="Worth knowing">
               <CardList className="flex h-full flex-col divide-y divide-paper/[0.06] px-4">
                 {insights.slice(1, 6).map((line) => (
-                  <li key={line} className="py-2.5 text-[13px] text-paper/75">
+                  <li key={line} className="py-2.5 text-[13px] text-paper/80">
                     {line}
                   </li>
                 ))}

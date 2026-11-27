@@ -41,7 +41,7 @@ export default function ProgressBar({
         )}
       </div>
       {!compact && (
-        <div className="mt-1 flex justify-between gap-2 text-xs text-paper/50">
+        <div className="mt-1 flex justify-between gap-2 text-xs text-paper/65">
           <span className="truncate">{label}</span>
           <span className="shrink-0 tabular-nums">
             {progress.ratio === null ? "—" : `${percent}%`}

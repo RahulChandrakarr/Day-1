@@ -37,7 +37,7 @@ export default function ModeSwitch({
           aria-checked={mode === m.value}
           onClick={() => onChange(m.value)}
           className={`relative h-9 px-4 transition-colors ${
-            mode === m.value ? "text-on-ember" : "text-paper/55 hover:text-paper"
+            mode === m.value ? "text-on-ember" : "text-paper/70 hover:text-paper"
           }`}
         >
           {m.label}

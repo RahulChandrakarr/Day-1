@@ -75,7 +75,7 @@ export default async function BodyPage() {
                 <span className="text-4xl font-semibold tracking-tight tabular-nums">
                   {bmiValue.toFixed(1)}
                 </span>
-                <span className="pb-1 text-sm text-paper/55">
+                <span className="pb-1 text-sm text-paper/70">
                   BMI ·{" "}
                   <span className={tone(band?.tone)}>{band?.label}</span>
                 </span>
@@ -120,7 +120,7 @@ export default async function BodyPage() {
 
               {targets && (
                 <div className="mt-5 rounded-2xl border border-paper/10 bg-inset p-4">
-                  <p className="text-xs font-medium uppercase tracking-wider text-paper/50">
+                  <p className="text-xs font-medium uppercase tracking-wider text-paper/65">
                     Daily target for your goal
                   </p>
                   <p className="mt-1 text-2xl font-semibold tabular-nums">
@@ -134,14 +134,14 @@ export default async function BodyPage() {
                 </div>
               )}
 
-              <p className="mt-4 text-xs text-paper/40">
+              <p className="mt-4 text-xs text-paper/55">
                 BMI doesn&apos;t know muscle from fat, and these are estimates, not
                 medical advice. For South Asians, health risk rises from about
                 BMI 23.
               </p>
             </>
           ) : (
-            <p className="mt-4 card px-4 py-8 text-center text-sm text-paper/50">
+            <p className="mt-4 card px-4 py-8 text-center text-sm text-paper/65">
               Add your height and weight to see BMI, calories and your plan.
             </p>
           )}
@@ -168,9 +168,9 @@ function Stat({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="truncate text-xs text-paper/50">{label}</dt>
+      <dt className="truncate text-xs text-paper/65">{label}</dt>
       <dd className="truncate font-semibold tabular-nums">{value}</dd>
-      {hint && <dd className="truncate text-xs text-paper/40">{hint}</dd>}
+      {hint && <dd className="truncate text-xs text-paper/55">{hint}</dd>}
     </div>
   );
 }
@@ -193,7 +193,7 @@ function Scale({ value }: { value: number }) {
           style={{ left: `${position}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-paper/35">
+      <div className="mt-1 flex justify-between text-[10px] text-paper/50">
         <span>15</span>
         <span>18.5</span>
         <span>23</span>

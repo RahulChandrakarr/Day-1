@@ -62,7 +62,7 @@ export default function Sidebar({
                   title={item.label}
                   aria-current={active ? "page" : undefined}
                   className={`group relative flex h-11 items-center justify-center gap-3 rounded-2xl px-3 text-sm transition-colors lg:justify-start ${
-                    active ? "font-semibold text-ember" : "text-paper/65 hover:text-paper"
+                    active ? "font-semibold text-ember" : "text-paper/75 hover:text-paper"
                   }`}
                 >
                   {active && (
@@ -100,7 +100,7 @@ export default function Sidebar({
             </span>
             <div className="hidden min-w-0 lg:block">
               <p className="truncate text-sm font-medium">{name}</p>
-              <p className="truncate text-xs capitalize text-paper/40">
+              <p className="truncate text-xs capitalize text-paper/55">
                 {profile.role}
               </p>
             </div>
@@ -112,7 +112,7 @@ export default function Sidebar({
           <form action={logout}>
             <button
               title="Sign out"
-              className="flex h-10 w-full items-center justify-center gap-3 rounded-xl px-3 text-sm text-paper/50 transition hover:bg-paper/5 hover:text-paper lg:justify-start"
+              className="flex h-10 w-full items-center justify-center gap-3 rounded-xl px-3 text-sm text-paper/65 transition hover:bg-paper/5 hover:text-paper lg:justify-start"
             >
               {logoutIcon}
               <span className="hidden lg:block">Sign out</span>

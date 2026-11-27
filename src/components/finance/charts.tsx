@@ -38,7 +38,7 @@ function Tooltip({
       className="pointer-events-none absolute top-0 z-10 w-40 -translate-x-1/2 rounded-xl card glass-strong px-3 py-2 text-xs shadow-xl shadow-black/10 dark:shadow-black/40"
       style={{ left }}
     >
-      <p className="mb-1 text-paper/55">{title}</p>
+      <p className="mb-1 text-paper/70">{title}</p>
       {rows.map((row) => (
         <p key={row.label} className="flex items-center gap-2">
           {row.color && (
@@ -48,7 +48,7 @@ function Tooltip({
             />
           )}
           <span className="font-semibold tabular-nums">{row.value}</span>
-          <span className="ml-auto text-paper/50">{row.label}</span>
+          <span className="ml-auto text-paper/65">{row.label}</span>
         </p>
       ))}
     </div>
@@ -388,7 +388,7 @@ export function CategoryBars({ slices }: { slices: CategorySlice[] }) {
 
   if (slices.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-paper/40">
+      <p className="py-8 text-center text-sm text-paper/55">
         Nothing to show yet.
       </p>
     );
@@ -427,7 +427,7 @@ export function CategoryBars({ slices }: { slices: CategorySlice[] }) {
           </span>
           <span className="text-right tabular-nums">
             <span className="font-semibold">{formatMoney(s.amount)}</span>
-            <span className="ml-2 text-paper/45">
+            <span className="ml-2 text-paper/60">
               {Math.round((s.amount / total) * 100)}%
             </span>
           </span>
@@ -442,7 +442,7 @@ export function CategoryBars({ slices }: { slices: CategorySlice[] }) {
 // ---------------------------------------------------------------------------
 function Legend({ items }: { items: { label: string; color: string }[] }) {
   return (
-    <ul className="flex flex-wrap gap-4 text-sm text-paper/60">
+    <ul className="flex flex-wrap gap-4 text-sm text-paper/72">
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-2">
           <span
@@ -479,7 +479,7 @@ export function BucketTable({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="text-sm text-paper/55 underline-offset-4 transition hover:text-paper hover:underline"
+        className="text-sm text-paper/70 underline-offset-4 transition hover:text-paper hover:underline"
       >
         {open ? "Hide table" : "Show as table"}
       </button>
@@ -487,7 +487,7 @@ export function BucketTable({
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-md text-sm tabular-nums">
             <thead>
-              <tr className="border-b border-paper/10 text-left text-paper/50">
+              <tr className="border-b border-paper/10 text-left text-paper/65">
                 <th className="py-2 font-medium">{heading}</th>
                 <th className="py-2 text-right font-medium">Income</th>
                 <th className="py-2 text-right font-medium">Expenses</th>
@@ -515,7 +515,7 @@ export function BucketTable({
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-6 text-center text-paper/40">
+                  <td colSpan={4} className="py-6 text-center text-paper/55">
                     No entries in this range.
                   </td>
                 </tr>

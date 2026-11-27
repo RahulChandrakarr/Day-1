@@ -41,7 +41,7 @@ export default function TodoList({ date, todos }: { date: string; todos: Todo[] 
           </button>
           <span
             className={`min-w-0 flex-1 text-[15px] ${
-              todo.done ? "text-paper/40 line-through" : ""
+              todo.done ? "text-paper/55 line-through" : ""
             }`}
           >
             {todo.text}

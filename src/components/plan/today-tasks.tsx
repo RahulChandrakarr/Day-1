@@ -44,7 +44,7 @@ export default function TodayTasks({
     return (
       <Link
         href={href}
-        className="flex min-h-11 items-center gap-3 rounded-inset border border-dashed border-ember/40 bg-ember/5 px-4 py-2.5"
+        className="card flex min-h-11 items-center gap-3 rounded-inset border-dashed border-ember/40 bg-ember/5 px-4 py-2.5"
       >
         <span className="text-base">🗓️</span>
         <span className="min-w-0 flex-1 text-sm font-medium">
@@ -81,7 +81,7 @@ export default function TodayTasks({
         {noteLines.length > 0 && (
           <div className="flex flex-col gap-1 py-2">
             {noteLines.map((line) => (
-              <p key={line} className="text-[13px] text-paper/60">
+              <p key={line} className="text-[13px] text-paper/72">
                 {line}
               </p>
             ))}

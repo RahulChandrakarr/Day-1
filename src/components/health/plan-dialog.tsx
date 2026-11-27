@@ -59,8 +59,8 @@ const blankExercise = (): DraftExercise => ({
 });
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
-const smallLabel = "text-[11px] uppercase tracking-wider text-paper/45";
+  "h-10 w-full rounded-xl border border-paper/10 bg-inset px-3 text-sm text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+const smallLabel = "text-[11px] uppercase tracking-wider text-paper/60";
 
 const SUGGESTED_TITLES = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Cardio", "Full body"];
 
@@ -112,7 +112,7 @@ export default function PlanDialog({
           variant === "primary"
             ? "h-11 rounded-xl bg-ember px-5 text-sm font-medium text-on-ember transition-colors hover:bg-ember-light"
             : variant === "icon"
-              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full card text-paper/60 transition hover:text-paper active:bg-inset"
+              ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full card text-paper/72 transition hover:text-paper active:bg-inset"
               : "h-10 rounded-xl border border-paper/15 px-4 text-sm font-medium transition hover:bg-paper/5"
         }
       >
@@ -242,7 +242,7 @@ function PlanEditor({
       <header className="flex items-center gap-3 border-b border-paper/10 px-4 py-3 sm:px-5">
         <div className="min-w-0 flex-1">
           <h2 className="font-bold tracking-tight text-xl sm:text-2xl">Weekly gym plan</h2>
-          <p className="text-xs text-paper/50">
+          <p className="text-xs text-paper/65">
             Set it once; the tracker shows each day&apos;s exercises.
           </p>
         </div>
@@ -250,7 +250,7 @@ function PlanEditor({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/50 transition hover:bg-paper/10 hover:text-paper"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-paper/65 transition hover:bg-paper/10 hover:text-paper"
         >
           ×
         </button>
@@ -271,12 +271,12 @@ function PlanEditor({
                 className={`flex flex-col items-center rounded-xl py-1.5 text-xs transition ${
                   active
                     ? "bg-ember text-on-ember"
-                    : "text-paper/60 hover:bg-paper/5"
+                    : "text-paper/72 hover:bg-paper/5"
                 }`}
               >
                 <span className="font-medium">{w.short}</span>
                 <span
-                  className={`text-[10px] ${active ? "text-on-ember/70" : "text-paper/40"}`}
+                  className={`text-[10px] ${active ? "text-on-ember/70" : "text-paper/55"}`}
                 >
                   {d.rest ? "Rest" : count ? `${count} ex` : "—"}
                 </span>
@@ -308,7 +308,7 @@ function PlanEditor({
             className={`h-10 rounded-xl border px-3 text-sm transition ${
               day.rest
                 ? "border-moss/50 bg-moss/15 text-paper"
-                : "border-paper/15 text-paper/70 hover:bg-paper/5"
+                : "border-paper/15 text-paper/78 hover:bg-paper/5"
             }`}
           >
             😴 Rest day
@@ -323,7 +323,7 @@ function PlanEditor({
                   key={t}
                   type="button"
                   onClick={() => updateDay({ title: t })}
-                  className="rounded-full border border-paper/10 px-2.5 py-0.5 text-xs text-paper/55 transition hover:bg-paper/5 hover:text-paper"
+                  className="rounded-full border border-paper/10 px-2.5 py-0.5 text-xs text-paper/70 transition hover:bg-paper/5 hover:text-paper"
                 >
                   {t}
                 </button>
@@ -342,7 +342,7 @@ function PlanEditor({
                     className="rounded-2xl border border-paper/10 bg-inset p-3"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-5 shrink-0 text-center text-xs text-paper/40">
+                      <span className="w-5 shrink-0 text-center text-xs text-paper/55">
                         {i + 1}
                       </span>
                       <input
@@ -364,7 +364,7 @@ function PlanEditor({
                             ),
                           })
                         }
-                        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-xl text-lg text-paper/35 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-xl text-lg text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
                       >
                         ×
                       </button>
@@ -409,7 +409,7 @@ function PlanEditor({
                           className={`rounded-full border px-2.5 py-1 text-xs transition ${
                             e.phase === p.value
                               ? p.active
-                              : "border-paper/10 text-paper/55 hover:bg-paper/5 hover:text-paper"
+                              : "border-paper/10 text-paper/70 hover:bg-paper/5 hover:text-paper"
                           }`}
                         >
                           {p.label}
@@ -437,7 +437,7 @@ function PlanEditor({
               onClick={() =>
                 updateDay({ exercises: [...day.exercises, blankExercise()] })
               }
-              className="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/60 transition hover:border-paper/40 hover:text-paper"
+              className="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/72 transition hover:border-paper/40 hover:text-paper"
             >
               + Add exercise
             </button>
@@ -445,7 +445,7 @@ function PlanEditor({
         )}
 
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-paper/10 pt-4">
-          <span className="text-xs text-paper/45">
+          <span className="text-xs text-paper/60">
             Copy {WEEKDAYS[selected - 1].short} to
           </span>
           {WEEKDAYS.filter((w) => w.value !== selected).map((w) => (
@@ -453,7 +453,7 @@ function PlanEditor({
               key={w.value}
               type="button"
               onClick={() => copyTo(w.value)}
-              className="rounded-full border border-paper/10 px-2.5 py-1 text-xs text-paper/60 transition hover:bg-paper/5 hover:text-paper"
+              className="rounded-full border border-paper/10 px-2.5 py-1 text-xs text-paper/72 transition hover:bg-paper/5 hover:text-paper"
             >
               {w.short}
             </button>

@@ -15,10 +15,10 @@ import {
 } from "@/lib/finance";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/30 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
+  "h-11 w-full rounded-xl border border-paper/10 bg-inset px-3 text-paper outline-none transition placeholder:text-paper/45 focus:border-ember/70 focus:ring-4 focus:ring-ember/15";
 
 const labelClass =
-  "text-xs font-medium uppercase tracking-wider text-paper/50";
+  "text-xs font-medium uppercase tracking-wider text-paper/65";
 
 export type PlanPerson = {
   id: string;
@@ -192,7 +192,7 @@ export default function BudgetEditor({
       <fieldset className="flex flex-col gap-2">
         <legend className={`${labelClass} mb-3`}>Where the money goes</legend>
 
-        <div className="hidden grid-cols-[11rem_minmax(0,1fr)_10rem_2.75rem] gap-2 px-1 text-xs text-paper/40 sm:grid">
+        <div className="hidden grid-cols-[11rem_minmax(0,1fr)_10rem_2.75rem] gap-2 px-1 text-xs text-paper/55 sm:grid">
           <span>Category / person</span>
           <span>For</span>
           <span>Amount</span>
@@ -228,7 +228,7 @@ export default function BudgetEditor({
                 className={`${inputClass} order-last col-span-3 sm:order-none sm:col-span-1`}
               />
               <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/40">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-paper/55">
                   ₹
                 </span>
                 <input
@@ -258,7 +258,7 @@ export default function BudgetEditor({
                   )
                 }
                 aria-label={`Remove line ${i + 1}`}
-                className="flex h-11 w-full items-center justify-center rounded-xl text-lg text-paper/35 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                className="flex h-11 w-full items-center justify-center rounded-xl text-lg text-paper/50 transition hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
               >
                 ×
               </button>
@@ -269,7 +269,7 @@ export default function BudgetEditor({
         <button
           type="button"
           onClick={addLine}
-          className="mt-1 flex h-11 items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/60 transition hover:border-paper/40 hover:text-paper"
+          className="mt-1 flex h-11 items-center justify-center rounded-xl border border-dashed border-paper/20 text-sm text-paper/72 transition hover:border-paper/40 hover:text-paper"
         >
           + Add line
         </button>
@@ -312,7 +312,7 @@ export default function BudgetEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="h-12 rounded-xl border border-paper/10 px-5 text-sm font-medium text-paper/70 transition hover:bg-paper/5 hover:text-paper"
+            className="h-12 rounded-xl border border-paper/10 px-5 text-sm font-medium text-paper/78 transition hover:bg-paper/5 hover:text-paper"
           >
             Cancel
           </button>
@@ -345,7 +345,7 @@ function MoneyField({
     <label className="flex flex-col gap-1.5">
       <span className={labelClass}>{label}</span>
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/40">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-paper/55">
           ₹
         </span>
         <input
@@ -463,7 +463,7 @@ function CategoryField({
           } else onChange({ kind: "spend", category_id: v, person_id: "", emi_id: "" });
         }}
         aria-label="Category or person"
-        className={`${inputClass} pl-8 ${value ? "" : "text-paper/40"}`}
+        className={`${inputClass} pl-8 ${value ? "" : "text-paper/55"}`}
       >
         <option value="">Choose…</option>
         <optgroup label="Spending">
@@ -519,7 +519,7 @@ function Summary({
 }) {
   return (
     <div>
-      <p className="text-xs text-paper/45">{label}</p>
+      <p className="text-xs text-paper/60">{label}</p>
       <p
         className={`font-semibold tabular-nums ${
           tone === "bad"

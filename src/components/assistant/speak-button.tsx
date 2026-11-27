@@ -29,7 +29,7 @@ export default function SpeakButton({
       aria-label={active ? "Stop reading" : "Read aloud"}
       title={active ? "Stop" : "Read aloud"}
       className={`mt-1 flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition ${
-        active ? "bg-ember/15 text-ember" : "text-paper/45 hover:bg-paper/5 hover:text-paper"
+        active ? "bg-ember/15 text-ember" : "text-paper/60 hover:bg-paper/5 hover:text-paper"
       }`}
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

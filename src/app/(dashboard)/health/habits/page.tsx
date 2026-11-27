@@ -38,7 +38,7 @@ export default async function HabitsPage({
       />
 
       {habits.length > 0 && (
-        <p className="text-sm text-paper/55">
+        <p className="text-sm text-paper/70">
           {doneToday} of {habits.length} habit{habits.length === 1 ? "" : "s"} done{" "}
           {date === today ? "today" : "this day"}.
         </p>
@@ -48,7 +48,7 @@ export default async function HabitsPage({
         <section className="card px-6 py-10 text-center">
           <span className="text-4xl">✅</span>
           <h3 className="mt-2 font-bold tracking-tight text-2xl">Track your habits</h3>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-paper/55">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-paper/70">
             Add something you want to build or quit. Each day, mark whether you
             managed it, how it felt, or what got in the way.
           </p>
@@ -73,9 +73,9 @@ export default async function HabitsPage({
                   streak={streak(own, date)}
                 />
                 {top && top[1] >= 2 && (
-                  <p className="px-3 text-xs text-paper/45">
+                  <p className="px-3 text-xs text-paper/60">
                     Most often missed because of{" "}
-                    <span className="text-paper/70">
+                    <span className="text-paper/78">
                       {reasonLabel(top[0]).toLowerCase()}
                     </span>{" "}
                     ({top[1]}× in 60 days)
