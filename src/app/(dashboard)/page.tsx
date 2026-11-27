@@ -24,7 +24,6 @@ import {
   CardGrid,
   CardList,
   DarkCard,
-  Empty,
   ReminderChip,
   Section,
   Stack,
@@ -266,32 +265,35 @@ export default async function OverviewPage() {
           Hi {name.split(" ")[0]}
         </p>
 
-        {/* Today so far: ring, one insight, what's done */}
-        <DarkCard className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: `conic-gradient(var(--ember) ${Math.max(dayPercent, 1) * 3.6}deg, color-mix(in srgb, var(--ink) 18%, transparent) 0)`,
-            }}
-          >
-            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-paper text-[10px] font-bold">
-              {dayPercent}%
-            </span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-ember">
-              {allClear ? "All done today 🎉" : "Today so far"}
-            </p>
-            <p className="truncate text-[13px] lg:whitespace-normal">
-              {insights[0] ?? "Log something and your day starts filling in."}
-            </p>
-            {finished.length > 0 && (
-              <p className="truncate text-xs text-ink/80 lg:whitespace-normal">
-                ✓ {finished.join(" · ")}
+        {/* Today so far: ring, one insight, what's done; reminders get their
+            own row so they don't squeeze the text */}
+        <DarkCard>
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              style={{
+                background: `conic-gradient(var(--ember) ${Math.max(dayPercent, 1) * 3.6}deg, color-mix(in srgb, var(--ink) 18%, transparent) 0)`,
+              }}
+            >
+              <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-paper text-[10px] font-bold">
+                {dayPercent}%
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold text-ember">
+                {allClear ? "All done today 🎉" : "Today so far"}
               </p>
-            )}
+              <p className="line-clamp-2 text-[13px]">
+                {insights[0] ?? "Log something and your day starts filling in."}
+              </p>
+              {finished.length > 0 && (
+                <p className="truncate text-xs text-ink/80 lg:whitespace-normal">
+                  ✓ {finished.join(" · ")}
+                </p>
+              )}
+            </div>
           </div>
-          {reminders.length > 0 && <div className="flex shrink-0 gap-1.5">{reminders}</div>}
+          {reminders.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{reminders}</div>}
         </DarkCard>
 
         <BriefingToggle />
@@ -313,6 +315,7 @@ export default async function OverviewPage() {
             plan.goals.length > 0 ? planQuestions({ goals: plan.goals, items: plan.items }) : []
           }
           answers={reflection}
+          limit={5}
         />
 
         <CardGrid layout="triple">
@@ -360,7 +363,14 @@ export default async function OverviewPage() {
           )}
 
           {habits.length === 0 ? (
-            <Empty href="/health/habits">No habits yet. Add one to track →</Empty>
+            <Link
+              href="/health/habits"
+              className="card flex min-h-11 items-center gap-3 rounded-inset border-dashed border-paper/25 px-4 py-2.5 text-sm text-paper/80"
+            >
+              <span>✅</span>
+              <span className="flex-1">No habits yet. Add one to track</span>
+              <span className="text-ember">→</span>
+            </Link>
           ) : (
             pendingHabits.length > 0 && (
               <Section
@@ -395,14 +405,9 @@ export default async function OverviewPage() {
             >
               {banks.length > 0 && (
                 <div className="flex items-center gap-3 border-b border-paper/[0.06] px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-paper/65">Net balance</p>
-                    <p className="truncate text-xs text-paper/70">
-                      {banks
-                        .map((a) => `${a.name} ${a.balance < 0 ? "−" : ""}${formatMoney(Math.abs(a.balance))}`)
-                        .join(" · ")}
-                    </p>
-                  </div>
+                  <p className="min-w-0 flex-1 text-sm text-paper/70">
+                    In {banks.length === 1 ? banks[0].name : `${banks.length} accounts`}
+                  </p>
                   <p
                     className={`shrink-0 text-xl font-bold tabular-nums ${
                       bankTotal < 0 ? "text-[#b3372e] dark:text-red-300" : "text-moss"

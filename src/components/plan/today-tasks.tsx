@@ -109,8 +109,20 @@ export default function TodayTasks({
             +{hidden} more →
           </Link>
         )}
+        {/* Five questions are a lot to show all day; they wait behind one line */}
         {questions.length > 0 && (
-          <PlanQuestions date={date} questions={questions} answers={answers} />
+          <details className="group border-t border-paper/[0.06]">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+              <span className="flex-1">Reflect on today&apos;s plan</span>
+              <span className="text-xs text-paper/60">
+                {answers.filter((a) => a.trim()).length} of {questions.length} answered
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 text-paper/50 transition-transform group-open:rotate-180">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </summary>
+            <PlanQuestions date={date} questions={questions} answers={answers} />
+          </details>
         )}
       </section>
     </>
