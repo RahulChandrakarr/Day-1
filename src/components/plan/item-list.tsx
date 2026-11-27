@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { addItem, deleteItem, updateItem } from "@/app/(dashboard)/plan/actions";
-import { DictationStatus, joinSpoken, MicButton, useDictation } from "@/components/journal/voice-input";
+import { joinSpoken, ListeningBar, MicButton, useDictation } from "@/components/journal/voice-input";
 import { formatAmount, type PlanGoal, type PlanItem, type PlanLevel } from "@/lib/plans";
 
 type Change =
@@ -343,7 +343,7 @@ function AddRow({
           </button>
         )}
       </div>
-      {voice && <DictationStatus d={dictation} />}
+      {voice && dictation.status && <ListeningBar d={dictation} />}
       {error && (
         <p role="alert" className="pt-1 text-xs text-red-700 dark:text-red-300">
           {error}

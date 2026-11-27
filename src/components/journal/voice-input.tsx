@@ -222,6 +222,7 @@ export function useDictation(onText: (text: string) => void) {
     start,
     stop,
     toggle: () => (listening ? stop() : start()),
+    dismiss: () => setError(null),
     switchLang,
   };
 }
@@ -307,44 +308,64 @@ export function MicButton({
   );
 }
 
-// "Listening in English…" or the words being heard, with the language switch
-// beside it, for a line under a text field while the mic is on.
-export function DictationStatus({ d }: { d: Dictation }) {
-  if (!d.status) return null;
+// Mic button + language switch for a text field; spoken words are passed to
+// onText as they're recognised. While it listens, a slim bar with the words
+// and a stop button stays pinned at the bottom of the screen, so stopping is
+// always in reach however far the text has grown, and nothing on the page moves.
+export default function VoiceInput({ onText }: { onText: (text: string) => void }) {
+  const d = useDictation(onText);
   return (
-    <div className="flex min-w-0 items-center gap-2 pt-1">
-      <p
-        role={d.error ? "alert" : "status"}
-        className={`min-w-0 flex-1 truncate text-xs ${d.error ? "text-red-700 dark:text-red-300" : "text-paper/70"}`}
-      >
-        {d.status}
-      </p>
-      {d.listening && <LangSwitch d={d} />}
+    <div className="flex shrink-0 items-center gap-1.5">
+      <LangSwitch d={d} />
+      <MicButton d={d} />
+      {d.status && <ListeningBar d={d} />}
     </div>
   );
 }
 
-// Mic button + language switch for a text field; spoken words are passed to
-// onText as they're recognised. The status line sits to the left of the
-// buttons, on the same row, so turning the mic on never moves anything.
-export default function VoiceInput({ onText }: { onText: (text: string) => void }) {
-  const d = useDictation(onText);
+export function ListeningBar({ d }: { d: Dictation }) {
+  const cover = useKeyboardCover();
   return (
-    <div className="flex min-w-0 max-w-full items-center justify-end gap-1.5">
-      {d.status && (
+    <Portal>
+      <div
+        style={cover ? { bottom: cover + 12 } : undefined}
+        className={`fixed inset-x-3 z-[60] mx-auto flex max-w-md items-center gap-2 rounded-full card glass-strong py-1.5 pl-4 pr-1.5 shadow-xl ${
+          cover ? "" : "bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:bottom-6"
+        }`}
+      >
         <p
           role={d.error ? "alert" : "status"}
-          className={`min-w-0 truncate rounded-full bg-glass-strong px-2.5 py-1 text-xs ${
-            d.error ? "text-red-700 dark:text-red-300" : "text-paper/75"
-          }`}
+          className={`min-w-0 flex-1 truncate text-sm ${d.error ? "text-red-700 dark:text-red-300" : "text-paper/80"}`}
         >
           {d.status}
         </p>
-      )}
-      <LangSwitch d={d} />
-      <MicButton d={d} />
-    </div>
+        {d.listening ? (
+          <MicButton d={d} />
+        ) : (
+          <button
+            type="button"
+            onClick={d.dismiss}
+            aria-label="Dismiss"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg text-paper/60 hover:bg-paper/10"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    </Portal>
   );
+}
+
+// After spoken words land at the end of a growing text box, scroll the page
+// so the end stays in sight above the bar pinned at the bottom
+export function revealBottom(el: HTMLElement | null) {
+  requestAnimationFrame(() => {
+    if (!el) return;
+    const vv = window.visualViewport;
+    const visibleBottom = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 160;
+    const bottom = el.getBoundingClientRect().bottom;
+    if (bottom > visibleBottom) window.scrollBy({ top: bottom - visibleBottom, behavior: "smooth" });
+  });
 }
 
 // How much of the bottom of the window the on-screen keyboard covers, so

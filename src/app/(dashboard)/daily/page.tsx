@@ -49,7 +49,7 @@ export default async function DailyPage({ searchParams }: PageProps<"/daily">) {
   const byDate = new Map(days.map((d) => [d.entry_date, d]));
 
   return (
-    <PageShell title="Daily" description="Your journal for the day.">
+    <PageShell title="Daily">
       <div className="flex flex-col gap-3">
         <PeriodNav
           label={
