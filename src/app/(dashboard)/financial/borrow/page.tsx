@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import PeopleList, {
   type PersonPlan,
 } from "@/components/finance/borrow/people-list";
@@ -17,7 +18,8 @@ import {
   getPeople,
   getTransactions,
 } from "@/lib/finance-queries";
-import { Stack } from "@/components/ui/kit";
+import SplitwiseBalances from "@/components/finance/borrow/splitwise-balances";
+import { Skeleton, Stack } from "@/components/ui/kit";
 
 export default async function BorrowPage() {
   const today = todayISO();
@@ -106,6 +108,11 @@ export default async function BorrowPage() {
         plans={plans}
         monthLabel={formatMonthShort(month)}
       />
+
+      {/* Read live from Splitwise; the page above doesn't wait for it */}
+      <Suspense fallback={<Skeleton className="h-40" />}>
+        <SplitwiseBalances />
+      </Suspense>
     </Stack>
   );
 }

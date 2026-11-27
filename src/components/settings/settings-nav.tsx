@@ -53,6 +53,17 @@ const sections: NavSection[] = [
     ),
   },
   {
+    href: "/settings/integrations",
+    label: "Integrations",
+    hint: "Splitwise, Groww",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0z" />
+        <path d="M12 18v4" />
+      </svg>
+    ),
+  },
+  {
     href: "/settings/documents",
     label: "Documents",
     hint: "Your saved files",
