@@ -259,7 +259,7 @@ export async function POST(req: Request) {
             ? 1800
             : brief
               ? 300
-              : 600
+              : 1500
           : worldOnly || studying
             ? 2500
             : brief

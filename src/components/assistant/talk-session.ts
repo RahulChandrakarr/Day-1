@@ -43,6 +43,8 @@ export type TalkSession = {
   end: () => void;
   /** Tap the orb: resume if paused, send what's been said, or stop a reply. */
   tap: () => void;
+  /** End the current take and send it, even if the detector still thinks they're talking. */
+  sendHeard: () => void;
   replyChanged: (id: string, text: string) => void;
   replyFinished: (reply: { text: string; isError: boolean }) => void;
 };
@@ -393,6 +395,12 @@ export function createTalkSession(
       if (phase === "paused") return resumeListening();
       if (speaker) return cutReply();
       if (speakingNow) return mic?.flush();
+    },
+
+    sendHeard() {
+      if (!active || phase === "paused" || speaker) return;
+      if (speakingNow) return mic?.flush();
+      settleTurn();
     },
 
     replyChanged(id, text) {

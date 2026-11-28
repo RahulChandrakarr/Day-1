@@ -40,16 +40,15 @@ Set detail to "brief" for a single fact or status check ("what did I spend today
 }
 
 const TALK_RULES = `
-VOICE MODE — this is a live spoken conversation, not a written answer being read out. These rules override any formatting, money-style or link guidance above.
-- Talk the way you would on a phone call: contractions, everyday words, and a natural lead-in when it fits ("Sure", "Right, so", "Looks like", "Okay").
-- 1–3 short sentences, under 60 words. Say the one thing that matters and let them ask for the rest.
-- Exception: if they asked you to sing, recite lyrics, tell a story, or teach from an uploaded syllabus/file, the 60-word limit does not apply. Teach or recite what they asked, then stop.
-- React before you report when there's something to react to ("Oh nice", "Hmm, that's a bit high"). Vary sentence length so it doesn't come out flat.
-- Never recite data as a list. Pick the one or two numbers that matter and work them into a sentence — they'll ask if they want the full breakdown.
-- If you did something, confirm it in one sentence. If you need a detail, ask one short question and stop there.
-- Never say a link or URL out loud. If they want a PDF, a link, or a table, tell them to switch to Ask mode for it.
+VOICE MODE — this is a live spoken conversation. The on-screen reply is also shown in the chat, so write it with the same markdown as Ask (bold, lists, tables). A spoken version is read out from that text.
+- Open like a phone call when it fits ("Sure", "Right, so", "Looks like", "Okay"), then give the full answer on screen.
+- For a single fact or a yes/no, keep it to 1–3 short sentences.
+- For a breakdown, comparison, plan, syllabus, table or several values, use markdown lists or a table — the same structure as Ask. Do not flatten it into one paragraph.
+- React before you report when there's something to react to ("Oh nice", "Hmm, that's a bit high").
+- If you did something, confirm it, then include the useful detail on screen.
+- Don't put raw URLs in a way a voice would have to spell them. If they want a PDF, say it's on screen.
 - Reply in the language the user spoke: Hindi (Devanagari) if they spoke Hindi, the same easy mix if they mixed Hindi and English, otherwise English.
-- A short follow-up question is welcome when it keeps the conversation going naturally, for example after going through what's on for today.
+- A short follow-up question is welcome when it keeps the conversation going naturally.
 - Their words came through speech recognition. If a name or amount looks misheard, check it with them before changing anything.`;
 
 const TEACHER_TALK_RULES = `
@@ -104,13 +103,8 @@ How to work:
   const talkRules =
     mode !== "talk" ? "" : persona.isDefault || persona.hasTools ? TALK_RULES : TEACHER_TALK_RULES;
 
-  // In talk mode every character is spoken, so the markdown and ₹ rules are
-  // replaced rather than added to — otherwise they contradict TALK_RULES.
   const formatRules =
-    mode === "talk"
-      ? `- Write only what a person would say out loud. No markdown, headings, bullets, numbered lists, tables, emoji, links, or symbols like *, #, - or |.
-- Say money, numbers, dates and percentages as spoken words ("about twelve thousand rupees", "one point two lakh", "Tuesday the sixteenth", "around forty percent") — never a ₹ sign or digits with commas. Check the direction of any comparison (a bigger number is "up").`
-      : `- Plain, warm text; bold only the key number or two. Use a list when ${name} asks for a breakdown or several values.
+    `- Plain, warm text; bold only the key number or two. Use a list when ${name} asks for a breakdown or several values.
 - When ${name} asks for a table (or "in a table", "as a table", "table of…"), reply with one short sentence, then a markdown table and nothing else. Header row, a | --- | separator row, then one row per item. Fill it only with values from tools or from what they just said — never invent rows, amounts or names. If there is nothing to list, say so in one sentence and skip the table.
 - Money in ₹ with Indian grouping (₹1,23,456). Check the direction of any comparison (a bigger number is "up").`;
 

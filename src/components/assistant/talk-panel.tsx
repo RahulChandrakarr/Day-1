@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { AnimatePresence } from "framer-motion";
 import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { textOf, useAssistant } from "./chat-provider";
-import { canListen, speakable } from "./speech";
+import { canListen } from "./speech";
 import AttachFile, { withUploadedFiles } from "./attach-file";
+import { SendIcon } from "./icons";
+import Markdown from "./markdown";
 import TalkOrb from "./talk-orb";
 import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
 import { WorkingStatus } from "./working-mark";
@@ -55,6 +57,20 @@ function HoldToEnd({ onEnd }: { onEnd: () => void }) {
         }}
       />
       <span className="relative">Hold to end</span>
+    </button>
+  );
+}
+
+function SendHeard({ onSend }: { onSend: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSend}
+      aria-label="Send what I said"
+      className="flex h-11 items-center gap-1.5 rounded-full bg-ember px-5 text-sm font-semibold text-on-ember transition hover:bg-ember-light"
+    >
+      <SendIcon />
+      Send
     </button>
   );
 }
@@ -145,16 +161,23 @@ export default function TalkPanel() {
             {turns.map((m) => {
               const text = textOf(m);
               if (!text) return null;
+              const isLast = m.id === last?.id;
+              if (m.role === "user") {
+                return (
+                  <li
+                    key={m.id}
+                    className="ml-auto max-w-[88%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ember/15 px-3.5 py-2 text-[15px] leading-relaxed"
+                  >
+                    {text}
+                  </li>
+                );
+              }
               return (
                 <li
                   key={m.id}
-                  className={`max-w-[88%] rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed ${
-                    m.role === "user"
-                      ? "ml-auto rounded-br-md bg-ember/15"
-                      : "rounded-bl-md bg-paper/[0.06]"
-                  }`}
+                  className="card max-w-full rounded-2xl rounded-bl-md px-4 py-3 text-[15px] leading-relaxed"
                 >
-                  {m.role === "user" ? text : speakable(text)}
+                  <Markdown streaming={isLast && working}>{text}</Markdown>
                 </li>
               );
             })}
@@ -192,7 +215,7 @@ export default function TalkPanel() {
             {saved}
           </p>
         ) : null}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <AttachFile
             userId={userId}
             disabled={working}
@@ -206,6 +229,9 @@ export default function TalkPanel() {
               setSaved(`Saved “${name}”. Say what you want from it.`);
             }}
           />
+          {supported && live && phase === "listening" && (
+            <SendHeard onSend={() => session.current?.sendHeard()} />
+          )}
           {supported && live && <HoldToEnd onEnd={() => session.current?.end()} />}
         </div>
         {supported && live && (
@@ -227,7 +253,7 @@ function talkLabel(phase: TalkPhase, speakerName: string, working: boolean, job:
   }
   if (phase === "starting") return "Getting ready…";
   if (phase === "paused") return "Stopped listening. Tap to start again.";
-  if (phase === "listening") return "Listening… say “stop” or “hold” to pause";
+  if (phase === "listening") return "Listening… tap Send when you're done";
   if (phase === "thinking") return "Thinking…";
   return "Speaking… tap to interrupt";
 }
