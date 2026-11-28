@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { textOf, useAssistant } from "./chat-provider";
 import { canListen, speakable } from "./speech";
+import TalkOrb from "./talk-orb";
 import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
+import { WorkingStatus } from "./working-mark";
 
 const HOLD_TO_END_MS = 700;
 const LAST_TURNS = 30;
@@ -58,7 +60,8 @@ function HoldToEnd({ onEnd }: { onEnd: () => void }) {
 
 // A hands-free spoken conversation that carries on until it's ended.
 export default function TalkPanel() {
-  const { messages, send, persona, speakerName, onReplyFinished } = useAssistant();
+  const { messages, send, persona, speakerName, onReplyFinished, status, statusLabel } =
+    useAssistant();
   const supported = useSyncExternalStore(() => () => {}, canListen, () => true);
   const [phase, setPhase] = useState<TalkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -95,9 +98,14 @@ export default function TalkPanel() {
     if (replyId) session.current?.replyChanged(replyId, replyText);
   }, [replyId, replyText]);
 
+  const live = phase !== "idle";
+  const working = status === "submitted" || status === "streaming";
+  const job = statusLabel?.trim() || "Working on it…";
+  const label = talkLabel(phase, speakerName, working, job);
+
   useEffect(() => {
     stick.pin();
-  }, [stick.pin, messages, replyText, phase]);
+  }, [stick.pin, messages, replyText, phase, working, job]);
 
   // Start the call as soon as Talk opens, then keep it going until they hang up.
   useEffect(() => {
@@ -105,20 +113,6 @@ export default function TalkPanel() {
     start();
     return () => session.current?.end();
   }, [supported, start]);
-
-  const live = phase !== "idle";
-  const label =
-    phase === "idle"
-      ? `Tap to talk with ${speakerName}`
-      : phase === "starting"
-        ? "Getting ready…"
-        : phase === "paused"
-          ? "Stopped listening. Tap to start again."
-          : phase === "listening"
-            ? "Listening… say “stop” to pause"
-            : phase === "thinking"
-              ? "Thinking…"
-              : "Speaking… talk or tap to interrupt";
 
   const turns = messages.slice(-LAST_TURNS);
 
@@ -137,7 +131,7 @@ export default function TalkPanel() {
             <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
             <p className="max-w-xs text-sm text-paper/70">
               A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
-              today, say &ldquo;stop&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
+              today, say &ldquo;stop&rdquo; or &ldquo;hold&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
             </p>
           </div>
         ) : (
@@ -158,6 +152,7 @@ export default function TalkPanel() {
                 </li>
               );
             })}
+            <AnimatePresence>{working && <WorkingStatus key="working" label={job} />}</AnimatePresence>
             <li ref={stick.end} aria-hidden className="h-px list-none" />
           </ul>
         )}
@@ -170,69 +165,12 @@ export default function TalkPanel() {
           </p>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={() => (live ? session.current?.tap() : start())}
-              aria-label={label}
-              className="relative flex h-24 w-24 items-center justify-center rounded-full outline-none focus-visible:ring-4 focus-visible:ring-ember/30"
-            >
-              <AnimatePresence>
-                {(phase === "listening" || phase === "speaking") && (
-                  <motion.span
-                    key={phase}
-                    className={`absolute inset-0 rounded-full ${
-                      phase === "listening" ? "bg-red-500/25" : "bg-ember/25"
-                    }`}
-                    initial={{ scale: 1, opacity: 0.8 }}
-                    animate={{ scale: [1, 1.35, 1], opacity: [0.8, 0.2, 0.8] }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: phase === "listening" ? 1.4 : 0.9, repeat: Infinity }}
-                  />
-                )}
-              </AnimatePresence>
-              <motion.span
-                animate={phase === "thinking" || phase === "starting" ? { rotate: 360 } : { rotate: 0 }}
-                transition={
-                  phase === "thinking" || phase === "starting"
-                    ? { duration: 1.6, repeat: Infinity, ease: "linear" }
-                    : {}
-                }
-                className={`relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-colors ${
-                  phase === "paused"
-                    ? "bg-paper/15 text-paper"
-                    : phase === "listening"
-                      ? "bg-red-500 text-white"
-                      : phase === "thinking" || phase === "starting"
-                        ? "bg-[conic-gradient(var(--ember),transparent_70%)] text-ember"
-                        : "bg-ember text-on-ember"
-                }`}
-              >
-                {phase === "thinking" || phase === "starting" ? (
-                  <span className="h-16 w-16 rounded-full bg-surface" />
-                ) : phase === "paused" ? (
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <rect x="6" y="5" width="4" height="14" rx="1" />
-                    <rect x="14" y="5" width="4" height="14" rx="1" />
-                  </svg>
-                ) : phase === "speaking" ? (
-                  <span className="flex items-end gap-1" aria-hidden>
-                    {[0, 1, 2, 3].map((i) => (
-                      <motion.span
-                        key={i}
-                        className="w-1.5 rounded-full bg-current"
-                        animate={{ height: [8, 22, 10, 18, 8] }}
-                        transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.12 }}
-                      />
-                    ))}
-                  </span>
-                ) : (
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <rect x="9" y="3" width="6" height="11" rx="3" />
-                    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-                  </svg>
-                )}
-              </motion.span>
-            </button>
+            <TalkOrb
+              phase={phase}
+              working={working}
+              label={label}
+              onTap={() => (live ? session.current?.tap() : start())}
+            />
 
             <p role="status" aria-live="polite" className="min-h-5 max-w-md text-center text-sm text-paper/70">
               {label}
@@ -255,4 +193,18 @@ export default function TalkPanel() {
       </div>
     </div>
   );
+}
+
+function talkLabel(phase: TalkPhase, speakerName: string, working: boolean, job: string) {
+  if (phase === "idle") return `Tap to talk with ${speakerName}`;
+  if (working) {
+    if (phase === "paused") return `${job} Mic is paused. Tap to listen.`;
+    if (phase === "listening") return `${job} You can still talk.`;
+    return job;
+  }
+  if (phase === "starting") return "Getting ready…";
+  if (phase === "paused") return "Stopped listening. Tap to start again.";
+  if (phase === "listening") return "Listening… say “stop” or “hold” to pause";
+  if (phase === "thinking") return "Thinking…";
+  return "Speaking… talk or tap to interrupt";
 }

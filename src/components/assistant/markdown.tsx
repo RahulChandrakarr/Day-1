@@ -21,6 +21,7 @@ export default function Markdown({
       mode={streaming ? "streaming" : "static"}
       isAnimating={streaming}
       controls={false}
+      tableMaxHeight={480}
       linkSafety={linkSafety}
     >
       {children}

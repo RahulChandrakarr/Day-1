@@ -5,6 +5,21 @@ import { SECTION_NAMES, type Section } from "./domains";
 import { dataModel } from "./models";
 import { routerInstructions } from "./prompts";
 
+const FOLLOW_UP =
+  /^(yes|yeah|yep|yup|ok|okay|sure|no|nope|nah|haan|ha|haji|nahi|na|hmm|right|correct|done|go ahead|please|thanks|thank you)[.!?]*$/i;
+const FOLLOW_UP_VALUE =
+  /^[₹$]?\s*\d[\d,]*(?:\.\d+)?\s*(rs|inr|rupees?|kg|kgs|reps?|sets?|mins?|minutes?|months?|days?)?\.?$/i;
+const FOLLOW_UP_PICK = /^(the )?(first|second|third|last|that|this|same)(\s+one)?[.!?]?$/i;
+
+export function looksLikeFollowUp(text: string) {
+  const t = text.trim();
+  return FOLLOW_UP.test(t) || FOLLOW_UP_VALUE.test(t) || FOLLOW_UP_PICK.test(t);
+}
+
+function stickySections(previous: Section[] | undefined, allowed: Section[]) {
+  return (previous ?? []).filter((s) => allowed.includes(s));
+}
+
 // detail: "brief" for a fact or an action, "full" for analysis and reports
 export type RouteDecision = {
   sections: Section[];
@@ -22,6 +37,18 @@ const WATCHISH =
   /\b(youtube|youtu\.be|instagram|insta|reels?)\b/i;
 const WORLDISH =
   /गाना|सुनाओ|गीत|गाओ|लिरिक्स|मौसम|खबर|https?:\/\/|www\.|\b(sing|songs?|gana|gaana|lyrics|spotify|rap|news|weather|wikipedia|who won|score|article|research|crawl|website|url)\b/i;
+const PLANISH =
+  /परीक्षा|नोट|प्लान|\b(exam|exams|syllabus|notes?|study plan|revision|flashcards?|study prompt|make (a |the )?plan|create (a |the )?plan|add (a |the )?plan|write (a |the )?note|save (a |the )?note|generate (a |the )?(note|notes|plan|prompt))\b/i;
+const TABLEISH =
+  /तालिका|टेबल|(?:\b(?:make|generate|create|build|show|give|draw|put)\b.{0,48}\b(?:table|spreadsheet)\b)|(?:\b(?:table|spreadsheet)\s+of\b)|(?:\b(?:in|as)\s+a\s+table\b)/i;
+
+export function looksLikePlan(text: string) {
+  return PLANISH.test(text.trim());
+}
+
+export function looksLikeTable(text: string) {
+  return TABLEISH.test(text.trim());
+}
 
 export function looksLikeSong(text: string) {
   return SONG.test(text.trim());
@@ -45,10 +72,16 @@ export async function routeMessage(
   history: ModelMessage[],
   text: string,
   allowed: Section[] = SECTION_NAMES,
+  previous?: Section[],
 ): Promise<RouteDecision> {
+  const sticky = stickySections(previous, allowed);
+  if (looksLikeFollowUp(text) && sticky.length) {
+    return { sections: sticky, customQuery: false, detail: "brief" };
+  }
   const world: Section[] = allowed.includes("world") ? ["world"] : [];
   const jobs: Section[] = allowed.includes("jobs") ? ["jobs"] : [];
   const watch: Section[] = allowed.includes("watch") ? ["watch"] : [];
+  const plan: Section[] = allowed.includes("plan") ? ["plan"] : [];
   if (looksLikeSong(text) && world.length && !looksLikeWatch(text)) {
     return { sections: world, customQuery: false, detail: "full" };
   }
@@ -61,17 +94,28 @@ export async function routeMessage(
     return { sections: [...jobs, ...extra], customQuery: false, detail: "full" };
   }
   const fallback: RouteDecision = {
-    sections: looksLikeWatch(text) && watch.length
+    sections: looksLikePlan(text) && plan.length
+      ? plan
+      : looksLikeWatch(text) && watch.length
       ? watch
       : looksLikeJobs(text) && jobs.length
       ? jobs
       : looksLikeWorld(text) && world.length
       ? world
-      : allowed.length <= 4
-        ? allowed
-        : BROAD.filter((s) => allowed.includes(s)),
+      : sticky.length
+        ? sticky
+        : allowed.length <= 4
+          ? allowed
+          : BROAD.filter((s) => allowed.includes(s)),
     customQuery: false,
-    detail: looksLikeWorld(text) || looksLikeJobs(text) || looksLikeWatch(text) ? "full" : "brief",
+    detail:
+      looksLikeWorld(text) ||
+      looksLikeJobs(text) ||
+      looksLikeWatch(text) ||
+      looksLikePlan(text) ||
+      looksLikeTable(text)
+        ? "full"
+        : "brief",
   };
   const Route = z.object({
     sections: z
@@ -82,13 +126,13 @@ export async function routeMessage(
     detail: z.enum(["brief", "full"]),
   });
   const recent = history
-    .slice(-4)
-    .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content.slice(0, 300) : ""}`)
+    .slice(-6)
+    .map((m) => `${m.role}: ${typeof m.content === "string" ? m.content.slice(0, 400) : ""}`)
     .join("\n");
   try {
     const { output } = await generateText({
       model: dataModel,
-      instructions: routerInstructions(allowed),
+      instructions: routerInstructions(allowed, sticky),
       prompt: `${recent ? `Recent conversation:\n${recent}\n\n` : ""}Latest message: ${text}`,
       output: Output.object({ schema: Route }),
       temperature: 0,
@@ -105,13 +149,16 @@ export async function routeMessage(
     if (looksLikeJobs(text) && jobs.length && !sections.includes("jobs")) {
       sections.push("jobs");
     }
+    if (looksLikePlan(text) && plan.length && !sections.includes("plan")) {
+      sections.push("plan");
+    }
     if (WORLDISH.test(text.trim()) && world.length && !sections.includes("world")) {
       sections.push("world");
     }
     return {
       sections,
       customQuery: output.customQuery,
-      detail: looksLikeSong(text) ? "full" : output.detail,
+      detail: looksLikeSong(text) || looksLikePlan(text) || looksLikeTable(text) ? "full" : output.detail,
     };
   } catch (error) {
     console.error("[assistant] router failed:", error);

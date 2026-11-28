@@ -1,5 +1,7 @@
 import "server-only";
 import type { ToolSet } from "ai";
+import { getChatSummaries } from "@/lib/ai/chat-memory";
+import { getMemories } from "@/lib/assistant-memory";
 import { addDays, todayISO } from "@/lib/finance";
 import { MOODS } from "@/lib/journal";
 import { getJournalEntry } from "@/lib/journal-queries";
@@ -53,10 +55,12 @@ export { financeSnapshot };
 // Everything the morning check-in talks about: today, how yesterday went, and money.
 export async function buildBriefingContext(supabase: Supabase) {
   const today = todayISO();
-  const [card, yesterday, finance] = await Promise.all([
+  const [card, yesterday, finance, memories, chats] = await Promise.all([
     todayCard(today),
     getJournalEntry(addDays(today, -1)),
     financeBriefingContext(supabase),
+    getMemories(supabase, 20).catch(() => []),
+    getChatSummaries(supabase, 6).catch(() => []),
   ]);
   const { entry } = yesterday;
   return {
@@ -70,5 +74,10 @@ export async function buildBriefingContext(supabase: Supabase) {
         }
       : { journalWritten: false },
     finance,
+    known: memories.map(({ label, value }) => ({ label, value })),
+    recentChats: chats.map(({ title, summary }) => ({
+      title,
+      summary: summary.slice(0, 400),
+    })),
   };
 }

@@ -259,6 +259,79 @@
   }
 }
 
+/* Assistant: threads weaving while a tool or reply is still running */
+.working-loom-comet,
+.working-loom-ring {
+  fill: none;
+  stroke: var(--ember);
+  stroke-linecap: round;
+}
+.working-loom-comet {
+  stroke-width: 1.85;
+  stroke-dasharray: 26 210;
+  animation: loom-thread 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.working-loom-ring {
+  stroke-width: 1.2;
+  opacity: 0.28;
+}
+.working-halo {
+  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--ember) 55%, transparent));
+}
+.working-fleck {
+  position: absolute;
+  bottom: 38%;
+  width: 5px;
+  height: 7px;
+  border-radius: 1px;
+  background: var(--ember);
+  opacity: 0;
+  animation: loom-fleck 2.7s ease-in infinite;
+}
+.working-core {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--ember);
+  border-radius: 42% 58% 50% 50%;
+  animation: loom-breathe 2.1s ease-in-out infinite;
+  box-shadow: 0 0 10px color-mix(in oklab, var(--ember) 70%, transparent);
+}
+.working-core-lg {
+  width: 1.65rem;
+  height: 1.65rem;
+  background: var(--on-ember);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--on-ember) 55%, transparent);
+}
+@keyframes loom-thread {
+  to {
+    stroke-dashoffset: -236;
+  }
+}
+@keyframes loom-fleck {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(-10deg) scale(0.55);
+  }
+  18% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) rotate(22deg) scale(1);
+  }
+}
+@keyframes loom-breathe {
+  0%,
+  100% {
+    border-radius: 42% 58% 48% 52%;
+    transform: scale(1);
+  }
+  50% {
+    border-radius: 58% 40% 55% 45%;
+    transform: scale(1.12);
+  }
+}
+
 /* A page taking its placeholder's place: each block eases up into position,
    the top one first. [data-arrive] goes on the wrapper around a page (see
    Arrive in ui/kit); the page's own top-level blocks are what move. It is
@@ -296,7 +369,10 @@
   .skeleton::after,
   .skeleton-flow,
   .nav-progress::before,
-  [data-arrive] > :not([data-skeleton]) > * {
+  [data-arrive] > :not([data-skeleton]) > *,
+  .working-loom-comet,
+  .working-fleck,
+  .working-core {
     animation: none;
   }
   .skeleton::after {
@@ -361,8 +437,13 @@ body {
   border-radius: 0.35em;
   background: color-mix(in oklab, var(--paper) 8%, transparent);
 }
+.assistant-md [data-streamdown="table-wrapper"] {
+  max-width: 100%;
+  overflow-x: auto;
+}
 .assistant-md table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-size: 0.92em;
   font-variant-numeric: tabular-nums;
@@ -371,6 +452,7 @@ body {
 .assistant-md td {
   padding: 0.45em 0.6em;
   text-align: left;
+  white-space: nowrap;
   border-bottom: 1px solid color-mix(in oklab, var(--paper) 10%, transparent);
 }
 .assistant-md th {

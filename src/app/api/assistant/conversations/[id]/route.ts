@@ -19,7 +19,11 @@ export async function GET(
       .eq("conversation_id", id)
       .order("created_at", { ascending: true })
       .limit(200),
-    session.supabase.from("ai_conversations").select("persona").eq("id", id).maybeSingle(),
+    session.supabase
+      .from("ai_conversations")
+      .select("persona, summary")
+      .eq("id", id)
+      .maybeSingle<{ persona: string | null; summary: string | null }>(),
   ]);
   if (error) return jsonError(error.message, 500);
 
@@ -28,6 +32,13 @@ export async function GET(
     role: m.role as "user" | "assistant",
     parts: [{ type: "text", text: m.content }],
   }));
+  if (messages.length === 0 && conversation?.summary) {
+    messages.push({
+      id: "recap",
+      role: "assistant",
+      parts: [{ type: "text", text: `From earlier in this chat:\n\n${conversation.summary}` }],
+    });
+  }
   return Response.json({ persona: conversation?.persona ?? "assistant", messages });
 }
 

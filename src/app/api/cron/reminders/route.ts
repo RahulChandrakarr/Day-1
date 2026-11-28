@@ -62,6 +62,15 @@ export async function GET(request: Request) {
       // Heartbeat is optional; reminders still go out.
     }
 
+    // Raw chat lines older than 30 days go away; lasting summaries stay.
+    try {
+      await client.query(
+        "delete from public.ai_messages where created_at < now() - interval '30 days'",
+      );
+    } catch {
+      // Older databases without this table still send reminders.
+    }
+
     // Due within the last 3 hours and not sent yet today. The window lets a
     // late or infrequent run (Vercel Hobby runs this once a day, at 06:30-07:30
     // India time) still deliver, while an every-15-minutes scheduler is punctual.
@@ -281,7 +290,13 @@ async function writeBriefing(client: Client, item: Due, date: string) {
           from body_logs where user_id = $1
          order by logged_on desc limit 1) as latest_weight,
        (select json_build_object('mood', mood, 'notes', left(notes, 400))
-          from journal_entries where user_id = $1 and entry_date = $2::date - 1) as yesterday`,
+          from journal_entries where user_id = $1 and entry_date = $2::date - 1) as yesterday,
+       (select json_agg(json_build_object('label', m.label, 'value', m.value))
+          from (select label, value from assistant_memories
+                 where user_id = $1 order by updated_at desc limit 20) m) as known,
+       (select json_agg(json_build_object('title', s.title, 'summary', left(s.summary, 400)))
+          from (select title, summary from ai_chat_summaries
+                 where user_id = $1 order by updated_at desc limit 6) s) as recent_chats`
     [item.user_id, date, month],
   );
 

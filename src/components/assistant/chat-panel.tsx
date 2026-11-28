@@ -13,6 +13,7 @@ import ModeSwitch from "./mode-switch";
 import PersonaPicker from "./persona-picker";
 import SpeakButton from "./speak-button";
 import TalkPanel from "./talk-panel";
+import { WorkingStatus } from "./working-mark";
 
 const CUSTOM_STARTERS = ["Hi! What can you help me with?", "Let's get started"];
 
@@ -154,32 +155,7 @@ export default function ChatPanel() {
                   );
                 })}
                 <AnimatePresence>
-                  {waitingForText && (
-                    <motion.li
-                      key="status"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center gap-2 text-sm text-paper/70"
-                      role="status"
-                    >
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/60" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ember" />
-                      </span>
-                      <AnimatePresence mode="wait">
-                        <motion.span
-                          key={statusLabel ?? "Thinking…"}
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          {statusLabel ?? "Thinking…"}
-                        </motion.span>
-                      </AnimatePresence>
-                    </motion.li>
-                  )}
+                  {busy && <WorkingStatus key="working" label={statusLabel ?? "Working on it…"} />}
                 </AnimatePresence>
                 {errorMessage &&
                   status === "error" &&

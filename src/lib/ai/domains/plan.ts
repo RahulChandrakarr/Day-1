@@ -84,7 +84,9 @@ export const plan: Domain = {
 - Plan weeks are fixed chunks of the month: w1 = days 1–7, w2 = 8–14, w3 = 15–21, w4 = 22–end. Today's plan week is given in get_plan output.
 - Task periods: YYYY-MM (month), YYYY-MM-wN (week), YYYY-MM-DD (day). "Today's plan" = day tasks for today.
 - Goals can be named by title; task ids come from get_plan. Use split_goal to spread a target across months or a month across its 4 weeks.
-- "behind" means progress is below the share of time elapsed.`,
+- "behind" means progress is below the share of time elapsed.
+- When they ask you to write notes, a study prompt, revision material, a syllabus, or a plan: search_notes and get_plan first. If it isn't there, generate the content (don't wait for them to dictate it) and save it with save_note and/or add_plan_task / create_goal. Confirm what you saved.
+- Exam dates they mention are lasting facts: remember_fact, then add a plan task or note for each exam. If they say they already told you, search_past_chats and search_notes before asking again.`,
   tools: (ctx) => ({
     get_plan: tool({
       description:
@@ -285,7 +287,8 @@ export const plan: Domain = {
     }),
 
     save_note: tool({
-      description: "Create a note, or update one by id (from search_notes).",
+      description:
+        "Create a note, or update one by id (from search_notes). Use this to write study notes, exam notes, a study prompt, a synopsis, or any note they asked you to generate — write the full body yourself, don't wait for them to dictate it.",
       inputSchema: z.object({
         id: idInput.optional(),
         title: z.string().max(120).default(""),

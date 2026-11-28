@@ -6,13 +6,21 @@ import {
   toUIMessageStream,
   type ModelMessage,
 } from "ai";
+import { after } from "next/server";
 import { z } from "zod";
+import {
+  getChatSummaries,
+  looksLikePastReference,
+  referenceQuery,
+  refreshChatSummary,
+  searchChatHistory,
+} from "@/lib/ai/chat-memory";
 import { buildAgent, financeSnapshot, SECTION_NAMES, type Section } from "@/lib/ai/domains";
 import { resolvePersona } from "@/lib/ai/persona-queries";
 import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
-import { looksLikeJobs, looksLikeSong, looksLikeWatch, routeMessage, type RouteDecision } from "@/lib/ai/router";
+import { looksLikeFollowUp, looksLikeJobs, looksLikeSong, looksLikeWatch, routeMessage, type RouteDecision } from "@/lib/ai/router";
 import { getAssistantName, getMemories, MEMORY_LIMIT } from "@/lib/assistant-memory";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
@@ -46,10 +54,10 @@ const Body = z.object({
 
 // Old turns are context, not the question; a long report from earlier
 // shouldn't be paid for again on every message.
-const HISTORY_CHARS = 1500;
-const HISTORY_TURNS = 12;
+const HISTORY_CHARS = 1800;
+const HISTORY_TURNS = 20;
 // A spoken conversation has short messages and needs more of them for context
-const TALK_HISTORY_TURNS = 24;
+const TALK_HISTORY_TURNS = 32;
 
 const LIMIT_PER_MINUTE = 8;
 const TALK_LIMIT_PER_MINUTE = 15;
@@ -81,7 +89,7 @@ export async function POST(req: Request) {
       .gte("created_at", since(ms));
 
   // Everything independent runs in parallel.
-  const [minute, day, conversation, history, persona, assistantName, memories] =
+  const [minute, day, conversation, history, persona, assistantName, memories, chatNotes] =
     await Promise.all([
       countSince(60_000),
       countSince(86_400_000),
@@ -98,9 +106,13 @@ export async function POST(req: Request) {
         .then(() =>
           supabase
             .from("ai_conversations")
-            .select("id")
+            .select("id, summary, last_sections")
             .eq("id", conversationId)
-            .maybeSingle(),
+            .maybeSingle<{
+              id: string;
+              summary: string | null;
+              last_sections: string[] | null;
+            }>(),
         ),
       supabase
         .from("ai_messages")
@@ -111,6 +123,7 @@ export async function POST(req: Request) {
       resolvePersona(supabase, personaId),
       getAssistantName(supabase).catch(() => undefined),
       getMemories(supabase, MEMORY_LIMIT).catch(() => []),
+      getChatSummaries(supabase).catch(() => []),
     ]);
 
   if ((minute.count ?? 0) >= (mode === "talk" ? TALK_LIMIT_PER_MINUTE : LIMIT_PER_MINUTE))
@@ -150,9 +163,15 @@ export async function POST(req: Request) {
       // 1. The persona limits the sections; the router picks among them.
       const allowed: Section[] =
         persona.sections === "all" ? SECTION_NAMES : persona.sections;
-      const [route, today_] = await Promise.all([
+      const previous = (conversation.data?.last_sections ?? []).filter((s): s is Section =>
+        (SECTION_NAMES as string[]).includes(s),
+      );
+      const referringBack = looksLikePastReference(text);
+      const lookBack = referringBack ? referenceQuery(text) : "";
+      if (referringBack) status("Looking through earlier chats…");
+      const [route, today_, related] = await Promise.all([
         allowed.length > 1
-          ? routeMessage(historyMessages, text, allowed)
+          ? routeMessage(historyMessages, text, allowed, previous)
           : // Single-area personas (like a teacher) keep their usual depth
             Promise.resolve<RouteDecision>({ sections: allowed, customQuery: false, detail: "full" }),
         // Personas without data access don't get the day's details.
@@ -160,8 +179,12 @@ export async function POST(req: Request) {
         allowed.length && !looksLikeSong(text) && !looksLikeJobs(text) && !looksLikeWatch(text)
           ? todayCard(today).catch(() => null)
           : null,
+        lookBack
+          ? searchChatHistory(supabase, lookBack, conversationId).catch(() => null)
+          : Promise.resolve(null),
       ]);
       const brief = route.detail === "brief";
+      const followUp = looksLikeFollowUp(text) && previous.length > 0;
       const sections =
         allowed.includes("world") && !route.sections.includes("world")
           ? [...route.sections, "world" as Section]
@@ -170,14 +193,18 @@ export async function POST(req: Request) {
       // The month-wide finance picture and the table list are big; only load
       // them when the question needs them (tools cover everything else).
       // A song or a world question must not dump today's to-dos into the prompt.
-      const sql = route.customQuery && !worldOnly;
+      const sql = route.customQuery && !worldOnly && !followUp;
       const [schema, finance] = await Promise.all([
         sql ? getSchemaText(supabase) : null,
-        route.sections.includes("finance") && !brief && !worldOnly
+        route.sections.includes("finance") && !brief && !worldOnly && !followUp
           ? financeSnapshot(supabase).catch(() => null)
           : null,
       ]);
       if (sections.length) status(SECTION_STATUS[sections[0]] ?? "Thinking…");
+      await supabase
+        .from("ai_conversations")
+        .update({ last_sections: route.sections })
+        .eq("id", conversationId);
 
       // 2. The section agent looks things up, makes changes and answers.
       const emit = (action: AssistantAction) =>
@@ -189,9 +216,25 @@ export async function POST(req: Request) {
       const known = sections.length
         ? memories.map(({ label, value }) => ({ label, value }))
         : [];
+      const pastNotes = chatNotes
+        .filter((n) => n.conversation_id !== conversationId)
+        .slice(0, 8)
+        .map(({ title, summary }) => ({ title, summary: summary.slice(0, 400) }));
+      const thisThread = past
+        .filter((m) => m.role === "user")
+        .slice(-8)
+        .map((m) => m.content.slice(0, 220));
+      const relatedHits =
+        related && (related.summaries.length || related.mentions.length) ? related : null;
       const context = [
-        today_ && !worldOnly ? `<today>${JSON.stringify(today_)}</today>` : "",
+        today_ && !worldOnly && !followUp ? `<today>${JSON.stringify(today_)}</today>` : "",
         known.length ? `<memory>${JSON.stringify(known)}</memory>` : "",
+        conversation.data?.summary
+          ? `<this_chat>${conversation.data.summary}</this_chat>`
+          : "",
+        thisThread.length ? `<this_thread>${JSON.stringify(thisThread)}</this_thread>` : "",
+        pastNotes.length ? `<past_chats>${JSON.stringify(pastNotes)}</past_chats>` : "",
+        relatedHits ? `<related>${JSON.stringify(relatedHits)}</related>` : "",
         finance ? `<finance>${JSON.stringify(finance)}</finance>` : "",
       ]
         .filter(Boolean)
@@ -246,6 +289,13 @@ export async function POST(req: Request) {
           } catch (error) {
             console.error("[assistant] couldn't save the reply:", error);
           }
+          after(() =>
+            refreshChatSummary(
+              supabase,
+              conversationId,
+              memories.map((m) => m.label),
+            ),
+          );
         },
       });
       answer.consumeStream();
