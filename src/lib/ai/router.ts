@@ -14,6 +14,19 @@ export type RouteDecision = {
 
 const BROAD: Section[] = ["daily", "plan", "health", "finance"];
 
+const SONG =
+  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|\b(sing|song|gana|gaana|lyrics|spotify)\b/i;
+const WORLDISH =
+  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|मौसम|खबर|\b(sing|song|gana|gaana|lyrics|spotify|news|weather|wikipedia|who won|score)\b/i;
+
+export function looksLikeSong(text: string) {
+  return SONG.test(text.trim());
+}
+
+export function looksLikeWorld(text: string) {
+  return WORLDISH.test(text.trim());
+}
+
 // Picks the section agents for a message, only from the allowed ones.
 // Falls back to a broad set on failure.
 export async function routeMessage(
@@ -21,10 +34,18 @@ export async function routeMessage(
   text: string,
   allowed: Section[] = SECTION_NAMES,
 ): Promise<RouteDecision> {
+  const world: Section[] = allowed.includes("world") ? ["world"] : [];
+  if (looksLikeSong(text) && world.length) {
+    return { sections: world, customQuery: false, detail: "full" };
+  }
   const fallback: RouteDecision = {
-    sections: allowed.length <= 4 ? allowed : BROAD.filter((s) => allowed.includes(s)),
+    sections: looksLikeWorld(text) && world.length
+      ? world
+      : allowed.length <= 4
+        ? allowed
+        : BROAD.filter((s) => allowed.includes(s)),
     customQuery: false,
-    detail: "brief",
+    detail: looksLikeWorld(text) ? "full" : "brief",
   };
   const Route = z.object({
     sections: z
@@ -48,10 +69,17 @@ export async function routeMessage(
       maxOutputTokens: 200,
       abortSignal: AbortSignal.timeout(6000),
     });
+    const sections = [...new Set(output.sections)];
+    if (looksLikeSong(text) && world.length) {
+      return { sections: world, customQuery: false, detail: "full" };
+    }
+    if (looksLikeWorld(text) && world.length && !sections.includes("world")) {
+      sections.push("world");
+    }
     return {
-      sections: [...new Set(output.sections)],
+      sections,
       customQuery: output.customQuery,
-      detail: output.detail,
+      detail: looksLikeSong(text) ? "full" : output.detail,
     };
   } catch (error) {
     console.error("[assistant] router failed:", error);

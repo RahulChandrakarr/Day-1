@@ -9,6 +9,7 @@ export const PERSONA_SECTIONS = [
   { value: "documents", label: "Documents" },
   { value: "reports", label: "Reports" },
   { value: "settings", label: "Settings" },
+  { value: "world", label: "Web, songs & chat" },
 ] as const;
 
 export type PersonaSection = (typeof PERSONA_SECTIONS)[number]["value"];
@@ -34,7 +35,7 @@ export const BUILT_IN_PERSONAS: Persona[] = [
     id: "assistant",
     name: "Day One assistant",
     emoji: "✨",
-    tagline: "Knows your day, plans, health, money and documents",
+    tagline: "Your day, plus songs, news and anything you want to ask",
     instructions: "",
     sections: "all",
     language: "en-IN",
@@ -42,10 +43,10 @@ export const BUILT_IN_PERSONAS: Persona[] = [
     starters: [
       "How's my day going?",
       "What's my workout today?",
-      "Give me my weekly report",
+      "What's in the news today?",
+      "Sing me a song",
       "What's on my to-do list?",
       "How are my habits this week?",
-      "What documents do I have?",
     ],
   },
   {

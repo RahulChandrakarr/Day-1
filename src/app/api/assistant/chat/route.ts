@@ -12,7 +12,7 @@ import { resolvePersona } from "@/lib/ai/persona-queries";
 import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
-import { routeMessage, type RouteDecision } from "@/lib/ai/router";
+import { looksLikeSong, routeMessage, type RouteDecision } from "@/lib/ai/router";
 import { getAssistantName, getMemories, MEMORY_LIMIT } from "@/lib/assistant-memory";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
@@ -30,6 +30,7 @@ const SECTION_STATUS: Record<string, string> = {
   documents: "Looking through your documents…",
   reports: "Putting your report together…",
   settings: "Checking your settings…",
+  world: "Looking it up…",
 };
 
 const Body = z.object({
@@ -152,16 +153,20 @@ export async function POST(req: Request) {
           ? routeMessage(historyMessages, text, allowed)
           : // Single-area personas (like a teacher) keep their usual depth
             Promise.resolve<RouteDecision>({ sections: allowed, customQuery: false, detail: "full" }),
-        // Personas without data access don't get the day's details
-        allowed.length ? todayCard(today).catch(() => null) : null,
+        // Personas without data access don't get the day's details.
+        // A song request shouldn't load today's to-dos into the prompt.
+        allowed.length && !looksLikeSong(text) ? todayCard(today).catch(() => null) : null,
       ]);
       const brief = route.detail === "brief";
+      const worldOnly =
+        route.sections.length === 1 && route.sections[0] === "world";
       // The month-wide finance picture and the table list are big; only load
-      // them when the question needs them (tools cover everything else)
-      const sql = route.customQuery;
+      // them when the question needs them (tools cover everything else).
+      // A song or a world question must not dump today's to-dos into the prompt.
+      const sql = route.customQuery && !worldOnly;
       const [schema, finance] = await Promise.all([
         sql ? getSchemaText(supabase) : null,
-        route.sections.includes("finance") && !brief
+        route.sections.includes("finance") && !brief && !worldOnly
           ? financeSnapshot(supabase).catch(() => null)
           : null,
       ]);
@@ -178,7 +183,7 @@ export async function POST(req: Request) {
         ? memories.map(({ label, value }) => ({ label, value }))
         : [];
       const context = [
-        today_ ? `<today>${JSON.stringify(today_)}</today>` : "",
+        today_ && !worldOnly ? `<today>${JSON.stringify(today_)}</today>` : "",
         known.length ? `<memory>${JSON.stringify(known)}</memory>` : "",
         finance ? `<finance>${JSON.stringify(finance)}</finance>` : "",
       ]
@@ -198,7 +203,15 @@ export async function POST(req: Request) {
         tools: route.sections.length ? agent.tools : undefined,
         stopWhen: isStepCount(8),
         temperature: 0.3,
-        maxOutputTokens: mode === "talk" ? (brief ? 300 : 600) : brief ? 350 : 1500,
+        maxOutputTokens: mode === "talk"
+          ? worldOnly
+            ? 1000
+            : brief
+              ? 300
+              : 600
+          : brief
+            ? 350
+            : 1500,
         providerOptions: answerProviderOptions,
         onToolExecutionStart: ({ toolCall }) => {
           const label = agent.labels[toolCall.toolName];
