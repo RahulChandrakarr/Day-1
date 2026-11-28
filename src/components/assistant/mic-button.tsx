@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { canListen, createListener, type Listener } from "./speech";
+import { isStopListening } from "./wake-word";
 
 type State = "off" | "starting" | "listening" | "transcribing";
 
@@ -38,7 +39,7 @@ export default function MicButton({
         onTranscribing: () => setState("transcribing"),
         onPause: (text) => {
           stop();
-          if (text) onText(text);
+          if (text && !isStopListening(text)) onText(text);
         },
         onError: (message) => {
           stop();

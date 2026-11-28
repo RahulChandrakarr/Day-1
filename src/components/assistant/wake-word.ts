@@ -151,9 +151,42 @@ export function isGoodbye(text: string) {
   return !!t && t.split(" ").length <= 5 && GOODBYE.test(t);
 }
 
-const HUSH = new Set(["stop", "wait", "hold on", "ruko", "ruk", "ruk jao", "bas", "chup", "रुको", "रुक जाओ", "बस", "चुप"]);
+const HUSH = new Set(["wait", "hold on", "hold on a second", "one second", "ek second", "एक सेकंड"]);
 
-// "Stop talking", said over a reply: she stops and carries on listening
+// "Wait", said over a reply: she stops talking and carries on listening
 export function isHush(text: string) {
   return HUSH.has(normalise(text));
+}
+
+const STOP_LISTEN = new Set([
+  "stop",
+  "pause",
+  "mute",
+  "stop listening",
+  "stop listen",
+  "stop the mic",
+  "stop microphone",
+  "don't listen",
+  "dont listen",
+  "do not listen",
+  "ruko",
+  "ruk",
+  "ruk jao",
+  "bas",
+  "chup",
+  "band karo",
+  "sunna band",
+  "suno mat",
+  "रुको",
+  "रुक जाओ",
+  "बस",
+  "चुप",
+]);
+
+// "Stop": hang the mic. The call stays open; tap the orb to listen again.
+export function isStopListening(text: string) {
+  const t = normalise(text);
+  if (!t || t.split(" ").length > 5) return false;
+  if (STOP_LISTEN.has(t)) return true;
+  return /^(?:please\s+)?(?:stop|pause)\s+(?:listening|listen|the mic(?:rophone)?)$/.test(t);
 }

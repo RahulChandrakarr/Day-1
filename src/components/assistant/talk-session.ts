@@ -14,14 +14,14 @@ import {
   type Speaker,
   type SpeechLang,
 } from "./speech";
-import { isGoodbye, isHush } from "./wake-word";
+import { isGoodbye, isHush, isStopListening } from "./wake-word";
 
 // A live spoken conversation: the microphone stays on, turns are found by the
 // speech detector, and replies are spoken sentence by sentence as they arrive.
 // It keeps going through noise and network drops until it's ended, so someone
 // riding a bicycle never has to look at or touch the phone.
 
-export type TalkPhase = "idle" | "starting" | "listening" | "thinking" | "speaking";
+export type TalkPhase = "idle" | "starting" | "listening" | "thinking" | "speaking" | "paused";
 
 // Short, because a pause mid-sentence is forgiven: speech that resumes while
 // the last part is still being transcribed joins the same turn.
@@ -41,7 +41,7 @@ const SAY_QUIET = "It's been quiet for a while, so I'll hang up. Bye!";
 export type TalkSession = {
   start: () => void;
   end: () => void;
-  /** Tap on the orb: send what's been said so far, or cut a reply short. */
+  /** Tap the orb: resume if paused, send what's been said, or cut a reply short. */
   tap: () => void;
   replyChanged: (id: string, text: string) => void;
   replyFinished: (reply: { text: string; isError: boolean }) => void;
@@ -170,6 +170,41 @@ export function createTalkSession(
     mic = null;
   }
 
+  function pauseListening() {
+    // Phase first, so a mic-lost callback from closeMic doesn't reconnect.
+    setPhase("paused");
+    clearTimeout(quietTimer);
+    closeMic();
+    stopReplyAudio();
+    stopWaiting();
+    speakingNow = false;
+    heard = "";
+    nextTurn = "";
+    if (replyPending) dropReply = true;
+    replyPending = false;
+    void wakeLock?.release().catch(() => {});
+    wakeLock = null;
+    tone(330, 0.18, 0.05);
+  }
+
+  function resumeListening() {
+    if (!active || phase !== "paused") return;
+    setPhase("starting");
+    void keepScreenOn();
+    connectMic().then(
+      () => {
+        if (!active) return;
+        tone(880, 0.12);
+        resetQuietTimer();
+        setPhase("listening");
+      },
+      (error) => {
+        events.onError(micErrorMessage(error));
+        session.end();
+      },
+    );
+  }
+
   function sendTurn(text: string) {
     replyPending = true;
     dropReply = false;
@@ -195,6 +230,7 @@ export function createTalkSession(
       }
       return setPhase(restPhase());
     }
+    if (isStopListening(text)) return pauseListening();
     if (isGoodbye(text)) return sayThenEnd(SAY_BYE);
 
     stopReplyAudio();
@@ -223,7 +259,7 @@ export function createTalkSession(
   }
 
   function onSpeechEnd(wav: Blob) {
-    if (!active) return;
+    if (!active || phase === "paused") return;
     speakingNow = false;
     tone(660);
     resetQuietTimer();
@@ -246,6 +282,7 @@ export function createTalkSession(
     mic = await openMic(
       {
         onSpeechStart: () => {
+          if (phase === "paused") return;
           speakingNow = true;
           resetQuietTimer();
           // Hold the reply rather than drop it: it may just be a passing noise
@@ -267,7 +304,7 @@ export function createTalkSession(
   }
 
   async function reconnectMic() {
-    if (!active) return;
+    if (!active || phase === "paused") return;
     closeMic();
     speakingNow = false;
     try {
@@ -287,7 +324,7 @@ export function createTalkSession(
   }
 
   function onVisibilityChange() {
-    if (!active || document.visibilityState !== "visible") return;
+    if (!active || document.visibilityState !== "visible" || phase === "paused") return;
     void keepScreenOn();
     void sounds?.resume();
     if (mic?.isLive()) mic.wake();
@@ -341,6 +378,7 @@ export function createTalkSession(
 
     tap() {
       if (!active) return;
+      if (phase === "paused") return resumeListening();
       if (speakingNow) return mic?.flush();
       if (speaker) {
         stopReplyAudio();

@@ -112,11 +112,13 @@ export default function TalkPanel() {
       ? `Tap to talk with ${speakerName}`
       : phase === "starting"
         ? "Getting ready…"
-        : phase === "listening"
-          ? "Listening… just talk"
-          : phase === "thinking"
-            ? "Thinking…"
-            : "Speaking… talk or tap to interrupt";
+        : phase === "paused"
+          ? "Stopped listening. Tap to start again."
+          : phase === "listening"
+            ? "Listening… say “stop” to pause"
+            : phase === "thinking"
+              ? "Thinking…"
+              : "Speaking… talk or tap to interrupt";
 
   const turns = messages.slice(-LAST_TURNS);
 
@@ -135,7 +137,7 @@ export default function TalkPanel() {
             <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
             <p className="max-w-xs text-sm text-paper/70">
               A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
-              today, interrupt whenever you like, and say &ldquo;bye&rdquo; when you&apos;re done.
+              today, say &ldquo;stop&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
             </p>
           </div>
         ) : (
@@ -196,15 +198,22 @@ export default function TalkPanel() {
                     : {}
                 }
                 className={`relative flex h-20 w-20 items-center justify-center rounded-full shadow-lg transition-colors ${
-                  phase === "listening"
-                    ? "bg-red-500 text-white"
-                    : phase === "thinking" || phase === "starting"
-                      ? "bg-[conic-gradient(var(--ember),transparent_70%)] text-ember"
-                      : "bg-ember text-on-ember"
+                  phase === "paused"
+                    ? "bg-paper/15 text-paper"
+                    : phase === "listening"
+                      ? "bg-red-500 text-white"
+                      : phase === "thinking" || phase === "starting"
+                        ? "bg-[conic-gradient(var(--ember),transparent_70%)] text-ember"
+                        : "bg-ember text-on-ember"
                 }`}
               >
                 {phase === "thinking" || phase === "starting" ? (
                   <span className="h-16 w-16 rounded-full bg-surface" />
+                ) : phase === "paused" ? (
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <rect x="6" y="5" width="4" height="14" rx="1" />
+                    <rect x="14" y="5" width="4" height="14" rx="1" />
+                  </svg>
                 ) : phase === "speaking" ? (
                   <span className="flex items-end gap-1" aria-hidden>
                     {[0, 1, 2, 3].map((i) => (
