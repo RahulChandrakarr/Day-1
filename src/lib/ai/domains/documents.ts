@@ -17,20 +17,19 @@ const MAX_READ_BYTES = 10 * 1024 * 1024;
 
 async function openDocument(ctx: Parameters<Domain["tools"]>[0], document: string) {
   const docs = await getDocuments();
-  let found = pick(docs, document, (d) => d.name);
-  if ("error" in found) {
-    const q = document.toLowerCase();
-    const study = docs.filter((d) => d.folder.toLowerCase() === "study");
-    if (study.length === 1 && /study|syllabus|the file|uploaded/.test(q)) {
-      found = { item: study[0] };
-    } else {
-      const inFolder = docs.filter((d) => d.folder.toLowerCase() === q);
-      if (inFolder.length !== 1) return failed(found.error);
-      found = { item: inFolder[0] };
-    }
-  }
-  if ("error" in found) return failed(found.error);
-  const doc = found.item;
+  const found = pick(docs, document, (d) => d.name);
+  const q = document.toLowerCase();
+  const study = docs.filter((d) => d.folder.toLowerCase() === "study");
+  const inFolder = docs.filter((d) => d.folder.toLowerCase() === q);
+  const doc =
+    "item" in found
+      ? found.item
+      : study.length === 1 && /study|syllabus|the file|uploaded/.test(q)
+        ? study[0]
+        : inFolder.length === 1
+          ? inFolder[0]
+          : null;
+  if (!doc) return failed("error" in found ? found.error : "Couldn't find that file.");
   if (doc.size > MAX_READ_BYTES) return failed("That file is too large to read.");
   const { data, error } = await ctx.supabase.storage.from("documents").download(doc.path);
   if (error || !data) return failed(error?.message ?? "Couldn't open the file.");
