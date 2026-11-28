@@ -38,12 +38,18 @@ const WATCHISH =
 const WORLDISH =
   /गाना|सुनाओ|गीत|गाओ|लिरिक्स|मौसम|खबर|https?:\/\/|www\.|\b(sing|songs?|gana|gaana|lyrics|spotify|rap|news|weather|wikipedia|who won|score|article|research|crawl|website|url)\b/i;
 const PLANISH =
-  /परीक्षा|नोट|प्लान|\b(exam|exams|syllabus|notes?|study plan|revision|flashcards?|study prompt|make (a |the )?plan|create (a |the )?plan|add (a |the )?plan|write (a |the )?note|save (a |the )?note|generate (a |the )?(note|notes|plan|prompt))\b/i;
+  /परीक्षा|नोट|प्लान|\b(exam|exams|notes?|study plan|revision|flashcards?|study prompt|make (a |the )?plan|create (a |the )?plan|add (a |the )?plan|write (a |the )?note|save (a |the )?note|generate (a |the )?(note|notes|plan|prompt))\b/i;
+const DOCSISH =
+  /syllabus|पाठ्यक्रम|सिलेबस|I've uploaded|i have uploaded|uploaded "|study file|from (the |my )?(syllabus|pdf|document|file)|read (the |my )?(syllabus|pdf|document)|quiz me|teach me|explain .{0,40}(syllabus|unit|chapter|module|file)|what('s| is) (in |on )?(unit|chapter|module)|unit \d|chapter \d/i;
 const TABLEISH =
   /तालिका|टेबल|(?:\b(?:make|generate|create|build|show|give|draw|put)\b.{0,48}\b(?:table|spreadsheet)\b)|(?:\b(?:table|spreadsheet)\s+of\b)|(?:\b(?:in|as)\s+a\s+table\b)/i;
 
 export function looksLikePlan(text: string) {
   return PLANISH.test(text.trim());
+}
+
+export function looksLikeDocuments(text: string) {
+  return DOCSISH.test(text.trim());
 }
 
 export function looksLikeTable(text: string) {
@@ -82,6 +88,7 @@ export async function routeMessage(
   const jobs: Section[] = allowed.includes("jobs") ? ["jobs"] : [];
   const watch: Section[] = allowed.includes("watch") ? ["watch"] : [];
   const plan: Section[] = allowed.includes("plan") ? ["plan"] : [];
+  const documents: Section[] = allowed.includes("documents") ? ["documents"] : [];
   if (looksLikeSong(text) && world.length && !looksLikeWatch(text)) {
     return { sections: world, customQuery: false, detail: "full" };
   }
@@ -94,7 +101,9 @@ export async function routeMessage(
     return { sections: [...jobs, ...extra], customQuery: false, detail: "full" };
   }
   const fallback: RouteDecision = {
-    sections: looksLikePlan(text) && plan.length
+    sections: looksLikeDocuments(text) && documents.length
+      ? [...documents, ...(looksLikePlan(text) ? plan : [])]
+      : looksLikePlan(text) && plan.length
       ? plan
       : looksLikeWatch(text) && watch.length
       ? watch
@@ -113,6 +122,7 @@ export async function routeMessage(
       looksLikeJobs(text) ||
       looksLikeWatch(text) ||
       looksLikePlan(text) ||
+      looksLikeDocuments(text) ||
       looksLikeTable(text)
         ? "full"
         : "brief",
@@ -152,13 +162,19 @@ export async function routeMessage(
     if (looksLikePlan(text) && plan.length && !sections.includes("plan")) {
       sections.push("plan");
     }
+    if (looksLikeDocuments(text) && documents.length && !sections.includes("documents")) {
+      sections.push("documents");
+    }
     if (WORLDISH.test(text.trim()) && world.length && !sections.includes("world")) {
       sections.push("world");
     }
     return {
       sections,
       customQuery: output.customQuery,
-      detail: looksLikeSong(text) || looksLikePlan(text) || looksLikeTable(text) ? "full" : output.detail,
+      detail:
+        looksLikeSong(text) || looksLikePlan(text) || looksLikeDocuments(text) || looksLikeTable(text)
+          ? "full"
+          : output.detail,
     };
   } catch (error) {
     console.error("[assistant] router failed:", error);

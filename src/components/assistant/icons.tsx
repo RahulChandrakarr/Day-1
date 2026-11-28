@@ -56,6 +56,12 @@ export const RefreshIcon = () => (
   </svg>
 );
 
+export const AttachIcon = () => (
+  <svg {...base}>
+    <path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.4-9.4a4 4 0 0 1 5.7 5.7l-9.5 9.4a2 2 0 0 1-2.8-2.8l8.5-8.4" />
+  </svg>
+);
+
 export const TrashIcon = () => (
   <svg {...base} width={15} height={15}>
     <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />

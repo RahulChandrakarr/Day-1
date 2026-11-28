@@ -14,7 +14,7 @@ import { formatShortDate } from "@/lib/finance";
 import type { DocumentRow } from "@/lib/profile-queries";
 import { createClient } from "@/lib/supabase/client";
 
-const FOLDERS = ["ID", "Bills", "Insurance", "Receipts", "Medical", "Other"];
+const FOLDERS = ["Study", "ID", "Bills", "Insurance", "Receipts", "Medical", "Other"];
 const ACCEPT = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 const MAX_BYTES = 10 * 1024 * 1024;
 

@@ -16,7 +16,12 @@ export default async function AssistantLayout({
     profile.full_name?.split(" ")[0] ?? profile.email.split("@")[0] ?? "there";
 
   return (
-    <ChatProvider name={name} assistantName={assistantName} personas={personas}>
+    <ChatProvider
+      name={name}
+      userId={profile.id}
+      assistantName={assistantName}
+      personas={personas}
+    >
       {children}
     </ChatProvider>
   );

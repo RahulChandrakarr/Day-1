@@ -32,6 +32,7 @@ type ChatContextValue = ReturnType<typeof useChat<AssistantUIMessage>> & {
   newChat: () => void;
   openConversation: (id: string) => Promise<void>;
   name: string;
+  userId: string;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -91,11 +92,13 @@ function savedPersona(personas: Persona[]) {
 
 export default function ChatProvider({
   name,
+  userId,
   assistantName,
   personas,
   children,
 }: {
   name: string;
+  userId: string;
   assistantName: string;
   personas: Persona[];
   children: ReactNode;
@@ -211,6 +214,7 @@ export default function ChatProvider({
     newChat,
     openConversation,
     name,
+    userId,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

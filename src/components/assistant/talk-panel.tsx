@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { textOf, useAssistant } from "./chat-provider";
 import { canListen, speakable } from "./speech";
+import AttachFile, { uploadedStudyPrompt } from "./attach-file";
 import TalkOrb from "./talk-orb";
 import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
 import { WorkingStatus } from "./working-mark";
@@ -60,7 +61,7 @@ function HoldToEnd({ onEnd }: { onEnd: () => void }) {
 
 // A hands-free spoken conversation that carries on until it's ended.
 export default function TalkPanel() {
-  const { messages, send, persona, speakerName, onReplyFinished, status, statusLabel } =
+  const { messages, send, persona, speakerName, onReplyFinished, status, statusLabel, userId } =
     useAssistant();
   const supported = useSyncExternalStore(() => () => {}, canListen, () => true);
   const [phase, setPhase] = useState<TalkPhase>("idle");
@@ -131,7 +132,7 @@ export default function TalkPanel() {
             <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
             <p className="max-w-xs text-sm text-paper/70">
               A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
-              today, say &ldquo;stop&rdquo; or &ldquo;hold&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
+              today, upload a syllabus with the paperclip, say &ldquo;stop&rdquo; or &ldquo;hold&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
             </p>
           </div>
         ) : (
@@ -175,20 +176,29 @@ export default function TalkPanel() {
             <p role="status" aria-live="polite" className="min-h-5 max-w-md text-center text-sm text-paper/70">
               {label}
             </p>
-            {error && (
-              <p role="alert" className="text-center text-sm text-red-700 dark:text-red-300">
-                {error}
-              </p>
-            )}
-            {live && (
-              <>
-                <HoldToEnd onEnd={() => session.current?.end()} />
-                <p className="max-w-xs text-center text-xs text-paper/55">
-                  Keep this screen open. Locking your phone stops the microphone.
-                </p>
-              </>
-            )}
           </>
+        )}
+        {error && (
+          <p role="alert" className="text-center text-sm text-red-700 dark:text-red-300">
+            {error}
+          </p>
+        )}
+        <div className="flex items-center gap-2">
+          <AttachFile
+            userId={userId}
+            disabled={working}
+            onError={setError}
+            onUploaded={(name) => {
+              setError(null);
+              send(uploadedStudyPrompt(name));
+            }}
+          />
+          {supported && live && <HoldToEnd onEnd={() => session.current?.end()} />}
+        </div>
+        {supported && live && (
+          <p className="max-w-xs text-center text-xs text-paper/55">
+            Keep this screen open. Locking your phone stops the microphone.
+          </p>
         )}
       </div>
     </div>

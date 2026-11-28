@@ -15,16 +15,45 @@ import {
 
 const MAX_READ_BYTES = 10 * 1024 * 1024;
 
+async function openDocument(ctx: Parameters<Domain["tools"]>[0], document: string) {
+  const docs = await getDocuments();
+  let found = pick(docs, document, (d) => d.name);
+  if ("error" in found) {
+    const q = document.toLowerCase();
+    const study = docs.filter((d) => d.folder.toLowerCase() === "study");
+    if (study.length === 1 && /study|syllabus|the file|uploaded/.test(q)) {
+      found = { item: study[0] };
+    } else {
+      const inFolder = docs.filter((d) => d.folder.toLowerCase() === q);
+      if (inFolder.length !== 1) return failed(found.error);
+      found = { item: inFolder[0] };
+    }
+  }
+  if ("error" in found) return failed(found.error);
+  const doc = found.item;
+  if (doc.size > MAX_READ_BYTES) return failed("That file is too large to read.");
+  const { data, error } = await ctx.supabase.storage.from("documents").download(doc.path);
+  if (error || !data) return failed(error?.message ?? "Couldn't open the file.");
+  return {
+    doc,
+    bytes: new Uint8Array(await data.arrayBuffer()),
+    mediaType: doc.mime || data.type || "application/pdf",
+  };
+}
+
 export const documents: Domain = {
   labels: {
     list_documents: "Looking through your documents…",
     read_document: "Reading the document…",
+    teach_from_document: "Teaching from your file…",
     rename_document: "Updating the document…",
     delete_document: "Removing the document…",
   },
-  prompt: `DOCUMENTS (files the user uploaded in Settings → Documents: IDs, bills, insurance, receipts…)
-- list_documents shows what exists. To answer anything about a file's contents (an Aadhaar or PAN number, a bill amount, a policy date), call read_document with a clear question.
-- These are the user's own private files, so read out numbers and details they ask for exactly as written.
+  prompt: `DOCUMENTS (files they uploaded: syllabi in Study, plus IDs, bills, insurance, receipts)
+- When they upload a syllabus or study file, or ask a question from it, list_documents then teach_from_document (or read_document for a single fact). Prefer the Study folder and the file they just named.
+- teach_from_document: explain, summarise, quiz, walk through a unit, or answer any study question from the file. Stay faithful to what's written; if it isn't in the file, say so.
+- read_document: one exact fact (a number, date, name).
+- These are the user's own private files, so copy numbers, names and dates exactly as printed.
 - If several files could match, say which one you read.`,
   tools: (ctx) => ({
     list_documents: tool({
@@ -56,26 +85,14 @@ export const documents: Domain = {
 
     read_document: tool({
       description:
-        "Open one uploaded file (PDF or photo) and answer a question from its contents, e.g. 'What is the Aadhaar number?'.",
+        "Open one uploaded file (PDF or photo) and answer a short factual question from its contents, e.g. 'What is the Aadhaar number?'.",
       inputSchema: z.object({
         document: z.string().min(1).describe("File name, folder hint or id"),
         question: z.string().min(3).max(500),
       }),
       execute: async ({ document, question }) => {
-        const docs = await getDocuments();
-        let found = pick(docs, document, (d) => d.name);
-        if ("error" in found) {
-          const inFolder = docs.filter((d) => d.folder.toLowerCase() === document.toLowerCase());
-          if (inFolder.length !== 1) return failed(found.error);
-          found = { item: inFolder[0] };
-        }
-        const doc = found.item;
-        if (doc.size > MAX_READ_BYTES) return failed("That file is too large to read.");
-        const { data, error } = await ctx.supabase.storage.from("documents").download(doc.path);
-        if (error || !data) return failed(error?.message ?? "Couldn't open the file.");
-        const bytes = new Uint8Array(await data.arrayBuffer());
-        const mediaType = doc.mime || data.type || "application/pdf";
-
+        const opened = await openDocument(ctx, document);
+        if ("error" in opened) return opened;
         const { text } = await generateText({
           model: answerModel,
           instructions:
@@ -84,8 +101,11 @@ export const documents: Domain = {
             {
               role: "user",
               content: [
-                { type: "text", text: `Document: "${doc.name}" (${doc.folder}).\nQuestion: ${question}` },
-                { type: "file", data: bytes, mediaType, filename: doc.name },
+                {
+                  type: "text",
+                  text: `Document: "${opened.doc.name}" (${opened.doc.folder}).\nQuestion: ${question}`,
+                },
+                { type: "file", data: opened.bytes, mediaType: opened.mediaType, filename: opened.doc.name },
               ],
             },
           ],
@@ -94,7 +114,46 @@ export const documents: Domain = {
           providerOptions: answerProviderOptions,
           abortSignal: AbortSignal.timeout(40_000),
         });
-        return { document: doc.name, folder: doc.folder, answer: text };
+        return { document: opened.doc.name, folder: opened.doc.folder, answer: text };
+      },
+    }),
+
+    teach_from_document: tool({
+      description:
+        "Teach from an uploaded syllabus or study file: explain a topic, summarise a unit, quiz them, or answer any study question using only that file.",
+      inputSchema: z.object({
+        document: z.string().min(1).describe("File name, or 'Study' if that's the only study file"),
+        request: z
+          .string()
+          .min(3)
+          .max(800)
+          .describe("What to teach, summarise, quiz, or answer from the file"),
+      }),
+      execute: async ({ document, request }) => {
+        const opened = await openDocument(ctx, document);
+        if ("error" in opened) return opened;
+        const { text } = await generateText({
+          model: answerModel,
+          instructions:
+            "You are tutoring from one file the student uploaded (often a syllabus). Use only what is in the file. Teach clearly: explain, give examples from the file, and quiz when asked. Copy names, units and dates exactly. If it isn't in the file, say so and stay on what is. Reply in the student's language.",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Document: "${opened.doc.name}" (${opened.doc.folder}).\nRequest: ${request}`,
+                },
+                { type: "file", data: opened.bytes, mediaType: opened.mediaType, filename: opened.doc.name },
+              ],
+            },
+          ],
+          temperature: 0.2,
+          maxOutputTokens: 2200,
+          providerOptions: answerProviderOptions,
+          abortSignal: AbortSignal.timeout(60_000),
+        });
+        return { document: opened.doc.name, folder: opened.doc.folder, lesson: text };
       },
     }),
 

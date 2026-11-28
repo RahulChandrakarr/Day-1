@@ -13,6 +13,7 @@ import ModeSwitch from "./mode-switch";
 import PersonaPicker from "./persona-picker";
 import SpeakButton from "./speak-button";
 import TalkPanel from "./talk-panel";
+import AttachFile, { uploadedStudyPrompt } from "./attach-file";
 import { WorkingStatus } from "./working-mark";
 
 const CUSTOM_STARTERS = ["Hi! What can you help me with?", "Let's get started"];
@@ -35,6 +36,7 @@ export default function ChatPanel() {
     mode,
     setMode,
     persona,
+    userId,
   } = useAssistant();
   const starters = persona.starters.length ? persona.starters : CUSTOM_STARTERS;
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -181,6 +183,7 @@ export default function ChatPanel() {
 
           <Composer
             busy={busy}
+            userId={userId}
             onTalk={() => setMode("talk")}
             onSend={(t) => {
               stick.follow();
@@ -196,11 +199,13 @@ export default function ChatPanel() {
 
 function Composer({
   busy,
+  userId,
   onTalk,
   onSend,
   onStop,
 }: {
   busy: boolean;
+  userId: string;
   onTalk: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
@@ -250,6 +255,17 @@ function Composer({
           placeholder="Type a message…"
           aria-label="Message the assistant"
           className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[15px] text-paper outline-none placeholder:text-paper/50"
+        />
+        <AttachFile
+          userId={userId}
+          disabled={busy}
+          onError={setMicError}
+          onUploaded={(name) => {
+            setMicError(null);
+            const extra = value.trim();
+            setValue("");
+            onSend(uploadedStudyPrompt(name, extra));
+          }}
         />
         <MicButton
           onText={(spoken) => {

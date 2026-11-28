@@ -20,7 +20,7 @@ import { resolvePersona } from "@/lib/ai/persona-queries";
 import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
-import { looksLikeFollowUp, looksLikeJobs, looksLikeSong, looksLikeWatch, routeMessage, type RouteDecision } from "@/lib/ai/router";
+import { looksLikeDocuments, looksLikeFollowUp, looksLikeJobs, looksLikeSong, looksLikeWatch, routeMessage, type RouteDecision } from "@/lib/ai/router";
 import { getAssistantName, getMemories, MEMORY_LIMIT } from "@/lib/assistant-memory";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
@@ -190,6 +190,7 @@ export async function POST(req: Request) {
           ? [...route.sections, "world" as Section]
           : route.sections;
       const worldOnly = route.sections.every((s) => s === "world" || s === "jobs" || s === "watch");
+      const studying = looksLikeDocuments(text) || route.sections.includes("documents");
       // The month-wide finance picture and the table list are big; only load
       // them when the question needs them (tools cover everything else).
       // A song or a world question must not dump today's to-dos into the prompt.
@@ -251,15 +252,15 @@ export async function POST(req: Request) {
         }, worldOnly ? "full" : route.detail),
         messages: [...historyMessages, { role: "user", content: `${context}\n\n${text}` }],
         tools: sections.length ? agent.tools : undefined,
-        stopWhen: isStepCount(worldOnly ? 10 : 8),
+        stopWhen: isStepCount(worldOnly || studying ? 10 : 8),
         temperature: 0.3,
         maxOutputTokens: mode === "talk"
-          ? worldOnly
+          ? worldOnly || studying
             ? 1800
             : brief
               ? 300
               : 600
-          : worldOnly
+          : worldOnly || studying
             ? 2500
             : brief
               ? 350
