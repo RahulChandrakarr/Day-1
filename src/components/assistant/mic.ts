@@ -20,6 +20,8 @@ const SAMPLE_BITS = 16;
 export type Mic = {
   /** End the recording in progress now, if there is one. */
   flush: () => void;
+  /** Hear speech, or ignore it while the assistant is talking. */
+  listen: (on: boolean) => void;
   /** The microphone is still connected and delivering sound. */
   isLive: () => boolean;
   /** Pick up again after the page was in the background. */
@@ -103,11 +105,20 @@ export async function openMic(
     return stream;
   };
 
+  let hearing = true;
+
+  async function listen(on: boolean) {
+    if (!vad || closed || hearing === on) return;
+    hearing = on;
+    if (on) await vad.start();
+    else await vad.pause();
+  }
+
   async function flush() {
-    if (!vad) return;
+    if (!vad || !hearing) return;
     // Pausing hands over what's been heard so far; starting again carries on
     await vad.pause();
-    if (!closed) await vad.start();
+    if (!closed && hearing) await vad.start();
   }
 
   try {
@@ -154,6 +165,7 @@ export async function openMic(
 
   return {
     flush: () => void flush(),
+    listen: (on) => void listen(on),
     isLive: () => stream?.getAudioTracks()[0]?.readyState === "live",
     wake: () => void context.resume(),
     close: () => {

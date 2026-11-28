@@ -229,5 +229,5 @@ function talkLabel(phase: TalkPhase, speakerName: string, working: boolean, job:
   if (phase === "paused") return "Stopped listening. Tap to start again.";
   if (phase === "listening") return "Listening… say “stop” or “hold” to pause";
   if (phase === "thinking") return "Thinking…";
-  return "Speaking… talk or tap to interrupt";
+  return "Speaking… tap to interrupt";
 }

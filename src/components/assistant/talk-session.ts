@@ -41,7 +41,7 @@ const SAY_QUIET = "It's been quiet for a while, so I'll hang up. Bye!";
 export type TalkSession = {
   start: () => void;
   end: () => void;
-  /** Tap the orb: resume if paused, send what's been said, or cut a reply short. */
+  /** Tap the orb: resume if paused, send what's been said, or stop a reply. */
   tap: () => void;
   replyChanged: (id: string, text: string) => void;
   replyFinished: (reply: { text: string; isError: boolean }) => void;
@@ -65,10 +65,11 @@ export function createTalkSession(
   let transcribing = 0;
   let transcripts = Promise.resolve(); // keeps parts of a turn in order
   let heard = "";
+  // A take that started while the assistant was speaking is thrown away
+  let dropNextEnd = false;
 
   // Replying
   let speaker: Speaker | null = null;
-  let heldForSpeech = false; // the reply is paused because someone started talking
   let replyPending = false;
   let dropReply = false; // what's being written has been talked over
   let nextTurn = "";
@@ -103,7 +104,7 @@ export function createTalkSession(
   }
 
   const restPhase = (): TalkPhase =>
-    speaker && !heldForSpeech ? "speaking" : replyPending || transcribing ? "thinking" : "listening";
+    speaker ? "speaking" : replyPending || transcribing ? "thinking" : "listening";
 
   function resetQuietTimer() {
     clearTimeout(quietTimer);
@@ -127,7 +128,10 @@ export function createTalkSession(
     speaker ??= createSpeaker(lang, {
       onStart: () => {
         stopWaiting();
-        if (!speakingNow) setPhase("speaking");
+        dropNextEnd = true;
+        speakingNow = false;
+        mic?.listen(false);
+        setPhase("speaking");
       },
     });
     return speaker;
@@ -136,7 +140,17 @@ export function createTalkSession(
   function stopReplyAudio() {
     speaker?.stop();
     speaker = null;
-    heldForSpeech = false;
+    mic?.listen(true);
+  }
+
+  function cutReply() {
+    dropNextEnd = true;
+    speakingNow = false;
+    if (replyPending) dropReply = true;
+    nextTurn = "";
+    stopReplyAudio();
+    stopWaiting();
+    setPhase("listening");
   }
 
   function sayLine(text: string) {
@@ -152,6 +166,7 @@ export function createTalkSession(
     void line.finished.then(() => {
       if (speaker !== line) return;
       speaker = null;
+      mic?.listen(true);
       if (active && !speakingNow) setPhase(restPhase());
     });
   }
@@ -222,14 +237,7 @@ export function createTalkSession(
     const text = heard;
     heard = "";
 
-    if (!text) {
-      // Only noise. If it paused a reply, carry on as if nothing happened.
-      if (heldForSpeech) {
-        heldForSpeech = false;
-        speaker?.resume();
-      }
-      return setPhase(restPhase());
-    }
+    if (!text) return setPhase(restPhase());
     if (isStopListening(text)) return pauseListening();
     if (isGoodbye(text)) return sayThenEnd(SAY_BYE);
 
@@ -261,10 +269,14 @@ export function createTalkSession(
   function onSpeechEnd(wav: Blob) {
     if (!active || phase === "paused") return;
     speakingNow = false;
+    if (speaker || dropNextEnd) {
+      dropNextEnd = false;
+      return;
+    }
     tone(660);
     resetQuietTimer();
     transcribing++;
-    if (!heldForSpeech && !speaker) setPhase("thinking");
+    if (!speaker) setPhase("thinking");
     transcripts = transcripts.then(async () => {
       try {
         heard = join(heard, await transcribeWithRetry(wav));
@@ -283,13 +295,13 @@ export function createTalkSession(
       {
         onSpeechStart: () => {
           if (phase === "paused") return;
+          // Don't cut the answer off if they talk over it — tap the orb instead
+          if (speaker) {
+            dropNextEnd = true;
+            return;
+          }
           speakingNow = true;
           resetQuietTimer();
-          // Hold the reply rather than drop it: it may just be a passing noise
-          if (speaker && !heldForSpeech) {
-            heldForSpeech = true;
-            speaker.pause();
-          }
           setPhase("listening");
         },
         onMisfire: () => {
@@ -379,11 +391,8 @@ export function createTalkSession(
     tap() {
       if (!active) return;
       if (phase === "paused") return resumeListening();
+      if (speaker) return cutReply();
       if (speakingNow) return mic?.flush();
-      if (speaker) {
-        stopReplyAudio();
-        setPhase("listening");
-      }
     },
 
     replyChanged(id, text) {
