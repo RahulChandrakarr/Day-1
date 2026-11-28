@@ -13,7 +13,7 @@ import ModeSwitch from "./mode-switch";
 import PersonaPicker from "./persona-picker";
 import SpeakButton from "./speak-button";
 import TalkPanel from "./talk-panel";
-import AttachFile, { uploadedStudyPrompt } from "./attach-file";
+import AttachFile, { withUploadedFiles } from "./attach-file";
 import { WorkingStatus } from "./working-mark";
 
 const CUSTOM_STARTERS = ["Hi! What can you help me with?", "Let's get started"];
@@ -212,6 +212,8 @@ function Composer({
 }) {
   const [value, setValue] = useState("");
   const [micError, setMicError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const pendingFiles = useRef<string[]>([]);
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -221,9 +223,16 @@ function Composer({
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [value]);
 
+  function sendNow(text: string) {
+    const names = pendingFiles.current;
+    pendingFiles.current = [];
+    setSaved(null);
+    onSend(withUploadedFiles(text, names));
+  }
+
   function submit() {
     if (busy || !value.trim()) return;
-    onSend(value);
+    sendNow(value);
     setValue("");
   }
 
@@ -259,12 +268,14 @@ function Composer({
         <AttachFile
           userId={userId}
           disabled={busy}
-          onError={setMicError}
+          onError={(message) => {
+            setSaved(null);
+            setMicError(message);
+          }}
           onUploaded={(name) => {
             setMicError(null);
-            const extra = value.trim();
-            setValue("");
-            onSend(uploadedStudyPrompt(name, extra));
+            pendingFiles.current = [...pendingFiles.current, name];
+            setSaved(`Saved “${name}”. Send a message when you want to talk about it.`);
           }}
         />
         <MicButton
@@ -278,7 +289,7 @@ function Composer({
               return;
             }
             setValue("");
-            onSend(next);
+            sendNow(next);
           }}
           onError={setMicError}
         />
@@ -311,14 +322,18 @@ function Composer({
           </button>
         )}
       </div>
-      {micError && (
+      {micError ? (
         <p
           role="alert"
           className="mt-1.5 px-1 text-xs text-red-700 dark:text-red-300"
         >
           {micError}
         </p>
-      )}
+      ) : saved ? (
+        <p role="status" className="mt-1.5 px-1 text-xs text-paper/70">
+          {saved}
+        </p>
+      ) : null}
     </form>
   );
 }

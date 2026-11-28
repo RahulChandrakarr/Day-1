@@ -5,7 +5,7 @@ import { addDocument } from "@/app/(dashboard)/settings/actions";
 import { createClient } from "@/lib/supabase/client";
 import { AttachIcon } from "./icons";
 
-export const STUDY_FOLDER = "Study";
+const UPLOAD_FOLDER = "Other";
 const ACCEPT = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -21,12 +21,16 @@ function mimeOf(file: File) {
   return "";
 }
 
-export function uploadedStudyPrompt(name: string, extra = "") {
-  const note = extra.trim();
-  return `I've uploaded "${name}" into Study. It's a syllabus or study file. Read it, say what it covers, and use it for every question I ask from it.${note ? `\n\n${note}` : ""}`;
+export function withUploadedFiles(text: string, names: string[]) {
+  const listed = [...new Set(names.map((n) => n.trim()).filter(Boolean))]
+    .map((n) => `"${n}"`)
+    .join(", ");
+  const body = text.trim();
+  if (!listed) return body;
+  return body ? `I've uploaded ${listed}.\n\n${body}` : `I've uploaded ${listed}.`;
 }
 
-export async function saveStudyFile(file: File, userId: string) {
+export async function saveChatFile(file: File, userId: string) {
   const mime = mimeOf(file);
   if (!mime) {
     return { ok: false as const, error: "Upload a PDF or a photo (JPG, PNG, WebP, HEIC)." };
@@ -41,7 +45,7 @@ export async function saveStudyFile(file: File, userId: string) {
   const name = file.name.replace(/\.[^.]+$/, "").trim().slice(0, 120) || file.name;
   const result = await addDocument({
     name,
-    folder: STUDY_FOLDER,
+    folder: UPLOAD_FOLDER,
     path,
     mime,
     size: file.size,
@@ -67,7 +71,7 @@ export default function AttachFile({
   async function pick(file: File | undefined) {
     if (!file || busy || disabled) return;
     setBusy(true);
-    const result = await saveStudyFile(file, userId);
+    const result = await saveChatFile(file, userId);
     setBusy(false);
     if (!result.ok) return onError(result.error);
     onUploaded(result.name);
@@ -79,8 +83,8 @@ export default function AttachFile({
         type="button"
         disabled={disabled || busy}
         onClick={() => input.current?.click()}
-        aria-label={busy ? "Uploading file" : "Upload a syllabus or file"}
-        title="Upload a syllabus or file"
+        aria-label={busy ? "Uploading file" : "Upload a file"}
+        title="Upload a file"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-paper/70 transition hover:bg-paper/10 hover:text-paper disabled:opacity-50"
       >
         {busy ? (

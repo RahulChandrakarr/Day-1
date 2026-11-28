@@ -5,7 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { textOf, useAssistant } from "./chat-provider";
 import { canListen, speakable } from "./speech";
-import AttachFile, { uploadedStudyPrompt } from "./attach-file";
+import AttachFile, { withUploadedFiles } from "./attach-file";
 import TalkOrb from "./talk-orb";
 import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
 import { WorkingStatus } from "./working-mark";
@@ -66,6 +66,8 @@ export default function TalkPanel() {
   const supported = useSyncExternalStore(() => () => {}, canListen, () => true);
   const [phase, setPhase] = useState<TalkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const pendingFiles = useRef<string[]>([]);
   const session = useRef<TalkSession | null>(null);
   const stick = useStickToBottom(true);
 
@@ -83,7 +85,10 @@ export default function TalkPanel() {
       onError: setError,
       send: (text) => {
         stick.follow();
-        latestSend.current(text);
+        const names = pendingFiles.current;
+        pendingFiles.current = [];
+        setSaved(null);
+        latestSend.current(withUploadedFiles(text, names));
       },
     });
     session.current.start();
@@ -132,7 +137,7 @@ export default function TalkPanel() {
             <p className="font-bold tracking-tight text-2xl">Talk with {speakerName}</p>
             <p className="max-w-xs text-sm text-paper/70">
               A real conversation in English, Hindi or both. Plug in your headphones, ask what&apos;s on
-              today, upload a syllabus with the paperclip, say &ldquo;stop&rdquo; or &ldquo;hold&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
+              today, upload a file with the paperclip, say &ldquo;stop&rdquo; or &ldquo;hold&rdquo; to pause the mic, and &ldquo;bye&rdquo; when you&apos;re done.
             </p>
           </div>
         ) : (
@@ -178,19 +183,27 @@ export default function TalkPanel() {
             </p>
           </>
         )}
-        {error && (
+        {error ? (
           <p role="alert" className="text-center text-sm text-red-700 dark:text-red-300">
             {error}
           </p>
-        )}
+        ) : saved ? (
+          <p role="status" className="max-w-xs text-center text-sm text-paper/70">
+            {saved}
+          </p>
+        ) : null}
         <div className="flex items-center gap-2">
           <AttachFile
             userId={userId}
             disabled={working}
-            onError={setError}
+            onError={(message) => {
+              setSaved(null);
+              setError(message);
+            }}
             onUploaded={(name) => {
               setError(null);
-              send(uploadedStudyPrompt(name));
+              pendingFiles.current = [...pendingFiles.current, name];
+              setSaved(`Saved “${name}”. Say what you want from it.`);
             }}
           />
           {supported && live && <HoldToEnd onEnd={() => session.current?.end()} />}

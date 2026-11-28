@@ -48,10 +48,10 @@ export const documents: Domain = {
     rename_document: "Updating the document…",
     delete_document: "Removing the document…",
   },
-  prompt: `DOCUMENTS (files they uploaded: syllabi in Study, plus IDs, bills, insurance, receipts)
-- When they upload a syllabus or study file, or ask a question from it, list_documents then teach_from_document (or read_document for a single fact). Prefer the Study folder and the file they just named.
-- teach_from_document: explain, summarise, quiz, walk through a unit, or answer any study question from the file. Stay faithful to what's written; if it isn't in the file, say so.
-- read_document: one exact fact (a number, date, name).
+  prompt: `DOCUMENTS (files they uploaded: IDs, bills, insurance, receipts, syllabi, photos)
+- When they say they uploaded a file or ask about one, list_documents then read it. Use the file they just named. Do not assume it is a syllabus.
+- teach_from_document: only when they want to learn, quiz, or go through a study file. Stay faithful to what's written; if it isn't in the file, say so.
+- read_document: a fact from any file (a number, date, name, account detail).
 - These are the user's own private files, so copy numbers, names and dates exactly as printed.
 - If several files could match, say which one you read.`,
   tools: (ctx) => ({
