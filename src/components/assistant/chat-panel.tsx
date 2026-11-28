@@ -55,7 +55,7 @@ export default function ChatPanel() {
 
   return (
     <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden max-md:h-[calc(100dvh-env(safe-area-inset-top,0px)-1.25rem-env(safe-area-inset-bottom,0px)-6.75rem)] md:min-h-[520px] md:max-h-[calc(100dvh-8rem)]">
-      <header className="flex items-center gap-1.5 border-b border-paper/10 pb-3">
+      <header className="flex shrink-0 items-center gap-1.5 border-b border-paper/10 pb-3">
         <PersonaPicker />
         <div className="flex min-w-0 flex-1 justify-center">
           <ModeSwitch mode={mode} onChange={setMode} className="w-full max-w-52" />
@@ -93,7 +93,7 @@ export default function ChatPanel() {
       {mode === "talk" ? (
         <TalkPanel key={persona.id} />
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
             ref={stick.scroller}
             onScroll={stick.onScroll}
@@ -119,7 +119,7 @@ export default function ChatPanel() {
                 </div>
               </div>
             ) : (
-              <ul className="flex flex-col gap-4">
+              <ul className="flex min-h-full flex-col justify-end gap-4">
                 {messages.map((m, i) => {
                   const text = textOf(m);
                   const isLast = i === messages.length - 1;
@@ -181,17 +181,19 @@ export default function ChatPanel() {
             )}
           </div>
 
-          <Composer
-            busy={busy}
-            userId={userId}
-            onTalk={() => setMode("talk")}
-            onSend={(t) => {
-              stick.follow();
-              send(t);
-            }}
-            onStop={() => void stop()}
-          />
-        </>
+          <div className="z-[1] shrink-0">
+            <Composer
+              busy={busy}
+              userId={userId}
+              onTalk={() => setMode("talk")}
+              onSend={(t) => {
+                stick.follow();
+                send(t);
+              }}
+              onStop={() => void stop()}
+            />
+          </div>
+        </div>
       )}
     </section>
   );
@@ -242,7 +244,7 @@ function Composer({
         e.preventDefault();
         submit();
       }}
-      className="pt-2"
+      className="shrink-0 pt-2"
     >
       <div className="flex items-end gap-1.5 card p-1.5 shadow-sm transition focus-within:border-ember/60 focus-within:ring-4 focus-within:ring-ember/10">
         <textarea
