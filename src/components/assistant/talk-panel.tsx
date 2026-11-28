@@ -123,11 +123,11 @@ export default function TalkPanel() {
   const turns = messages.slice(-LAST_TURNS);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref={stick.scroller}
         onScroll={stick.onScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-1 py-4"
+        className="min-h-0 flex-1 overflow-y-auto px-1 py-3"
       >
         {turns.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
@@ -141,7 +141,7 @@ export default function TalkPanel() {
             </p>
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex min-h-full flex-col justify-end gap-3">
             {turns.map((m) => {
               const text = textOf(m);
               if (!text) return null;
@@ -164,7 +164,7 @@ export default function TalkPanel() {
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-3 pb-2 pt-4">
+      <div className="z-[1] flex shrink-0 flex-col items-center gap-3 bg-transparent pb-1 pt-3">
         {!supported ? (
           <p role="alert" className="text-center text-sm text-red-700 dark:text-red-300">
             Voice isn&apos;t supported in this browser. Try Chrome, Edge or Safari, or use Ask mode.

@@ -14,7 +14,6 @@ export function useStickToBottom(active = true) {
     if (!active || !stick.current) return;
     const el = scroller.current;
     if (el) el.scrollTop = el.scrollHeight;
-    end.current?.scrollIntoView({ block: "end", inline: "nearest" });
   }, [active]);
 
   const onScroll = useCallback(() => {
