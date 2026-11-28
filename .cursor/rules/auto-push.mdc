@@ -1,0 +1,15 @@
+---
+description: Commit and push to main after every completed change
+alwaysApply: true
+---
+
+# Push after every change
+
+When a code change is finished (feature, fix, or follow-up), do not wait to be asked:
+
+1. Commit the relevant files with a short message focused on why.
+2. Push to `main` immediately.
+3. If HTTPS auth fails, push with `git@github.com:RahulChandrakarr/Day-1.git`.
+4. Never force-push, never skip hooks, never commit `.env` or secrets.
+
+This overrides waiting for an explicit "commit" or "push" in this repo.
