@@ -13,7 +13,7 @@ const tones = {
 
 // One service on Settings -> Integrations, as a row that opens: its mark, name,
 // whether it's linked and what it brings into Day One; tap to see its
-// controls. Rows start closed, except one with a problem, so it gets seen.
+// controls. Linked rows start closed; ones that still need a key start open.
 // Every new integration gets one of these, so the list reads the same as it
 // grows.
 export default function IntegrationCard({
@@ -31,7 +31,7 @@ export default function IntegrationCard({
   status: IntegrationStatus;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(status.tone === "warn");
+  const [open, setOpen] = useState(status.tone !== "on");
   const panelId = useId();
 
   return (

@@ -134,7 +134,10 @@ export default function ChatProvider({
         .map((p) => (p.type === "text" ? p.text : ""))
         .join("")
         .trim();
-      for (const listener of finishListeners.current) listener({ text, isError });
+      // A reply that already has words is still a reply, even if the stream
+      // ended roughly (save failed, length cap). Don't scare them with "try again".
+      for (const listener of finishListeners.current)
+        listener({ text, isError: isError && !text });
       if (dataChanged.current) {
         dataChanged.current = false;
         router.refresh();

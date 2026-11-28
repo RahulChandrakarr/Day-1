@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { textOf, useAssistant } from "./chat-provider";
 import { canListen, speakable } from "./speech";
 import { createTalkSession, type TalkPhase, type TalkSession } from "./talk-session";
 
 const HOLD_TO_END_MS = 700;
-const LAST_TURNS = 4;
+const LAST_TURNS = 30;
 
 // A long press, so a phone in a pocket can't hang up by accident.
 function HoldToEnd({ onEnd }: { onEnd: () => void }) {
@@ -62,7 +63,7 @@ export default function TalkPanel() {
   const [phase, setPhase] = useState<TalkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const session = useRef<TalkSession | null>(null);
-  const transcript = useRef<HTMLDivElement>(null);
+  const stick = useStickToBottom(true);
 
   // useChat's send changes between renders; the session outlives them
   const latestSend = useRef(send);
@@ -70,16 +71,19 @@ export default function TalkPanel() {
     latestSend.current = send;
   });
 
-  function start() {
+  const start = useCallback(() => {
     setError(null);
     session.current?.end();
     session.current = createTalkSession(persona.language, {
       onPhase: setPhase,
       onError: setError,
-      send: (text) => latestSend.current(text),
+      send: (text) => {
+        stick.follow();
+        latestSend.current(text);
+      },
     });
     session.current.start();
-  }
+  }, [persona.language, stick.follow]);
 
   useEffect(() => onReplyFinished((reply) => session.current?.replyFinished(reply)), [onReplyFinished]);
 
@@ -92,12 +96,15 @@ export default function TalkPanel() {
   }, [replyId, replyText]);
 
   useEffect(() => {
-    const el = transcript.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+    stick.pin();
+  }, [stick.pin, messages, replyText, phase]);
 
-  // Leaving Talk mode ends the conversation
-  useEffect(() => () => session.current?.end(), []);
+  // Start the call as soon as Talk opens, then keep it going until they hang up.
+  useEffect(() => {
+    if (!supported) return;
+    start();
+    return () => session.current?.end();
+  }, [supported, start]);
 
   const live = phase !== "idle";
   const label =
@@ -115,7 +122,11 @@ export default function TalkPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={transcript} className="min-h-0 flex-1 overflow-y-auto px-1 py-4">
+      <div
+        ref={stick.scroller}
+        onScroll={stick.onScroll}
+        className="min-h-0 flex-1 overflow-y-auto px-1 py-4"
+      >
         {turns.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <span className="text-4xl" aria-hidden>
@@ -145,6 +156,7 @@ export default function TalkPanel() {
                 </li>
               );
             })}
+            <li ref={stick.end} aria-hidden className="h-px list-none" />
           </ul>
         )}
       </div>

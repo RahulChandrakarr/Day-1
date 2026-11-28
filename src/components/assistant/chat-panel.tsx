@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { AssistantUIMessage } from "@/lib/ai/types";
+import { useStickToBottom } from "@/hooks/use-stick-to-bottom";
 import { useAssistant } from "./chat-provider";
 import ConversationList from "./conversation-list";
 import { HistoryIcon, PlusIcon, SendIcon, StopIcon, TalkIcon } from "./icons";
@@ -36,19 +37,18 @@ export default function ChatPanel() {
   } = useAssistant();
   const starters = persona.starters.length ? persona.starters : CUSTOM_STARTERS;
   const [historyOpen, setHistoryOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const stickToBottom = useRef(true);
+  const stick = useStickToBottom(mode === "ask");
 
   const busy = status === "submitted" || status === "streaming";
   const last = messages[messages.length - 1];
+  const lastText = last ? textOf(last) : "";
   const waitingForText =
-    busy && (!last || last.role === "user" || !textOf(last).trim());
+    busy && (!last || last.role === "user" || !lastText.trim());
 
-  // Follow new tokens unless the user scrolled up to read
+  // Follow new tokens, a new prompt, and the thinking line.
   useEffect(() => {
-    const el = scrollRef.current;
-    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
-  }, [messages, statusLabel]);
+    stick.pin();
+  }, [stick.pin, messages.length, lastText, status, statusLabel, waitingForText]);
 
   return (
     <section className="relative flex min-h-[420px] flex-1 flex-col md:min-h-[520px]">
@@ -92,12 +92,8 @@ export default function ChatPanel() {
       ) : (
         <>
           <div
-            ref={scrollRef}
-            onScroll={(e) => {
-              const el = e.currentTarget;
-              stickToBottom.current =
-                el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-            }}
+            ref={stick.scroller}
+            onScroll={stick.onScroll}
             className="min-h-0 flex-1 overflow-y-auto px-1 py-5"
           >
             {messages.length === 0 ? (
@@ -185,7 +181,9 @@ export default function ChatPanel() {
                     </motion.li>
                   )}
                 </AnimatePresence>
-                {errorMessage && status === "error" && (
+                {errorMessage &&
+                  status === "error" &&
+                  !(last?.role === "assistant" && textOf(last).trim()) && (
                   <li
                     role="alert"
                     className="flex flex-wrap items-center gap-3 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
@@ -200,6 +198,7 @@ export default function ChatPanel() {
                     </button>
                   </li>
                 )}
+                <li ref={stick.end} aria-hidden className="h-px list-none" />
               </ul>
             )}
           </div>
@@ -208,7 +207,7 @@ export default function ChatPanel() {
             busy={busy}
             onTalk={() => setMode("talk")}
             onSend={(t) => {
-              stickToBottom.current = true;
+              stick.follow();
               send(t);
             }}
             onStop={() => void stop()}
@@ -278,10 +277,16 @@ function Composer({
         />
         <MicButton
           onText={(spoken) => {
-            setValue((typed) =>
-              `${typed}${typed && !/\s$/.test(typed) ? " " : ""}${spoken}`.slice(0, 2000),
-            );
             setMicError(null);
+            const next =
+              `${value}${value && !/\s$/.test(value) ? " " : ""}${spoken}`.trim();
+            if (!next) return;
+            if (busy) {
+              setValue(next.slice(0, 2000));
+              return;
+            }
+            setValue("");
+            onSend(next);
           }}
           onError={setMicError}
         />

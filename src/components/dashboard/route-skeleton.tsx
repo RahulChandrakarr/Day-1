@@ -11,7 +11,12 @@ import PageShell from "./page-shell";
 // once, and the real page then arrives under a heading that never changed.
 
 // Sections that aren't tabs
-const OTHER_TITLES: Record<string, string> = { "/settings": "Settings", "/admin": "Users" };
+const OTHER_TITLES: Record<string, string> = {
+  "/settings": "Settings",
+  "/admin": "Users",
+  "/jobs": "Jobs",
+  "/watch": "Watch",
+};
 
 // Sections with a line of text under the title, and whether phones show it.
 // It only reserves the line's space, so nothing shifts when the page arrives.
@@ -20,6 +25,8 @@ const DESCRIBED: Record<string, { onPhones: boolean }> = {
   "/financial": { onPhones: false },
   "/health": { onPhones: false },
   "/plan": { onPhones: true },
+  "/jobs": { onPhones: true },
+  "/watch": { onPhones: true },
   "/admin": { onPhones: true },
 };
 

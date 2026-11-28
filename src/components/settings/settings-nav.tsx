@@ -67,7 +67,7 @@ export const settingsSections: NavSection[] = [
   {
     href: "/settings/integrations",
     label: "Integrations",
-    hint: "Splitwise, Groww",
+    hint: "Splitwise, Groww, jobs, Watch",
     icon: (
       <svg {...iconProps}>
         <path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0z" />

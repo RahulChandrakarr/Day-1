@@ -97,6 +97,31 @@ export const navItems: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: "/watch",
+    label: "Watch",
+    short: "Watch",
+    description: "YouTube and your Instagram posts.",
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3" y="6" width="18" height="13" rx="2" />
+        <path d="m10 10 5 2.5L10 15z" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    href: "/jobs",
+    label: "Jobs",
+    short: "Jobs",
+    description: "Openings and gigs from public boards.",
+    icon: (
+      <svg {...iconProps}>
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+        <path d="M2 13h20" />
+      </svg>
+    ),
+  },
 ];
 
 export const usersIcon = (

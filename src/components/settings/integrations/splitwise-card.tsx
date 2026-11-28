@@ -62,7 +62,7 @@ export default function SplitwiseCard({ connection }: { connection: SplitwiseCon
         </div>
       )}
 
-      {(!connection || connection.keyRejected) && <ConnectForm replacing={Boolean(connection)} />}
+      {(!connection || connection.problem) && <ConnectForm replacing={Boolean(connection)} />}
     </IntegrationCard>
   );
 }

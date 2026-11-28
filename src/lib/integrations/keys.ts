@@ -7,7 +7,7 @@ import { Client } from "pg";
 // pass the user id from the verified session (requireProfile), never from the
 // browser, and nothing returned to the browser may include the secret.
 
-export type Provider = "splitwise";
+export type Provider = "splitwise" | "freelancer" | "upwork" | "youtube" | "instagram";
 
 export type IntegrationKey = {
   secret: string;
@@ -15,10 +15,32 @@ export type IntegrationKey = {
   connectedAt: string;
 };
 
+function isLoopback(url: string) {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return /@localhost\b|@127\.0\.0\.1\b/.test(url);
+  }
+}
+
+function connectionString() {
+  const url = process.env.DATABASE_URL;
+  if (url && !isLoopback(url)) return url;
+  const ref = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/^https?:\/\//, "").split(".")[0];
+  const password = process.env.SUPABASE_DB_PASSWORD;
+  if (ref && password) {
+    return `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`;
+  }
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return url;
+}
+
 async function withDatabase<T>(work: (client: Client) => Promise<T>): Promise<T> {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error("DATABASE_URL is not set");
-  const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    connectionString: connectionString(),
+    ssl: { rejectUnauthorized: false },
+  });
   await client.connect();
   try {
     return await work(client);

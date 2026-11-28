@@ -14,6 +14,8 @@ import { plan } from "./plan";
 import { reports } from "./reports";
 import { settings } from "./settings";
 import { sharedLabels, sharedTools } from "./shared";
+import { jobs } from "./jobs";
+import { watch } from "./watch";
 import { world } from "./world";
 
 export const SECTIONS = {
@@ -25,6 +27,8 @@ export const SECTIONS = {
   reports,
   settings,
   world,
+  jobs,
+  watch,
 } satisfies Record<string, Domain>;
 
 export type Section = keyof typeof SECTIONS;

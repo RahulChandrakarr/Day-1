@@ -15,16 +15,28 @@ export type RouteDecision = {
 const BROAD: Section[] = ["daily", "plan", "health", "finance"];
 
 const SONG =
-  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|\b(sing|song|gana|gaana|lyrics|spotify)\b/i;
+  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|\b(sing|songs?|gana|gaana|lyrics|spotify|rap)\b/i;
+const JOBISH =
+  /\b(job|jobs|gig|gigs|hiring|vacancy|vacancies|freelance|freelancer|upwork|fiverr|naukri|adzuna)\b/i;
+const WATCHISH =
+  /\b(youtube|youtu\.be|instagram|insta|reels?)\b/i;
 const WORLDISH =
-  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|मौसम|खबर|\b(sing|song|gana|gaana|lyrics|spotify|news|weather|wikipedia|who won|score)\b/i;
+  /गाना|सुनाओ|गीत|गाओ|लिरिक्स|मौसम|खबर|https?:\/\/|www\.|\b(sing|songs?|gana|gaana|lyrics|spotify|rap|news|weather|wikipedia|who won|score|article|research|crawl|website|url)\b/i;
 
 export function looksLikeSong(text: string) {
   return SONG.test(text.trim());
 }
 
 export function looksLikeWorld(text: string) {
-  return WORLDISH.test(text.trim());
+  return WORLDISH.test(text.trim()) || looksLikeJobs(text);
+}
+
+export function looksLikeJobs(text: string) {
+  return JOBISH.test(text.trim());
+}
+
+export function looksLikeWatch(text: string) {
+  return WATCHISH.test(text.trim());
 }
 
 // Picks the section agents for a message, only from the allowed ones.
@@ -35,17 +47,31 @@ export async function routeMessage(
   allowed: Section[] = SECTION_NAMES,
 ): Promise<RouteDecision> {
   const world: Section[] = allowed.includes("world") ? ["world"] : [];
-  if (looksLikeSong(text) && world.length) {
+  const jobs: Section[] = allowed.includes("jobs") ? ["jobs"] : [];
+  const watch: Section[] = allowed.includes("watch") ? ["watch"] : [];
+  if (looksLikeSong(text) && world.length && !looksLikeWatch(text)) {
     return { sections: world, customQuery: false, detail: "full" };
   }
+  if (looksLikeWatch(text) && watch.length) {
+    const extra = looksLikeSong(text) ? world : [];
+    return { sections: [...watch, ...extra], customQuery: false, detail: "full" };
+  }
+  if (looksLikeJobs(text) && jobs.length) {
+    const extra = WORLDISH.test(text.trim()) ? world : [];
+    return { sections: [...jobs, ...extra], customQuery: false, detail: "full" };
+  }
   const fallback: RouteDecision = {
-    sections: looksLikeWorld(text) && world.length
+    sections: looksLikeWatch(text) && watch.length
+      ? watch
+      : looksLikeJobs(text) && jobs.length
+      ? jobs
+      : looksLikeWorld(text) && world.length
       ? world
       : allowed.length <= 4
         ? allowed
         : BROAD.filter((s) => allowed.includes(s)),
     customQuery: false,
-    detail: looksLikeWorld(text) ? "full" : "brief",
+    detail: looksLikeWorld(text) || looksLikeJobs(text) || looksLikeWatch(text) ? "full" : "brief",
   };
   const Route = z.object({
     sections: z
@@ -70,10 +96,16 @@ export async function routeMessage(
       abortSignal: AbortSignal.timeout(6000),
     });
     const sections = [...new Set(output.sections)];
-    if (looksLikeSong(text) && world.length) {
+    if (looksLikeSong(text) && world.length && !looksLikeWatch(text)) {
       return { sections: world, customQuery: false, detail: "full" };
     }
-    if (looksLikeWorld(text) && world.length && !sections.includes("world")) {
+    if (looksLikeWatch(text) && watch.length && !sections.includes("watch")) {
+      sections.push("watch");
+    }
+    if (looksLikeJobs(text) && jobs.length && !sections.includes("jobs")) {
+      sections.push("jobs");
+    }
+    if (WORLDISH.test(text.trim()) && world.length && !sections.includes("world")) {
       sections.push("world");
     }
     return {

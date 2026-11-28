@@ -19,7 +19,7 @@ import { AlertDot, useTapped } from "./nav-state";
 const TABS = ["/", "/daily", "/financial/daily"];
 const tabs = navItems.filter((item) => TABS.includes(item.href));
 // In the order the Me menu shows them
-const menuSections = ["/health/gym", "/plan", "/assistant"].flatMap((href) =>
+const menuSections = ["/health/gym", "/plan", "/assistant", "/jobs", "/watch"].flatMap((href) =>
   navItems.filter((item) => item.href === href),
 );
 // Pages that light up the Me tab
@@ -105,7 +105,7 @@ export default function MobileNav({
           <button
             type="button"
             onClick={() => setMenuOn(pathname)}
-            aria-label="Me: Health, Plan, Ask and Settings"
+            aria-label="Me: Health, Plan, Ask, Jobs, Watch and Settings"
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
             className={tabClass(meActive)}

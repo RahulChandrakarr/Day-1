@@ -10,6 +10,8 @@ export const PERSONA_SECTIONS = [
   { value: "reports", label: "Reports" },
   { value: "settings", label: "Settings" },
   { value: "world", label: "Web, songs & chat" },
+  { value: "jobs", label: "Jobs & gigs" },
+  { value: "watch", label: "YouTube & Instagram" },
 ] as const;
 
 export type PersonaSection = (typeof PERSONA_SECTIONS)[number]["value"];
@@ -44,6 +46,8 @@ export const BUILT_IN_PERSONAS: Persona[] = [
       "How's my day going?",
       "What's my workout today?",
       "What's in the news today?",
+      "Find me React developer jobs",
+      "Play a video on YouTube",
       "Sing me a song",
       "What's on my to-do list?",
       "How are my habits this week?",

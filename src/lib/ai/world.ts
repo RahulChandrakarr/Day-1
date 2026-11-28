@@ -53,25 +53,25 @@ async function openRouterSearch(query: string) {
       "Content-Type": "application/json",
       "X-Title": "Day One",
     },
-    signal: AbortSignal.timeout(18_000),
+    signal: AbortSignal.timeout(22_000),
     body: JSON.stringify({
       model: process.env.AI_DATA_MODEL ?? "anthropic/claude-haiku-4.5",
       temperature: 0,
-      max_tokens: 700,
+      max_tokens: 1200,
       reasoning: { effort: "none" },
       tools: [
         {
           type: "openrouter:web_search",
-          parameters: { max_results: 5, max_uses: 1, search_context_size: "low" },
+          parameters: { max_results: 8, max_uses: 2, search_context_size: "medium" },
         },
       ],
       messages: [
         {
           role: "system",
           content:
-            "Search the web and return a compact factual briefing: 4–8 short facts, with dates when known. No intro, no headings, no links.",
+            "Search the live web. Return a compact briefing: key facts, dates, names, numbers, and the most useful links (full https URLs). For jobs, list role, company, location, and apply URL. For news, say when it happened. No filler.",
         },
-        { role: "user", content: query.slice(0, 300) },
+        { role: "user", content: query.slice(0, 400) },
       ],
     }),
   });
@@ -80,12 +80,12 @@ async function openRouterSearch(query: string) {
     choices?: { message?: { content?: unknown } }[];
   };
   const text = data.choices?.[0]?.message?.content;
-  return typeof text === "string" && text.trim() ? text.trim().slice(0, 2500) : null;
+  return typeof text === "string" && text.trim() ? text.trim().slice(0, 4000) : null;
 }
 
-// Facts from the public web. Used for news, people, weather, sports, how-tos.
+// Facts from the public web: news, jobs, people, weather, sports, how-tos.
 export async function searchWeb(query: string) {
-  const q = query.trim().slice(0, 200);
+  const q = query.trim().slice(0, 300);
   if (!q) return { error: "What should I look up?" };
   try {
     const brief = await openRouterSearch(q);
@@ -100,6 +100,47 @@ export async function searchWeb(query: string) {
     console.error("[assistant] wikipedia failed:", error);
   }
   return { error: "Couldn't look that up right now. Try again in a moment." };
+}
+
+const PRIVATE_HOST =
+  /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|\[::1\]|.*\.local|.*\.internal)$/i;
+
+function publicHttpUrl(raw: string) {
+  const parsed = new URL(raw);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Only http and https pages can be opened.");
+  }
+  if (PRIVATE_HOST.test(parsed.hostname)) {
+    throw new Error("That address can't be opened.");
+  }
+  return parsed;
+}
+
+// Read a public web page (articles, job posts, docs) as plain text.
+export async function fetchPage(url: string) {
+  let parsed: URL;
+  try {
+    parsed = publicHttpUrl(url.trim());
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "That doesn't look like a web address." };
+  }
+  try {
+    const response = await fetch(`https://r.jina.ai/${parsed.toString()}`, {
+      headers: { ...UA, Accept: "text/plain" },
+      signal: AbortSignal.timeout(18_000),
+    });
+    if (!response.ok) return { error: `Couldn't open that page (${response.status}).` };
+    const body = (await response.text()).replace(/[ \t]+\n/g, "\n").trim();
+    if (!body) return { error: "That page came back empty." };
+    return {
+      url: parsed.toString(),
+      text: body.slice(0, 12_000),
+      truncated: body.length > 12_000,
+    };
+  } catch (error) {
+    console.error("[assistant] page fetch failed:", error);
+    return { error: "Couldn't open that page right now." };
+  }
 }
 
 function verse(lyrics: string) {

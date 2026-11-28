@@ -12,7 +12,7 @@ import { resolvePersona } from "@/lib/ai/persona-queries";
 import { compact } from "@/lib/ai/evidence";
 import { answerModel, answerProviderOptions } from "@/lib/ai/models";
 import { agentInstructions } from "@/lib/ai/prompts";
-import { looksLikeSong, routeMessage, type RouteDecision } from "@/lib/ai/router";
+import { looksLikeJobs, looksLikeSong, looksLikeWatch, routeMessage, type RouteDecision } from "@/lib/ai/router";
 import { getAssistantName, getMemories, MEMORY_LIMIT } from "@/lib/assistant-memory";
 import { getSchemaText } from "@/lib/ai/schema-cache";
 import { firstName, getApiSession, jsonError } from "@/lib/ai/session";
@@ -31,6 +31,8 @@ const SECTION_STATUS: Record<string, string> = {
   reports: "Putting your report together…",
   settings: "Checking your settings…",
   world: "Looking it up…",
+  jobs: "Looking for openings…",
+  watch: "Opening Watch…",
 };
 
 const Body = z.object({
@@ -155,11 +157,16 @@ export async function POST(req: Request) {
             Promise.resolve<RouteDecision>({ sections: allowed, customQuery: false, detail: "full" }),
         // Personas without data access don't get the day's details.
         // A song request shouldn't load today's to-dos into the prompt.
-        allowed.length && !looksLikeSong(text) ? todayCard(today).catch(() => null) : null,
+        allowed.length && !looksLikeSong(text) && !looksLikeJobs(text) && !looksLikeWatch(text)
+          ? todayCard(today).catch(() => null)
+          : null,
       ]);
       const brief = route.detail === "brief";
-      const worldOnly =
-        route.sections.length === 1 && route.sections[0] === "world";
+      const sections =
+        allowed.includes("world") && !route.sections.includes("world")
+          ? [...route.sections, "world" as Section]
+          : route.sections;
+      const worldOnly = route.sections.every((s) => s === "world" || s === "jobs" || s === "watch");
       // The month-wide finance picture and the table list are big; only load
       // them when the question needs them (tools cover everything else).
       // A song or a world question must not dump today's to-dos into the prompt.
@@ -170,16 +177,16 @@ export async function POST(req: Request) {
           ? financeSnapshot(supabase).catch(() => null)
           : null,
       ]);
-      if (route.sections.length) status(SECTION_STATUS[route.sections[0]] ?? "Thinking…");
+      if (sections.length) status(SECTION_STATUS[sections[0]] ?? "Thinking…");
 
       // 2. The section agent looks things up, makes changes and answers.
       const emit = (action: AssistantAction) =>
         writer.write({ type: "data-action", data: action, transient: true });
-      const agent = buildAgent({ supabase, profile, today, emit }, route.sections, { sql });
+      const agent = buildAgent({ supabase, profile, today, emit }, sections, { sql });
       const announced = new Set<string>();
 
       // What the user has told the assistant about themselves
-      const known = route.sections.length
+      const known = sections.length
         ? memories.map(({ label, value }) => ({ label, value }))
         : [];
       const context = [
@@ -195,23 +202,25 @@ export async function POST(req: Request) {
         instructions: agentInstructions(firstName(profile), agent.prompts, schema, mode, {
           name: persona.name,
           instructions: persona.instructions,
-          hasTools: route.sections.length > 0,
+          hasTools: sections.length > 0,
           isDefault: persona.id === "assistant",
           assistantName,
-        }, route.detail),
+        }, worldOnly ? "full" : route.detail),
         messages: [...historyMessages, { role: "user", content: `${context}\n\n${text}` }],
-        tools: route.sections.length ? agent.tools : undefined,
-        stopWhen: isStepCount(8),
+        tools: sections.length ? agent.tools : undefined,
+        stopWhen: isStepCount(worldOnly ? 10 : 8),
         temperature: 0.3,
         maxOutputTokens: mode === "talk"
           ? worldOnly
-            ? 1000
+            ? 1800
             : brief
               ? 300
               : 600
-          : brief
-            ? 350
-            : 1500,
+          : worldOnly
+            ? 2500
+            : brief
+              ? 350
+              : 1500,
         providerOptions: answerProviderOptions,
         onToolExecutionStart: ({ toolCall }) => {
           const label = agent.labels[toolCall.toolName];
@@ -222,17 +231,21 @@ export async function POST(req: Request) {
         },
         onEnd: async ({ text: answerText, steps }) => {
           if (!answerText.trim()) return;
-          const evidence = steps
-            .flatMap((step) => step.toolResults)
-            .map((r) => compact(r.toolName, r.input, r.output));
-          await supabase.from("ai_messages").insert({
-            conversation_id: conversationId,
-            role: "assistant",
-            content: answerText.slice(0, 20000),
-            evidence: evidence.length
-              ? { persona: persona.id, sections: route.sections, tools: evidence }
-              : null,
-          });
+          try {
+            const evidence = (steps ?? [])
+              .flatMap((step) => step.toolResults ?? [])
+              .map((r) => compact(r.toolName, r.input, r.output));
+            await supabase.from("ai_messages").insert({
+              conversation_id: conversationId,
+              role: "assistant",
+              content: answerText.slice(0, 20000),
+              evidence: evidence.length
+                ? { persona: persona.id, sections: route.sections, tools: evidence }
+                : null,
+            });
+          } catch (error) {
+            console.error("[assistant] couldn't save the reply:", error);
+          }
         },
       });
       answer.consumeStream();

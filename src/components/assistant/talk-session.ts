@@ -31,7 +31,7 @@ const END_OF_TURN_MS = 900;
 const HANG_UP_AFTER_QUIET_MS = 30 * 60_000;
 const TRANSCRIBE_RETRY_MS = 800;
 const WAITING_TICK_MS = 3000;
-const NO_REPLY_TIMEOUT_MS = 60_000;
+const NO_REPLY_TIMEOUT_MS = 90_000;
 
 const SAY_MISHEARD = "Sorry, the network's weak and I missed that. Say it again?";
 const SAY_FAILED = "Sorry, something went wrong there. Try asking again.";
@@ -374,7 +374,7 @@ export function createTalkSession(
         dropReply = false;
         return setPhase(restPhase());
       }
-      if (isError) return sayLine(SAY_FAILED);
+      if (isError && !text) return sayLine(SAY_FAILED);
 
       const rest = speakable(text.slice(spokenChars));
       if (!rest && !speaker) return setPhase(restPhase());
