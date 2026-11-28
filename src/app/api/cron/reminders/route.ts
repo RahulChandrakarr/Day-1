@@ -296,7 +296,7 @@ async function writeBriefing(client: Client, item: Due, date: string) {
                  where user_id = $1 order by updated_at desc limit 20) m) as known,
        (select json_agg(json_build_object('title', s.title, 'summary', left(s.summary, 400)))
           from (select title, summary from ai_chat_summaries
-                 where user_id = $1 order by updated_at desc limit 6) s) as recent_chats`
+                 where user_id = $1 order by updated_at desc limit 6) s) as recent_chats`,
     [item.user_id, date, month],
   );
 

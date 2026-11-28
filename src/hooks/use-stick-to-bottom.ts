@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef } from "react";
 // scroll back down.
 export function useStickToBottom(active = true) {
   const scroller = useRef<HTMLDivElement>(null);
-  const end = useRef<HTMLDivElement>(null);
+  const end = useRef<HTMLLIElement>(null);
   const stick = useRef(true);
 
   const pin = useCallback(() => {
